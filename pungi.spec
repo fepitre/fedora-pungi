@@ -1,8 +1,8 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           pungi
-Version:        2.5
-Release:        2%{?dist}
+Version:        2.6
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -56,8 +56,14 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.5-2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+* Fri Apr 29 2011 Jesse Keating <jkeating@redhat.com> - 2.6-1
+- Only init yum if we haven't already (jkeating)
+- Add the repo from topdir to our yumobject for lorax. (jkeating)
+- only filter the arch list on x86_64 we cant do it on sparc and ppc. it really
+  only makes sense on x86_64. (dennis)
+- allow source isos to be generated,  there is no split media support (dennis)
+- Add an option to allow only grabbing the best provides for a particular
+  depenedency, instead of all. (notting)
 
 * Wed Jan 12 2011 Jesse Keating <jkeating@redhat.com> - 2.5-1
 - Use Lorax instead of buildinstall (mgracik)
