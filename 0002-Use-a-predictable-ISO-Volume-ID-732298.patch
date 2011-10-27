@@ -1,0 +1,37 @@
+From b5297ce1c82c626bb3e51b7eb67ac5529e16a29b Mon Sep 17 00:00:00 2001
+From: Will Woods <wwoods@redhat.com>
+Date: Wed, 12 Oct 2011 20:25:20 -0400
+Subject: [PATCH 2/2] Use a predictable ISO Volume ID (#732298)
+
+Since the new lorax branch needs to know the iso Volume ID to be able to
+boot, we need to make sure we're using the same Volume ID that lorax
+sets up the bootloaders to expect.
+---
+ src/pypungi/__init__.py |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/src/pypungi/__init__.py b/src/pypungi/__init__.py
+index a402eb4..1ef3b8d 100644
+--- a/src/pypungi/__init__.py
++++ b/src/pypungi/__init__.py
+@@ -1052,13 +1052,11 @@ class Pungi(pypungi.PungiBase):
+         elif self.config.get('pungi', 'arch') == 'sparc':
+             extraargs.extend(sparcbootargs)
+ 
++        # NOTE: if this doesn't match what's in the bootloader config, the
++        # image won't be bootable!
+         extraargs.append('-V')
+-        if treesize > 700:
+-            extraargs.append('%s %s %s DVD' % (self.config.get('pungi', 'name'),
+-                self.config.get('pungi', 'version'), self.config.get('pungi', 'arch')))
+-        else:
+-            extraargs.append('%s %s %s' % (self.config.get('pungi', 'name'),
+-                self.config.get('pungi', 'version'), self.config.get('pungi', 'arch')))
++        extraargs.append('%s %s %s' % (self.config.get('pungi', 'name'),
++            self.config.get('pungi', 'version'), self.config.get('pungi', 'arch')))
+ 
+         extraargs.extend(['-o', isofile])
+         
+-- 
+1.7.7
+

@@ -1,0 +1,28 @@
+From 4b5b59bd507def6077a4fac9f52af291527ded17 Mon Sep 17 00:00:00 2001
+From: Will Woods <wwoods@redhat.com>
+Date: Tue, 11 Oct 2011 15:03:52 -0400
+Subject: [PATCH 1/2] Fix DVD building on ppc64
+
+ppc64 systems used to have arch == 'ppc', so pungi was only checking to
+see if arch == 'ppc'. Now that ppc64 is separate from ppc, we need to
+check if arch.startswith('ppc') instead.
+---
+ src/pypungi/__init__.py |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/pypungi/__init__.py b/src/pypungi/__init__.py
+index e183b9c..a402eb4 100644
+--- a/src/pypungi/__init__.py
++++ b/src/pypungi/__init__.py
+@@ -1046,7 +1046,7 @@ class Pungi(pypungi.PungiBase):
+                 extraargs.extend(efibootargs)
+         elif self.config.get('pungi', 'arch') == 'ia64':
+             extraargs.extend(ia64bootargs)
+-        elif self.config.get('pungi', 'arch') == 'ppc':
++        elif self.config.get('pungi', 'arch').startswith('ppc'):
+             extraargs.extend(ppcbootargs)
+             extraargs.append(os.path.join(self.topdir, "ppc/mac"))
+         elif self.config.get('pungi', 'arch') == 'sparc':
+-- 
+1.7.7
+

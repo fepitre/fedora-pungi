@@ -2,13 +2,15 @@
 
 Name:           pungi
 Version:        2.8
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://fedorahosted.org/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
+Patch1:         0001-Fix-DVD-building-on-ppc64.patch
+Patch2:         0002-Use-a-predictable-ISO-Volume-ID-732298.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:       anaconda >= 14.3, yum => 3.2.19, repoview, createrepo >= 0.4.11
 Requires:       lorax
@@ -22,6 +24,8 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
+%patch1 -p1
+%patch2 -p1
 
 
 %build
@@ -56,6 +60,10 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Oct 27 2011 Will Woods <wwoods@redhat.com> - 2.8-2
+- Fix DVD builds for ppc/ppc64
+- Use a consistent ISO label so the bootloader will work (#732298)
+
 * Mon Jul 18 2011 Jesse Keating <jkeating@redhat.com> - 2.8-1
 - Always re-init the yum object (#717089)
 
