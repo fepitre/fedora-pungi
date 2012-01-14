@@ -2,7 +2,7 @@
 
 Name:           pungi
 Version:        2.8
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -60,6 +60,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Sat Jan 14 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.8-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild
+
 * Thu Oct 27 2011 Will Woods <wwoods@redhat.com> - 2.8-2
 - Fix DVD builds for ppc/ppc64
 - Use a consistent ISO label so the bootloader will work (#732298)
