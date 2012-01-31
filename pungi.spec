@@ -2,7 +2,7 @@
 
 Name:           pungi
 Version:        2.9
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -11,6 +11,7 @@ URL:            https://fedorahosted.org/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
 Patch1:         0001-Fix-DVD-building-on-ppc64.patch
 Patch2:         0002-Use-a-predictable-ISO-Volume-ID-732298.patch
+PAtch3:         hack-ppc-yaboot.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:       anaconda >= 14.3, yum => 3.2.19, repoview, createrepo >= 0.4.11
 Requires:       lorax
@@ -26,6 +27,7 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 %setup -q
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
 
 
 %build
@@ -60,6 +62,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Jan 31 2012 Dennis Gilmore <dennis@ausil.us> - 2.9-2
+- add patch from will woods for yaboot on ppc
+
 * Mon Jan 30 2012 Dennis Gilmore <dennis@ausil.us> - 2.9-1
 - pass isfinal rather than is_beta to lorax 
 
