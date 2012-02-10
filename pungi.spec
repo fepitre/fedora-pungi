@@ -1,18 +1,14 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           pungi
-Version:        2.9
-Release:        3%{?dist}
+Version:        2.10
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://fedorahosted.org/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
-Patch1:         0001-Fix-DVD-building-on-ppc64.patch
-Patch2:         0002-Use-a-predictable-ISO-Volume-ID-732298.patch
-Patch3:         hack-ppc-yaboot.patch
-Patch4:         0001-hash-the-Packages-tree-by-default-adding-a-nohash-op.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:       anaconda >= 14.3, yum => 3.2.19, repoview, createrepo >= 0.4.11
 Requires:       lorax
@@ -26,10 +22,6 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
 
 
 %build
@@ -64,8 +56,11 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Feb 09 2012 Dennis Gilmore <dennis@ausil.us> - 2.10-1
+- drop all the patches merged into upstream 2.10 release
+
 * Thu Feb 09 2012 Dennis Gilmore <dennis@ausil.us> - 2.9-3
-- has the Packages dir for consistency between Fedora and Everything trees
+- hash the Packages dir for consistency between Fedora and Everything trees
 
 * Tue Jan 31 2012 Dennis Gilmore <dennis@ausil.us> - 2.9-2
 - add patch from will woods for yaboot on ppc
