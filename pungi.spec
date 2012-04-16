@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           pungi
-Version:        2.10
+Version:        2.11
 Release:        1%{?dist}
 Summary:        Distribution compose tool
 
@@ -56,6 +56,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Apr 16 2012 Dennis Gilmore <dennis@ausil.us> - 2.11-1
+- upstream 2.11 release
+
 * Thu Feb 09 2012 Dennis Gilmore <dennis@ausil.us> - 2.10-1
 - drop all the patches merged into upstream 2.10 release
 
