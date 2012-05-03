@@ -2,13 +2,14 @@
 
 Name:           pungi
 Version:        2.11
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://fedorahosted.org/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
+Patch0:         pungi-2.11-wildcard-fix.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:       anaconda >= 14.3, yum => 3.2.19, repoview, createrepo >= 0.4.11
 Requires:       lorax
@@ -22,7 +23,7 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
-
+%patch0 -p1 
 
 %build
 %{__python} setup.py build
@@ -56,6 +57,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu May 03 2012 Dennis Gilmore <dennis@ausil.us> - 2.11-2
+- add patch for bz#816315
+ 
 * Mon Apr 16 2012 Dennis Gilmore <dennis@ausil.us> - 2.11-1
 - upstream 2.11 release
 
