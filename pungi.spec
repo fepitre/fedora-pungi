@@ -2,7 +2,7 @@
 
 Name:           pungi
 Version:        2.11
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -57,6 +57,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Sat Jul 21 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.11-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
+
 * Thu May 03 2012 Dennis Gilmore <dennis@ausil.us> - 2.11-2
 - add patch for bz#816315
  
