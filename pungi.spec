@@ -55,7 +55,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Aug 31 2012 Dennis Gilmore <dennis@ausil.us> - 2.12-1
+* Fri Aug 31 2012 Dennis Gilmore <dennis@ausil.us> - 2.12-1
 - ppc64p7 support
 - update locations for ppc files for image composition bz#849731
 - add 32 bit arm arches
