@@ -1,15 +1,14 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           pungi
-Version:        2.11
-Release:        3%{?dist}
+Version:        2.12
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://fedorahosted.org/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
-Patch0:         pungi-2.11-wildcard-fix.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:       anaconda >= 14.3, yum => 3.2.19, repoview, createrepo >= 0.4.11
 Requires:       lorax
@@ -23,7 +22,6 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
-%patch0 -p1 
 
 %build
 %{__python} setup.py build
@@ -57,6 +55,11 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+ Aug 31 2012 Dennis Gilmore <dennis@ausil.us> - 2.12-1
+- ppc64p7 support
+- update locations for ppc files for image composition bz#849731
+- add 32 bit arm arches
+
 * Sat Jul 21 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.11-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
 
