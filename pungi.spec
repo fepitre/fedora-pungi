@@ -2,7 +2,7 @@
 
 Name:           pungi
 Version:        2.13
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -55,6 +55,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.13-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
+
 * Fri Dec 21 2012 Dennis Gilmore <dennis@ausil.us> - 2.13-1
 - strip groups from comps not listed in the kickstart
 - fix ppc64 runtime installation (#888887)
