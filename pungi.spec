@@ -1,8 +1,8 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           pungi
-Version:        2.13
-Release:        3%{?dist}
+Version:        3.00
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -10,7 +10,7 @@ License:        GPLv2
 URL:            https://fedorahosted.org/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires:       anaconda >= 14.3, yum => 3.2.19, repoview, createrepo >= 0.4.11
+Requires:       yum => 3.4.3-28, repoview, createrepo >= 0.4.11
 Requires:       lorax
 BuildRequires:  python-devel
 
@@ -55,6 +55,11 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Aug 20 2013 Dennis Gilmore <dennis@ausil.us> - 3.00-1
+- apply patches from Daniel Mach
+- make sure we only use mac support on x86_64
+- make sure deltarpm is disabled
+
 * Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.13-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 
