@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           pungi
-Version:        3.01
+Version:        3.02
 Release:        1%{?dist}
 Summary:        Distribution compose tool
 
@@ -55,6 +55,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Oct 31 2013 Dennis Gilmore <dennis@ausil.us> - 3.02-1
+- fix typo in call to __version__ (Dennis Gilmore)
+
 * Sun Oct 27 2013 Daniel Mach <dmach@redhat.com> - 3.01-1
 - Add 'make log' command to print changelog for spec. (Daniel Mach)
 - Implement %prepopulate config section as an additional package input. (Daniel Mach)
