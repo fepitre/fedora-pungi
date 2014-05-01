@@ -2,7 +2,7 @@
 
 Name:           pungi
 Version:        3.04
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -11,7 +11,7 @@ URL:            https://fedorahosted.org/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:       yum => 3.4.3-28, repoview, createrepo >= 0.4.11
-Requires:       lorax
+Requires:       lorax, python-lockfile
 BuildRequires:  python-devel
 
 BuildArch:      noarch
@@ -55,7 +55,10 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Tue Apr 29 2014 Dennis Gilmore <dennis@ausil.us - 3.04-1
+* Thu May 01 2014 Dennis Gilmore <dennis@ausil.us> - 3.04-2
+- add missing requires on python-lockfile
+
+* Tue Apr 29 2014 Dennis Gilmore <dennis@ausil.us> - 3.04-1
 - Use a lockfile around things that modify the cachedir. (rbean)
 - Improve logging for missing srpms. (rbean)
 - honour the --nosource option (dennis)
