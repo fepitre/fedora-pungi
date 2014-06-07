@@ -2,7 +2,7 @@
 
 Name:           pungi
 Version:        3.04
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -55,6 +55,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.04-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
+
 * Thu May 01 2014 Dennis Gilmore <dennis@ausil.us> - 3.04-2
 - add missing requires on python-lockfile
 
