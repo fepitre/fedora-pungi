@@ -1,8 +1,8 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           pungi
-Version:        3.04
-Release:        3%{?dist}
+Version:        3.05
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -55,6 +55,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Jul 08 2014 Dennis Gilmore <dennis@ausil.us> - 3.05-1
+- Don't emit media labels with spaces in them. (pjones)
+
 * Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.04-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 
