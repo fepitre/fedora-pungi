@@ -2,14 +2,14 @@
 
 Name:           pungi
 Version:        3.12
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://fedorahosted.org/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Patch0:         0001-replace-tabs-with-spaces.patch
 Requires:       yum => 3.4.3-28, repoview, createrepo >= 0.4.11
 Requires:       lorax, python-lockfile
 BuildRequires:  python-devel
@@ -22,6 +22,7 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 %{__python} setup.py build
@@ -55,6 +56,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Sep 30 2014 Dennis Gilmore <dennis@ausil.us> - 3.12-2
+- add patch to fix whitespace errors
+
 * Thu Sep 11 2014 Dennis Gilmore <dennis@ausil.us> - 3.12-1
 - Remove magic parameter to mkisofs (hamzy)
 - Added option for setting release note files (riehecky)
