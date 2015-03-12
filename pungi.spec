@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.0
-Release:        0.2%{?dist}.git320724e
+Release:        0.3%{?dist}.git320724e
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -53,6 +53,18 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.3.gita3158ec
+- rename binaries (dennis)
+- Add the option to pass a custom path for the multilib config files (bcl)
+- Call lorax as a process not a library (bcl)
+- Close child fds when using subprocess (bcl)
+- fixup setup.py and MANIFEST.in to make a useable tarball (dennis)
+- switch to BSD style hashes for the iso checksums (dennis)
+- refactor to get better data into .treeinfo (dennis)
+- Initial code merge for Pungi 4.0. (dmach)
+- Initial changes for Pungi 4.0. (dmach)
+- Add --nomacboot option (csieh)
+
 * Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.2.git320724e
 - update git snapshot to switch to executing lorax since it is using dnf
 
