@@ -1,8 +1,6 @@
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-
 Name:           pungi
-Version:        3.14
-Release:        1%{?dist}
+Version:        4.0
+Release:        0.11%{?dist}.gitdfd0cc9
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -15,7 +13,7 @@ Requires:       lorax >= 22.1
 Requires:       repoview
 Requires:       python-lockfile
 
-BuildRequires:  python-devel
+BuildRequires:  python-devel, python-setuptools
 
 BuildArch:      noarch
 
@@ -36,7 +34,6 @@ rm -rf $RPM_BUILD_ROOT
 %{__install} -d $RPM_BUILD_ROOT/var/cache/pungi
 %{__install} -d $RPM_BUILD_ROOT/%{_mandir}/man8
 %{__install} doc/pungi.8 $RPM_BUILD_ROOT/%{_mandir}/man8/
-%{__mv} $RPM_BUILD_ROOT/%{_bindir}/pungi.py $RPM_BUILD_ROOT/%{_bindir}/pungi
 
  
 %clean
@@ -45,17 +42,20 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc Authors Changelog COPYING GPL ToDo doc/README
-# For noarch packages: sitelib
-%{python_sitelib}/pypungi
+%license COPYING GPL
+%doc AUTHORS doc/README
+%{python_sitelib}/%{name}
 %{python_sitelib}/%{name}-%{version}-py?.?.egg-info
-%{_bindir}/pungi
+%{_bindir}/*
 %{_datadir}/pungi
 %{_mandir}/man8/pungi.8.gz
 /var/cache/pungi
 
 
 %changelog
+* Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.1.git64b6c80
+- update to the pungi 4.0 dev branch
+
 * Tue Mar 10 2015 Dennis Gilmore <dennis@ausil.us> - 3.14-1
 - switch to BSD style hashes for the iso checksums (dennis)
 - refactor to get better data into .treeinfo (dennis)
@@ -121,9 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 
 * Sun Oct 27 2013 Daniel Mach <dmach@redhat.com> - 3.01-1
 - Add 'make log' command to print changelog for spec. (Daniel Mach)
-- Implement %prepopulate config section as an additional package input. (Daniel Mach)
+- Implement %%prepopulate config section as an additional package input. (Daniel Mach)
 - Don't automatically apply fulltree on input multilib packages. (Daniel Mach)
-- Implement %multilib-blacklist and %multilib-whitelist config sections. (Daniel Mach)
+- Implement %%multilib-blacklist and %%multilib-whitelist config sections. (Daniel Mach)
 - Turn off fulltree for multilib packages. (Daniel Mach)
 - Return package flags: input, fulltree-exclude, langpack, multilib, fulltree (Daniel Mach)
 - Exclude srpms from conditional deps. (Daniel Mach)
@@ -280,7 +280,7 @@ rm -rf $RPM_BUILD_ROOT
 - Use https url for bugzilla by default.
 
 * Thu Oct 09 2008 Jesse Keating <jkeating@redhat.com> - 2.0.6-1
-- Handle %packages --default to pick up the default groups.
+- Handle %%packages --default to pick up the default groups.
 - Set iso name to be the same as --name
 - Make sure we don't include the 'sha1:' in the iso SHA1SUM file.
 - Fix .treeinfo to have proper case in file names
@@ -439,7 +439,7 @@ McLoughlin)
 * Thu Aug 30 2007 Jesse Keating <jkeating@redhat.com> - 1.0.2-1
 - Fix some bugs with source iso creation
 - Add source repo to kickstart file
-- Add %end to %packages in kickstart file
+- Add %%end to %%packages in kickstart file
 
 * Tue Aug 28 2007 Jesse Keating <jkeating@redhat.com> - 1.0.1-1
 - Default flavor to blank.
@@ -558,7 +558,7 @@ McLoughlin)
 * Fri Mar 09 2007 Jesse Keating <jkeating@redhat.com> - 0.2.8-1
 - Call createrepo ourselves for the tree, not buildinstall's job
 - Convert from commands to subprocess for things we call out
-- Add kickstart %packages syntax support to package manifest
+- Add kickstart %%packages syntax support to package manifest
 - Make the list we hand off to yum to search for as unique as we can
 
 * Wed Feb 28 2007 Jesse Keating <jkeating@redhat.com> - 0.2.7-1
