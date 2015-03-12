@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.0
-Release:        0.11%{?dist}.gitdfd0cc9
+Release:        0.2%{?dist}.git320724e
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -53,6 +53,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.2.git320724e
+- update git snapshot to switch to executing lorax since it is using dnf
+
 * Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.1.git64b6c80
 - update to the pungi 4.0 dev branch
 
