@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.0
-Release:        0.3%{?dist}.git320724e
+Release:        0.4%{?dist}.git18d4d2e
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -12,6 +12,8 @@ Requires:       yum => 3.4.3-28
 Requires:       lorax >= 22.1
 Requires:       repoview
 Requires:       python-lockfile
+Requires:       kobo
+Requires:       productmd
 
 BuildRequires:  python-devel, python-setuptools
 
@@ -20,13 +22,11 @@ BuildArch:      noarch
 %description
 A tool to create anaconda based installation trees/isos of a set of rpms.
 
-
 %prep
 %setup -q
 
 %build
 %{__python} setup.py build
-
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -34,11 +34,6 @@ rm -rf $RPM_BUILD_ROOT
 %{__install} -d $RPM_BUILD_ROOT/var/cache/pungi
 %{__install} -d $RPM_BUILD_ROOT/%{_mandir}/man8
 %{__install} doc/pungi.8 $RPM_BUILD_ROOT/%{_mandir}/man8/
-
- 
-%clean
-rm -rf $RPM_BUILD_ROOT
-
 
 %files
 %defattr(-,root,root,-)
@@ -51,8 +46,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/pungi.8.gz
 /var/cache/pungi
 
-
 %changelog
+* Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.4.git18d4d2e
+- fix up the pungi logging by putting the arch in the log file name (dennis)
+- change pypungi imports to pungi (dennis)
+- spec file cleanups (dennis)
+
 * Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.3.gita3158ec
 - rename binaries (dennis)
 - Add the option to pass a custom path for the multilib config files (bcl)
