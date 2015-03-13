@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.0
-Release:        0.4%{?dist}.git18d4d2e
+Release:        0.5%{?dist}.git18d4d2e
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -13,7 +13,7 @@ Requires:       lorax >= 22.1
 Requires:       repoview
 Requires:       python-lockfile
 Requires:       kobo
-Requires:       productmd
+Requires:       python-productmd
 
 BuildRequires:  python-devel, python-setuptools
 
@@ -47,6 +47,9 @@ rm -rf $RPM_BUILD_ROOT
 /var/cache/pungi
 
 %changelog
+* Fri Mar 13 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.5.git18d4d2e
+- update Requires for rename of python-productmd
+
 * Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.4.git18d4d2e
 - fix up the pungi logging by putting the arch in the log file name (dennis)
 - change pypungi imports to pungi (dennis)
