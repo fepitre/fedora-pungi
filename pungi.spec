@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.0
-Release:        0.5%{?dist}.git18d4d2e
+Release:        0.6%{?dist}.20150314.gitd337c34
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -29,14 +29,12 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 %{__python} setup.py build
 
 %install
-rm -rf $RPM_BUILD_ROOT
 %{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
 %{__install} -d $RPM_BUILD_ROOT/var/cache/pungi
 %{__install} -d $RPM_BUILD_ROOT/%{_mandir}/man8
 %{__install} doc/pungi.8 $RPM_BUILD_ROOT/%{_mandir}/man8/
 
 %files
-%defattr(-,root,root,-)
 %license COPYING GPL
 %doc AUTHORS doc/README
 %{python_sitelib}/%{name}
@@ -47,6 +45,9 @@ rm -rf $RPM_BUILD_ROOT
 /var/cache/pungi
 
 %changelog
+* Sat Mar 14 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.6.20150314.gitd337c34
+- update the git snapshot to pick up some fixes
+
 * Fri Mar 13 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.5.git18d4d2e
 - update Requires for rename of python-productmd
 
