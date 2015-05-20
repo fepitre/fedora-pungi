@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.0
-Release:        0.7%{?dist}.20150520.gitdc1be3e
+Release:        0.8%{?dist}.20150520.gitff77a92
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -46,6 +46,10 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 /var/cache/pungi
 
 %changelog
++* Wed May 20 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.8.20150520.gitff77a92
++- fix up bad += from early test of implementing different iso labels based on
++  if there is a variant or not (dennis)
+
 * Wed May 20 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.7.20150520.gitdc1be3e
 - make sure we treat the isfinal option as a boolean when fetching it (dennis)
 - if there is a variant use it in the volume id and shorten it. this will make
