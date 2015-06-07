@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.0
-Release:        0.8%{?dist}.20150520.gitff77a92
+iRelease:        0.9%{?dist}.20150607.gitef7c78c
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -13,8 +13,21 @@ Requires:       lorax >= 22.1
 Requires:       repoview
 Requires:       python-lockfile
 Requires:       kobo
+Requires:       kobo-rpmlib
 Requires:       python-productmd
 Requires:       python-kickstart
+Requires:       libselinux-python
+Requires:       createrepo_c
+Requires:       python-lxml
+Requires:       koji
+Requires:       jigdo
+Requires:       cvs
+Requires:       yum-utils
+Requires:       isomd5sum
+Requires:       genisoimage
+Requires:       gettext
+Requires:       syslinux
+Requires:       git
 
 BuildRequires:  python-devel, python-setuptools
 
@@ -46,6 +59,29 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 /var/cache/pungi
 
 %changelog
+* Sun Jun 07 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.9.20150607.gitef7c78c
+- update docs now devel-4-pungi is merged to master, minor spelling fixes
+  (pbrobinson)
+- Fix remaining productmd issues. (dmach)
+- Revert "refactor metadata.py to use productmd's compose.dump for composeinfo"
+  (dmach)
+- Fix LoraxTreeInfo class inheritance. (dmach)
+- Fix pungi -> pungi_wrapper namespace issue. (dmach)
+- fix arg order for checksums.add (admiller)
+- update for productmd checksums.add to TreeInfo (admiller)
+- fix product -> release namespace change for productmd (admiller)
+- update arch manifest.add config order for productmd api call (admiller)
+- update for new productmd named args to rpms (admiller)
+- fix pungi vs pungi_wrapper namespacing in method_deps.py (admiller)
+- add createrepo_c Requires to pungi.spec (admiller)
+- add comps_filter (admiller)
+- refactor metadata.py to use productmd's compose.dump for composeinfo instead
+  of pungi compose_to_composeinfo (admiller)
+- Update compose, phases{buildinstall,createiso,gather/__ini__} to use correct
+  productmd API calls (admiller)
+- Use libselinux-python instead of subprocess (lmacken)
+- Add README for contributors (admiller)
+
 * Wed May 20 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.8.20150520.gitff77a92
 - fix up bad += from early test of implementing different iso labels based on
   if there is a variant or not (dennis)
