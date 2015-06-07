@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.0
-iRelease:        0.9%{?dist}.20150607.gitef7c78c
+Release:        0.9%{?dist}.20150607.gitef7c78c
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
