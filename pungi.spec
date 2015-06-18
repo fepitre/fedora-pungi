@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.0.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -59,6 +59,9 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 /var/cache/pungi
 
 %changelog
+* Thu Jun 18 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.0.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
+
 * Thu Jun 11 2015 Dennis Gilmore <dennis@ausil.us> - 4.0.1-1
 - wrap check for selinux enforcing in a try except (dennis)
 - pull in gather.py patches from dmach for test compose (admiller)
