@@ -48,7 +48,7 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %files
 %license COPYING GPL
-%doc AUTHORS doc/README
+%doc AUTHORS doc/*
 %{python_sitelib}/%{name}
 %{python_sitelib}/%{name}-%{version}-py?.?.egg-info
 %{_bindir}/*
