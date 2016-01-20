@@ -1,5 +1,5 @@
 Name:           pungi
-Version:        4.0.3
+Version:        4.0.4
 Release:        1%{?dist}
 Summary:        Distribution compose tool
 
@@ -20,13 +20,11 @@ Requires:       libselinux-python
 Requires:       createrepo_c
 Requires:       python-lxml
 Requires:       koji
-Requires:       jigdo
 Requires:       cvs
 Requires:       yum-utils
 Requires:       isomd5sum
 Requires:       genisoimage
 Requires:       gettext
-#Requires:       syslinux
 Requires:       git
 
 BuildRequires:  python-devel, python-setuptools
@@ -56,6 +54,67 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 /var/cache/pungi
 
 %changelog
+* Wed Jan 20 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.4-1
+- 4.0.4 release (dennis)
+- Merge #123 `Live images: add repo from another variant` (ausil)
+- Merge #125 `[image-build] Stop creating wrong arch dirs` (ausil)
+- Toggle multilib per variant (lsedlar)
+- [live-images] Code cleanup (lsedlar)
+- [live-images] Add documentation (lsedlar)
+- [live-images] Add repos from other variants (lsedlar)
+- [image-build] Stop creating wrong arch dirs (lsedlar)
+- Enable identifying variants in exception traces (lsedlar)
+- Store which deliverables failed (lsedlar)
+- scm.py: use git clone instead git archive for http(s):// (lkocman)
+- Fix filtering of system release packages (lsedlar)
+- Merge #114 `Use install tree/repo from another variant for image build`
+  (ausil)
+- Make system release package filtering optional (lsedlar)
+- [image-build] Optionally do not break whole compose (lsedlar)
+- [image-build] Refactoring (lsedlar)
+- [image-build] Use repo from another variant (lsedlar)
+- [image-build] Take install tree from another variant (lsedlar)
+- Add missing formats to volumeid and image name (lsedlar)
+- [image-build] Use single koji task per variant (lsedlar)
+- Fix image-build modifying config (lsedlar)
+- Fix missing checksums in .treeinfo (lsedlar)
+- Don't crash on generating volid without variant (lsedlar)
+- Merge #99 `Add option to specify non-failing stuff` (ausil)
+- Add repo from current compose (lsedlar)
+- Fix getting compose topdir in CreateImage build thread (lsedlar)
+- Add option to specify non-failing stuff (lsedlar)
+- Allow customizing image name and volume id (lsedlar)
+- Fix notifier tests (lsedlar)
+- Publish a url instead of a file path. (rbean)
+- Add 'topdir' to all fedmsg/notifier messages. (rbean)
+- Merge #75 `Start of development guide` (ausil)
+- Merge #88 `Resolve HEAD in ksurl to actual hash` (ausil)
+- Merge #87 `Add support for customizing lorax options` (ausil)
+- Update fedmsg notification hook to use appropriate config. (rbean)
+- we need to ensure that we send all the tasks to koji on the correct arch
+  (dennis)
+- Resolve HEAD in ksurl to actual hash (lsedlar)
+- Add support for customizing lorax options (lsedlar)
+- Run lorax in separate dirs for each variant (lsedlar)
+- Merge #84 `Allow specifying --installpkgs for lorax` (ausil)
+- Merge #83 `Fix recently discovered bugs` (ausil)
+- Merge #82 `indentation fixs correcting dvd creation` (ausil)
+- Merge #69 `Move messaging into cli options and simplify it` (ausil)
+- Start lorax for each variant separately (lsedlar)
+- Update lorax wrapper to use --installpkgs (lsedlar)
+- Allow specifying which packages to install in variants xml (lsedlar)
+- Add basic tests for buildinstall phase (lsedlar)
+- Fix generating checksum files (lsedlar)
+- Use lowercase hashed directories (lsedlar)
+- indentation fixs correcting dvd creation (dennis)
+- remove glibc32 from the runroot tasks (dennis)
+- fix up the pungi-fedmesg-notification script name (dennis)
+- Add overview of Pungi to documentation (lsedlar)
+- Move messaging into cli options (lsedlar)
+- Extend contributing guide (lsedlar)
+- Load multilib configuration from local dir in development (lsedlar)
+- Allow running scripts with any python in PATH (lsedlar)
+
 * Tue Aug 08 2015 Dennis Gilmore <dennis@ausil.us> 4.0.3-1
 - Merge #54 `fix log_info for image_build (fails if image_build is skipped)`
   (lkocman)
