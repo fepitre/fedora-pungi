@@ -1,12 +1,15 @@
 Name:           pungi
-Version:        4.0.4
-Release:        2%{?dist}
+Version:        4.0.5
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
+BuildRequires:  python-nose, python-nose-cov, python-mock
+BuildRequires:  python-devel, python-setuptools
+
 Requires:       createrepo >= 0.4.11
 Requires:       yum => 3.4.3-28
 Requires:       lorax >= 22.1
@@ -27,8 +30,6 @@ Requires:       genisoimage
 Requires:       gettext
 Requires:       git
 
-BuildRequires:  python-devel, python-setuptools
-
 BuildArch:      noarch
 
 %description
@@ -44,6 +45,13 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 %{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
 %{__install} -d $RPM_BUILD_ROOT/var/cache/pungi
 
+%check
+./tests/data/specs/build.sh
+%{__python} setup.py test
+nosetests --exe --with-cov --cov-report html --cov-config tox.ini
+#TODO: enable compose test
+#cd tests && ./test_compose.sh
+
 %files
 %license COPYING GPL
 %doc AUTHORS doc/*
@@ -54,6 +62,80 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 /var/cache/pungi
 
 %changelog
+* Tue Feb 23 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.5-1
+- [tests] Fix wrong checks in buildinstall tests (lsedlar)
+- [tests] Use temporary files for buildinstall (lsedlar)
+- [tests] Do not mock open for koji wrapper tests (lsedlar)
+- Merge #179 `Update makefile targets for testing` (ausil)
+- Update makefile targets for testing (lsedlar)
+- [live-images] Set type to raw-xz for appliances (lsedlar)
+- [live-images] Correctly create format (lsedlar)
+- [tests] Dummy compose is no longer private (lsedlar)
+- [tests] Move buildinstall tests to new infrastructure (lsedlar)
+- [tests] Use real paths module in testing (lsedlar)
+- [tests] Move dummy testing compose into separate module (lsedlar)
+- [live-images] Create image dir if needed (lsedlar)
+- [live-images] Add images to manifest (lsedlar)
+- [live-images] Fix path processing (lsedlar)
+- [live-images] Move repo calculation to separate method (lsedlar)
+- [koji-wrapper] Fix getting results from spin-appliance (lsedlar)
+- [live-images] Filter non-image results (lsedlar)
+- [live-images] Rename repos_from to repo_from (lsedlar)
+- [koji-wrapper] Add test for passing release to image-build (lsedlar)
+- [live-images] Automatically populate release with date and respin (lsedlar)
+- [live-media] Respect release set in configuration (lsedlar)
+- [live-images] Build all images specified in config (lsedlar)
+- [live-media] Don't create $basedir arch (lsedlar)
+- Update tests (lsedlar)
+- do not ad to image build and live tasks the variant if it is empty (dennis)
+- when a variant is empty do not add it to the repolist for livemedia (dennis)
+- [live-media] Update tests to use $basearch (lsedlar)
+- [buildinstall] Don't run lorax for empty variants (lsedlar)
+- Merge #159 `use $basearch not $arch in livemedia tasks` (lubomir.sedlar)
+- Merge #158 `do not uses pipes.quotes in livemedia tasks` (lubomir.sedlar)
+- Add documentation for signing support that was added by previous commit
+  (tmlcoch)
+- Support signing of rpm wrapped live images (tmlcoch)
+- Fix terminology - Koji uses sigkey not level (tmlcoch)
+- use $basearch not $arch in livemedia tasks (dennis)
+- do not uses pipes.quotes in livemedia tasks (dennis)
+- [live-images] Don't tweak kickstarts (lsedlar)
+- Allow specifying empty variants (lsedlar)
+- [createrepo] Remove dead assignments (lsedlar)
+- Keep empty query string in resolved git url (lsedlar)
+- [image-build] Use dashes as arch separator in log (lsedlar)
+- [buildinstall] Stop parsing task_id (lsedlar)
+- [koji-wrapper] Get task id from failed runroot (lsedlar)
+- [live-media] Pass ksurl to koji (lsedlar)
+- Merge #146 `[live-media] Properly calculate iso dir` (ausil)
+- [live-media] Properly calculate iso dir (lsedlar)
+- [image-build] Fix tests (lsedlar)
+- add image-build sections (lkocman)
+- [koji-wrapper] Add tests for get_create_image_cmd (lsedlar)
+- [live-images] Add support for spin-appliance (lsedlar)
+- [live-media] Koji option is ksfile, not kickstart (lsedlar)
+- [live-media] Use install tree from another variant (lsedlar)
+- [live-media] Put images into iso dir (lsedlar)
+- [image-build] Koji expects arches as a comma separated string (lsedlar)
+- Merge #139 `Log more details when any deliverable fails` (ausil)
+- [live-media] Version is required argument (lsedlar)
+- [koji-wrapper] Only parse output on success (lsedlar)
+- [koji-wrapper] Add tests for runroot wrapper (lsedlar)
+- [buildinstall] Improve logging (lsedlar)
+- Log more details about failed deliverable (lsedlar)
+- [image-build] Fix failable tests (lsedlar)
+- Merge #135 `Add live media support` (ausil)
+- Merge #133 `media_split: add logger support. Helps with debugging space
+  issues on dvd media` (ausil)
+- [live-media] Add live media phase (lsedlar)
+- [koji-wrapper] Add support for spin-livemedia (lsedlar)
+- [koji-wrapper] Use more descriptive method names (lsedlar)
+- [image-build] Remove dead code (lsedlar)
+- media_split: add logger support. Helps with debugging space issues on dvd
+  media (lkocman)
+- [image-build] Allow running image build scratch tasks (lsedlar)
+- [image-build] Allow dynamic release for images (lsedlar)
+
 * Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 4.0.4-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
 
