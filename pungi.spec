@@ -8,7 +8,7 @@ License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
 BuildRequires:  python-nose, python-nose-cov, python-mock
-BuildRequires:  python-devel, python-setuptools, python2-configparser, python2-productmd
+BuildRequires:  python-devel, python-setuptools, python2-productmd
 BuildRequires:  python-lockfile, kobo, kobo-rpmlib, python-kickstart, createrepo_c
 BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax
 BuildRequires:  yum => 3.4.3-28, createrepo >= 0.4.11
