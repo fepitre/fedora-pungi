@@ -2,7 +2,7 @@
 
 Name:           pungi
 Version:        3.12
-Release:        3%{?dist}
+Release:        3%{?dist}.1
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -58,6 +58,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Feb 26 2016 Dennis Gilmore <dennis@ausil.us> - 3.12-3.1
+- rebuild
+
 * Mon Dec 15 2014 Dennis Gilmore <dennis@ausil.us> - 3.12-3
 - add patch to make the dvd bootable on aarch64
 
