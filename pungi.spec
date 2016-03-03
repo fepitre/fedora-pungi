@@ -1,5 +1,5 @@
 Name:           pungi
-Version:        4.0.6
+Version:        4.0.7
 Release:        1%{?dist}
 Summary:        Distribution compose tool
 
@@ -65,6 +65,19 @@ nosetests --exe --with-cov --cov-report html --cov-config tox.ini
 /var/cache/pungi
 
 %changelog
+* Thu Mar 03 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.7-1
+- Limit the variants with config option 'tree_variants' (dennis)
+- [createrepo-wrapper] Fix --deltas argument (lsedlar)
+- [createrepo-wrapper] Add tests (lsedlar)
+- [koji-wrapper] Retry watching on connection errors (lsedlar)
+- [createrepo-wrapper] Refactor code (lsedlar)
+- [paths] Use variant.uid explicitly (lsedlar)
+- [createrepo] Add tests (lsedlar)
+- [createrepo] Refactor code (lsedlar)
+- [image-build] Fix resolving git urls (lsedlar)
+- [testphase] Don't run repoclosure for empty variants (lsedlar)
+- [live-images] No manifest for appliances (lsedlar)
+
 * Fri Feb 26 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.6-1
 - push the 4.0 docs to a 4.0 branch (dennis)
 - [live-images] Rename log file (lsedlar)
