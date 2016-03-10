@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.0.9
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -66,6 +66,9 @@ nosetests --exe --with-cov --cov-report html --cov-config tox.ini
 /var/cache/pungi
 
 %changelog
+* Thu Mar 10 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.9-2
+- new tarball with upstream commits for test suite and pkgset
+
 * Thu Mar 10 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.9-1
 - [init] Update documentation (lsedlar)
 - [init] Iterate over arches just once (lsedlar)
