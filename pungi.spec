@@ -1,5 +1,5 @@
 Name:           pungi
-Version:        4.1.0
+Version:        4.1.1
 Release:        1%{?dist}
 Summary:        Distribution compose tool
 
@@ -13,6 +13,12 @@ BuildRequires:  python-devel, python-setuptools, python2-productmd
 BuildRequires:  python-lockfile, kobo, kobo-rpmlib, python-kickstart, createrepo_c
 BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax
 BuildRequires:  yum => 3.4.3-28, createrepo >= 0.4.11
+#deps for doc building
+BuildRequires:  python-sphinx, texlive-latex-bin-bin, texlive-collection-fontsrecommended
+BuildRequires:  texlive-times, texlive-cmap, texlive-babel-english, texlive-fancyhdr
+BuildRequires:  texlive-fancybox, texlive-titlesec, texlive-framed, texlive-threeparttable
+BuildRequires:  texlive-mdwtools, texlive-wrapfig, texlive-parskip, texlive-upquote
+BuildRequires:  texlive-multirow
 
 Requires:       createrepo >= 0.4.11
 Requires:       yum => 3.4.3-28
@@ -44,28 +50,66 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %build
 %{__python} setup.py build
+cd doc
+make latexpdf
+make epub
+make text
+make man
+gzip _build/man/pungi.1
 
 %install
 %{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
 %{__install} -d $RPM_BUILD_ROOT/var/cache/pungi
+%{__install} -d $RPM_BUILD_ROOT%{_mandir}/man1
+%{__install} doc/_build/man/pungi.1.gz $RPM_BUILD_ROOT%{_mandir}/man1
 
 %check
 ./tests/data/specs/build.sh
 %{__python} setup.py test
 nosetests --exe --with-cov --cov-report html --cov-config tox.ini
-#TODO: enable compose test
-#cd tests && ./test_compose.sh
+cd tests && ./test_compose.sh
 
 %files
 %license COPYING GPL
-%doc AUTHORS doc/*
+%doc AUTHORS doc/_build/latex/Pungi.pdf doc/_build/epub/Pungi.epub doc/_build/text/*
 %{python_sitelib}/%{name}
 %{python_sitelib}/%{name}-%{version}-py?.?.egg-info
 %{_bindir}/*
+%{_mandir}/man1/pungi.1.gz
 %{_datadir}/pungi
 /var/cache/pungi
 
 %changelog
+* Fri Apr 01 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.1-1
+- install scripts (dennis)
+- Merge #242 `Fix wrong file permissions` (ausil)
+- Add a utility to validate config (lsedlar)
+- [variants] Stop printing stuff to stderr unconditionally (lsedlar)
+- Fix atomic/ostree config validations (lsedlar)
+- [pungi-wrapper] Remove duplicated code (lsedlar)
+- [checks] Add a check for too restrictive umask (lsedlar)
+- [util] Remove umask manipulation from makedirs (lsedlar)
+- Merge #240 `Filter variants and architectures` (ausil)
+- Filter variants and architectures (lsedlar)
+- Refactor checking for failable deliverables (lsedlar)
+- [buildinstall] Do not crash on failure (lsedlar)
+- Reuse helper in all tests (lsedlar)
+- [atomic] Add atomic_installer phase (lsedlar)
+- [ostree] Add ostree phase (lsedlar)
+- [atomic] Add a script to create ostree repo (lsedlar)
+- Merge #232 `Improve logging by adding subvariants` (ausil)
+- Add compose type to release for images (lsedlar)
+- [image-build] Add traceback on failure (lsedlar)
+- [image-build] Use subvariants in logging output (lsedlar)
+- [live-media] Use subvariants in logging (lsedlar)
+- Add tracebacks to all failable phases (lsedlar)
+- ppc no longer needs magic bits in the iso (pbrobinson)
+- [buildinstall] Add more debugging output (lsedlar)
+- [metadata] Stop crashing on empty path from .treeinfo (lsedlar)
+- [checksums] Add label to file name (lsedlar)
+- [buildinstall] Use customized dvd disc type (lsedlar)
+- image_build: fix subvariant handling (awilliam)
+
 * Fri Mar 11 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.0-1
 - upstream 4.1.0 release
 
