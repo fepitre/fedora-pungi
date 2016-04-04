@@ -1,0 +1,221 @@
+From e34bd2763c0d0776693f8842639b35b55dcb511b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Mon, 4 Apr 2016 09:38:48 +0200
+Subject: [PATCH 1/3] [checksum] Add arch to file name
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This allows the checksum file to include the architecture.
+
+Fixes: #243
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ doc/configuration.rst          | 16 +++++++++++++---
+ pungi/compose.py               | 32 +++++++-------------------------
+ pungi/phases/image_checksum.py | 21 +++++++--------------
+ pungi/util.py                  | 35 ++++++++++++++++++++++++++++-------
+ tests/helpers.py               |  2 ++
+ 5 files changed, 57 insertions(+), 49 deletions(-)
+
+diff --git a/doc/configuration.rst b/doc/configuration.rst
+index 23bcbcf..7d4b91e 100644
+--- a/doc/configuration.rst
++++ b/doc/configuration.rst
+@@ -1051,9 +1051,19 @@ Media Checksums Settings
+     prefix to that name
+ 
+     It is possible to use format strings that will be replace by actual values.
+-    The allowed keys are ``%(release_showrt)s``, ``%(release_short)s``,
+-    ``%(release_id)s``, ``%(variant)s``, ``%(version)s``, ``%(date)s``,
+-    ``%(type_suffix)s``, ``%(label)s`` and ``%(respin)s``
++    The allowed keys are:
++
++      * ``arch``
++      * ``compose_id``
++      * ``date``
++      * ``label``
++      * ``label_major_version``
++      * ``release_short``
++      * ``respin``
++      * ``type``
++      * ``type_suffix``
++      * ``version``
++      * ``version``
+ 
+     For example, for Fedora the prefix should be
+     ``%(release_short)s-%(variant)s-%(version)s-%(date)s%(type_suffix)s.%(respin)s``.
+diff --git a/pungi/compose.py b/pungi/compose.py
+index 8935a0f..f764129 100644
+--- a/pungi/compose.py
++++ b/pungi/compose.py
+@@ -33,7 +33,7 @@ from productmd.images import Images
+ from pungi.wrappers.variants import VariantsXmlParser
+ from pungi.paths import Paths
+ from pungi.wrappers.scm import get_file_from_scm
+-from pungi.util import makedirs, get_arch_variant_data
++from pungi.util import makedirs, get_arch_variant_data, get_format_substs
+ from pungi.metadata import compose_to_composeinfo
+ 
+ 
+@@ -270,25 +270,6 @@ class Compose(kobo.log.LoggingBase):
+             return
+         return open(self.status_file, "r").read().strip()
+ 
+-    def get_format_substs(self, **kwargs):
+-        """Return a dict of basic format substitutions.
+-
+-        Any kwargs will be added as well.
+-        """
+-        substs = {
+-            'compose_id': self.compose_id,
+-            'release_short': self.ci_base.release.short,
+-            'version': self.ci_base.release.version,
+-            'date': self.compose_date,
+-            'respin': self.compose_respin,
+-            'type': self.compose_type,
+-            'type_suffix': self.compose_type_suffix,
+-            'label': self.compose_label,
+-            'label_major_version': self.compose_label_major_version,
+-        }
+-        substs.update(kwargs)
+-        return substs
+-
+     def get_image_name(self, arch, variant, disc_type='dvd',
+                        disc_num=1, suffix='.iso', format=None):
+         """Create a filename for image with given parameters.
+@@ -310,11 +291,12 @@ class Compose(kobo.log.LoggingBase):
+             variant_uid = variant.parent.uid
+         else:
+             variant_uid = variant.uid
+-        args = self.get_format_substs(variant=variant_uid,
+-                                      arch=arch,
+-                                      disc_type=disc_type,
+-                                      disc_num=disc_num,
+-                                      suffix=suffix)
++        args = get_format_substs(self,
++                                 variant=variant_uid,
++                                 arch=arch,
++                                 disc_type=disc_type,
++                                 disc_num=disc_num,
++                                 suffix=suffix)
+         try:
+             return format % args
+         except KeyError as err:
+diff --git a/pungi/phases/image_checksum.py b/pungi/phases/image_checksum.py
+index c9ef321..aa74c4f 100644
+--- a/pungi/phases/image_checksum.py
++++ b/pungi/phases/image_checksum.py
+@@ -4,6 +4,7 @@ import os
+ from kobo import shortcuts
+ 
+ from .base import PhaseBase
++from ..util import get_format_substs
+ 
+ 
+ MULTIPLE_CHECKSUMS_ERROR = (
+@@ -66,29 +67,21 @@ class ImageChecksumPhase(PhaseBase):
+             for arch in self.compose.im.images[variant]:
+                 for image in self.compose.im.images[variant][arch]:
+                     path = os.path.dirname(os.path.join(top_dir, image.path))
+-                    images.setdefault((variant, path), set()).add(image)
++                    images.setdefault((variant, arch, path), set()).add(image)
+         return images
+ 
+-    def _get_base_filename(self, variant):
++    def _get_base_filename(self, variant, arch):
+         base_checksum_name = self.compose.conf.get('media_checksum_base_filename', '')
+         if base_checksum_name:
+-            base_checksum_name = base_checksum_name % {
+-                'release_short': self.compose.ci_base.release.short,
+-                'release_id': self.compose.ci_base.release_id,
+-                'variant': variant,
+-                'version': self.compose.ci_base.release.version,
+-                'date': self.compose.compose_date,
+-                'type_suffix': self.compose.compose_type_suffix,
+-                'respin': self.compose.compose_respin,
+-                'label': self.compose.compose_label,
+-            }
++            substs = get_format_substs(self.compose, variant=variant, arch=arch)
++            base_checksum_name = base_checksum_name % substs
+             base_checksum_name += '-'
+         return base_checksum_name
+ 
+     def run(self):
+-        for (variant, path), images in self._get_images().iteritems():
++        for (variant, arch, path), images in self._get_images().iteritems():
+             checksums = {}
+-            base_checksum_name = self._get_base_filename(variant)
++            base_checksum_name = self._get_base_filename(variant, arch)
+             for image in images:
+                 filename = os.path.basename(image.path)
+                 full_path = os.path.join(path, filename)
+diff --git a/pungi/util.py b/pungi/util.py
+index f4f5e33..6a6ccf3 100644
+--- a/pungi/util.py
++++ b/pungi/util.py
+@@ -370,13 +370,14 @@ def get_volid(compose, arch, variant=None, escape_spaces=False, disc_type=False)
+         if not variant_uid and "%(variant)s" in i:
+             continue
+         try:
+-            volid = i % compose.get_format_substs(variant=variant_uid,
+-                                                  release_short=release_short,
+-                                                  version=release_version,
+-                                                  arch=arch,
+-                                                  disc_type=disc_type or '',
+-                                                  base_product_short=base_product_short,
+-                                                  base_product_version=base_product_version)
++            volid = i % get_format_substs(compose,
++                                          variant=variant_uid,
++                                          release_short=release_short,
++                                          version=release_version,
++                                          arch=arch,
++                                          disc_type=disc_type or '',
++                                          base_product_short=base_product_short,
++                                          base_product_version=base_product_version)
+         except KeyError as err:
+             raise RuntimeError('Failed to create volume id: unknown format element: %s' % err.message)
+         volid = _apply_substitutions(compose, volid)
+@@ -472,3 +473,23 @@ def failable(compose, variant, arch, deliverable, msg=None):
+             compose.log_info(str(exc))
+             tb = traceback.format_exc()
+             compose.log_debug(tb)
++
++
++def get_format_substs(compose, **kwargs):
++    """Return a dict of basic format substitutions.
++
++    Any kwargs will be added as well.
++    """
++    substs = {
++        'compose_id': compose.compose_id,
++        'release_short': compose.ci_base.release.short,
++        'version': compose.ci_base.release.version,
++        'date': compose.compose_date,
++        'respin': compose.compose_respin,
++        'type': compose.compose_type,
++        'type_suffix': compose.compose_type_suffix,
++        'label': compose.compose_label,
++        'label_major_version': compose.compose_label_major_version,
++    }
++    substs.update(kwargs)
++    return substs
+diff --git a/tests/helpers.py b/tests/helpers.py
+index 9a0983c..11c07a4 100644
+--- a/tests/helpers.py
++++ b/tests/helpers.py
+@@ -23,9 +23,11 @@ class DummyCompose(object):
+         self.supported = True
+         self.compose_date = '20151203'
+         self.compose_type_suffix = '.t'
++        self.compose_type = 'test'
+         self.compose_respin = 0
+         self.compose_id = 'Test-20151203.0.t'
+         self.compose_label = None
++        self.compose_label_major_version = None
+         self.image_release = '20151203.t.0'
+         self.ci_base = mock.Mock(
+             release_id='Test-1.0',
+-- 
+2.7.3
+

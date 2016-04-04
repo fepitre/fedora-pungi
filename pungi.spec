@@ -1,12 +1,16 @@
 Name:           pungi
 Version:        4.1.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
+Patch0:         0001-checksum-Add-arch-to-file-name.patch
+Patch1:         0002-atomic-Stop-creating-the-os-directory.patch
+Patch2:         0003-ostree-Fix-call-to-kobo.shortcuts.run.patch
+
 
 BuildRequires:  python-nose, python-nose-cov, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -48,6 +52,9 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
+%patch0 -p1 
+%patch1 -p1
+%patch2 -p1
 
 %build
 %{__python} setup.py build
@@ -81,6 +88,9 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Mon Apr 04 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.1-2
+- add upstream patches for bugfixes in ostree and checksums
+
 * Fri Apr 01 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.1-1
 - install scripts (dennis)
 - Merge #242 `Fix wrong file permissions` (ausil)
