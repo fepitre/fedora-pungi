@@ -1,0 +1,54 @@
+From c52cb198c5ffc0593720c927f469793bedb3d4a4 Mon Sep 17 00:00:00 2001
+From: Peter Robinson <pbrobinson@gmail.com>
+Date: Mar 16 2016 22:03:33 +0000
+Subject: Fix locations of ppc lorax templates for PowerPC iso creation
+
+
+PowerPC needs a mapping file for iso creation, with lorax moving the
+templates locations in 24+ we need to update this so runroot iso
+creation doesn't fail.
+
+Signed-off-by: Peter Robinson <pbrobinson@fedoraproject.org>
+
+---
+
+diff --git a/pungi/gather.py b/pungi/gather.py
+index 2e5048c..c27070f 100644
+--- a/pungi/gather.py
++++ b/pungi/gather.py
+@@ -1590,7 +1590,7 @@ class Pungi(PungiBase):
+             return
+ 
+         isolist = []
+-        ppcbootinfo = '/usr/share/lorax/config_files/ppc'
++        ppcbootinfo = '/usr/share/lorax/templates.d/99-generic/config_files/ppc'
+ 
+         pungi.util._ensuredir(self.isodir, self.logger,
+                            force=self.config.getboolean('pungi', 'force'),
+diff --git a/pungi/phases/createiso.py b/pungi/phases/createiso.py
+index f88b20d..eab3133 100644
+--- a/pungi/phases/createiso.py
++++ b/pungi/phases/createiso.py
+@@ -142,7 +142,7 @@ class CreateisoPhase(PhaseBase):
+                         buildinstall_method = self.compose.conf["buildinstall_method"]
+                         if buildinstall_method == "lorax":
+                             # TODO: $arch instead of ppc
+-                            mkisofs_kwargs["boot_args"] = iso.get_boot_options(arch, "/usr/share/lorax/config_files/ppc")
++                            mkisofs_kwargs["boot_args"] = iso.get_boot_options(arch, "/usr/share/lorax/templates.d/99-generic/config_files/ppc")
+                         elif buildinstall_method == "buildinstall":
+                             mkisofs_kwargs["boot_args"] = iso.get_boot_options(arch, "/usr/lib/anaconda-runtime/boot")
+ 
+diff --git a/pungi/phases/product_img.py b/pungi/phases/product_img.py
+index 687d261..8da4e23 100644
+--- a/pungi/phases/product_img.py
++++ b/pungi/phases/product_img.py
+@@ -230,7 +230,7 @@ def rebuild_boot_iso(compose, arch, variant, package_sets):
+     boot_files = None
+     if buildinstall_method == "lorax":
+         # TODO: $arch instead of ppc
+-        mkisofs_kwargs["boot_args"] = iso.get_boot_options(arch, "/usr/share/lorax/config_files/ppc")
++        mkisofs_kwargs["boot_args"] = iso.get_boot_options(arch, "/usr/share/lorax/templates.d/99-generic/config_files/ppc")
+     elif buildinstall_method == "buildinstall":
+         boot_files = explode_anaconda(compose, arch, variant, package_sets)
+         mkisofs_kwargs["boot_args"] = iso.get_boot_options(arch, boot_files)
+

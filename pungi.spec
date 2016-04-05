@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -10,7 +10,11 @@ Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name
 Patch0:         0001-checksum-Add-arch-to-file-name.patch
 Patch1:         0002-atomic-Stop-creating-the-os-directory.patch
 Patch2:         0003-ostree-Fix-call-to-kobo.shortcuts.run.patch
-
+Patch3:         0004-ostree-Move-cloning-config-repo-to-chroot.patch
+Patch4:         0005-ostree-Rename-atomic-to-ostree.patch
+Patch5:         0006-ostree-Use-explicit-work-directory.patch
+# bandaid for https://pagure.io/pungi/issue/231 until we get things fixed properly upstream
+Patch6:         c52cb198c5ffc0593720c927f469793bedb3d4a4.patch
 
 BuildRequires:  python-nose, python-nose-cov, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -55,6 +59,10 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 %patch0 -p1 
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
+%patch4 -p1
+%patch5 -p1
+%patch6 -p1
 
 %build
 %{__python} setup.py build
@@ -88,6 +96,10 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Tue Apr 05 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.1-3
+- add some more ostree fixes
+- add a bandaid for ppc until we get a proper fix
+
 * Mon Apr 04 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.1-2
 - add upstream patches for bugfixes in ostree and checksums
 

@@ -1,0 +1,168 @@
+From 79ee9a4ffaf4627eade703c9bd819c870258745f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Tue, 5 Apr 2016 12:46:59 +0200
+Subject: [PATCH 6/6] [ostree] Use explicit work directory
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/ostree.py             | 26 +++++++++++++++++++-------
+ pungi/phases/ostree.py      |  2 ++
+ tests/test_ostree_phase.py  |  1 +
+ tests/test_ostree_script.py |  9 ++++-----
+ 4 files changed, 26 insertions(+), 12 deletions(-)
+
+diff --git a/pungi/ostree.py b/pungi/ostree.py
+index de2cfcd..c0c8a04 100644
+--- a/pungi/ostree.py
++++ b/pungi/ostree.py
+@@ -8,17 +8,26 @@ It is expected to be runnable in Koji runroot.
+ import argparse
+ import os
+ from kobo import shortcuts
+-import tempfile
+-import shutil
+ import re
++import errno
+ 
+ from .wrappers import scm
+ 
+ 
++def ensure_dir(path):
++    try:
++        os.makedirs(path)
++    except OSError as err:
++        if err.errno != errno.EEXIST:
++            raise
++    return path
++
++
+ def make_log_file(log_dir, filename):
+     """Return path to log file with given name, if log_dir is set."""
+     if not log_dir:
+         return None
++    ensure_dir(log_dir)
+     return os.path.join(log_dir, '{}.log'.format(filename))
+ 
+ 
+@@ -26,14 +35,15 @@ def init_ostree_repo(repo, log_dir=None):
+     """If the ostree repo does not exist, initialize it."""
+     log_file = make_log_file(log_dir, 'init-ostree-repo')
+     if not os.path.isdir(repo):
++        ensure_dir(repo)
+         shortcuts.run(['ostree', 'init', '--repo={}'.format(repo), '--mode=archive-z2'],
+-                      logfile=log_file)
++                      show_cmd=True, logfile=log_file)
+ 
+ 
+ def make_ostree_repo(repo, config, log_dir=None):
+     log_file = make_log_file(log_dir, 'create-ostree-repo')
+     shortcuts.run(['rpm-ostree', 'compose', 'tree', '--repo={}'.format(repo), config],
+-                  logfile=log_file)
++                  show_cmd=True, logfile=log_file)
+ 
+ 
+ def clone_repo(repodir, url, branch):
+@@ -52,7 +62,7 @@ def tweak_file(path, source_repo):
+     with open(path, 'r') as f:
+         contents = f.read()
+     replacement = 'baseurl={}'.format(source_repo)
+-    contents = re.sub(r'^mirrorlist=.*$', replacement, contents)
++    contents = re.sub(r'^mirrorlist=.*$', replacement, contents, flags=re.MULTILINE)
+     with open(path, 'w') as f:
+         f.write(contents)
+ 
+@@ -65,19 +75,21 @@ def prepare_config(workdir, config_url, config_branch, source_repo):
+ 
+ 
+ def run(opts):
+-    workdir = tempfile.mkdtemp()
++    workdir = ensure_dir(opts.work_dir)
+     repodir = prepare_config(workdir, opts.config_url, opts.config_branch,
+                              opts.source_repo)
++    ensure_dir(repodir)
+     init_ostree_repo(opts.ostree_repo, log_dir=opts.log_dir)
+     treefile = os.path.join(repodir, opts.treefile)
+     make_ostree_repo(opts.ostree_repo, treefile, log_dir=opts.log_dir)
+-    shutil.rmtree(workdir)
+ 
+ 
+ def main(args=None):
+     parser = argparse.ArgumentParser()
+     parser.add_argument('--log-dir',
+                         help='where to log output')
++    parser.add_argument('--work-dir', required=True,
++                        help='where to put temporary files')
+ 
+     parser.add_argument('ostree_repo', metavar='OSTREE_REPO',
+                         help='where to put the ostree repo')
+diff --git a/pungi/phases/ostree.py b/pungi/phases/ostree.py
+index 810716e..77e4838 100644
+--- a/pungi/phases/ostree.py
++++ b/pungi/phases/ostree.py
+@@ -51,9 +51,11 @@ class OSTreeThread(WorkerThread):
+         self.pool.log_info('[DONE ] %s' % msg)
+ 
+     def _run_ostree_cmd(self, compose, variant, arch, config, source_repo):
++        workdir = os.path.join(compose.paths.work.topdir(arch), 'ostree')
+         cmd = [
+             'pungi-make-ostree',
+             '--log-dir={}'.format(self.logdir),
++            '--work-dir={}'.format(workdir),
+             '--treefile={}'.format(config['treefile']),
+             '--config-url={}'.format(config['config_url']),
+             '--config-branch={}'.format(config.get('config_branch', 'master')),
+diff --git a/tests/test_ostree_phase.py b/tests/test_ostree_phase.py
+index 9f8fdf1..7617dde 100755
+--- a/tests/test_ostree_phase.py
++++ b/tests/test_ostree_phase.py
+@@ -103,6 +103,7 @@ class OSTreeThreadTest(helpers.PungiTestCase):
+                          [mock.call('rrt', 'x86_64',
+                                     ['pungi-make-ostree',
+                                      '--log-dir={}/logs/x86_64/ostree'.format(self.topdir),
++                                     '--work-dir={}/work/x86_64/ostree'.format(self.topdir),
+                                      '--treefile=fedora-atomic-docker-host.json',
+                                      '--config-url=https://git.fedorahosted.org/git/fedora-atomic.git',
+                                      '--config-branch=f24',
+diff --git a/tests/test_ostree_script.py b/tests/test_ostree_script.py
+index 744af4d..7b59680 100755
+--- a/tests/test_ostree_script.py
++++ b/tests/test_ostree_script.py
+@@ -21,17 +21,16 @@ class OstreeScriptTest(helpers.PungiTestCase):
+         helpers.touch(os.path.join(target, 'fedora-atomic-docker-host.json'))
+         helpers.touch(os.path.join(target, 'fedora-rawhide.repo'))
+ 
+-    @mock.patch('tempfile.mkdtemp')
+     @mock.patch('kobo.shortcuts.run')
+     @mock.patch('pungi.wrappers.scm.get_dir_from_scm')
+-    def test_full_run(self, get_dir_from_scm, run, tempfile):
+-        tempfile.return_value = self.topdir
++    def test_full_run(self, get_dir_from_scm, run):
+         get_dir_from_scm.side_effect = self._dummy_config_repo
+ 
+         repo = os.path.join(self.topdir, 'atomic')
+ 
+         ostree.main([
+             '--log-dir={}'.format(os.path.join(self.topdir, 'logs', 'Atomic')),
++            '--work-dir={}'.format(self.topdir),
+             '--treefile={}'.format('fedora-atomic-docker-host.json'),
+             '--config-url=https://git.fedorahosted.org/git/fedora-atomic.git',
+             '--config-branch=f24',
+@@ -47,10 +46,10 @@ class OstreeScriptTest(helpers.PungiTestCase):
+         self.assertItemsEqual(
+             run.call_args_list,
+             [mock.call(['ostree', 'init', '--repo={}'.format(repo), '--mode=archive-z2'],
+-                       logfile=self.topdir + '/logs/Atomic/init-ostree-repo.log'),
++                       logfile=self.topdir + '/logs/Atomic/init-ostree-repo.log', show_cmd=True),
+              mock.call(['rpm-ostree', 'compose', 'tree', '--repo={}'.format(repo),
+                         self.topdir + '/config_repo/fedora-atomic-docker-host.json'],
+-                       logfile=self.topdir + '/logs/Atomic/create-ostree-repo.log')])
++                       logfile=self.topdir + '/logs/Atomic/create-ostree-repo.log', show_cmd=True)])
+ 
+ 
+ if __name__ == '__main__':
+-- 
+2.7.3
+

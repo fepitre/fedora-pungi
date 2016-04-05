@@ -1,0 +1,1494 @@
+From f98a506e86e15409be6733d37695303443a5452d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Tue, 5 Apr 2016 09:13:01 +0200
+Subject: [PATCH 5/6] [ostree] Rename atomic to ostree
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ bin/pungi-config-validate            |   2 +-
+ bin/pungi-koji                       |   8 +-
+ bin/pungi-make-ostree                |   4 +-
+ doc/configuration.rst                |  14 +-
+ pungi/atomic.py                      |  95 -----------
+ pungi/ostree.py                      |  95 +++++++++++
+ pungi/phases/__init__.py             |   2 +-
+ pungi/phases/atomic_installer.py     | 134 ---------------
+ pungi/phases/ostree.py               |   8 +-
+ pungi/phases/ostree_installer.py     | 134 +++++++++++++++
+ tests/test_atomic_installer_phase.py | 317 -----------------------------------
+ tests/test_atomic_script.py          |  55 ------
+ tests/test_ostree_installer_phase.py | 317 +++++++++++++++++++++++++++++++++++
+ tests/test_ostree_phase.py           |   8 +-
+ tests/test_ostree_script.py          |  57 +++++++
+ 15 files changed, 626 insertions(+), 624 deletions(-)
+ delete mode 100644 pungi/atomic.py
+ create mode 100644 pungi/ostree.py
+ delete mode 100644 pungi/phases/atomic_installer.py
+ create mode 100644 pungi/phases/ostree_installer.py
+ delete mode 100644 tests/test_atomic_installer_phase.py
+ delete mode 100755 tests/test_atomic_script.py
+ create mode 100644 tests/test_ostree_installer_phase.py
+ create mode 100755 tests/test_ostree_script.py
+
+diff --git a/bin/pungi-config-validate b/bin/pungi-config-validate
+index 20f8094..3d61f11 100755
+--- a/bin/pungi-config-validate
++++ b/bin/pungi-config-validate
+@@ -54,7 +54,7 @@ def run(config, topdir, has_old):
+         pungi.phases.GatherPhase(compose, pkgset_phase),
+         pungi.phases.ExtraFilesPhase(compose, pkgset_phase),
+         pungi.phases.CreaterepoPhase(compose),
+-        pungi.phases.AtomicInstallerPhase(compose),
++        pungi.phases.OstreeInstallerPhase(compose),
+         pungi.phases.OSTreePhase(compose),
+         pungi.phases.ProductimgPhase(compose, pkgset_phase),
+         pungi.phases.CreateisoPhase(compose),
+diff --git a/bin/pungi-koji b/bin/pungi-koji
+index a0eba0e..de59621 100755
+--- a/bin/pungi-koji
++++ b/bin/pungi-koji
+@@ -227,7 +227,7 @@ def run_compose(compose):
+     gather_phase = pungi.phases.GatherPhase(compose, pkgset_phase)
+     extrafiles_phase = pungi.phases.ExtraFilesPhase(compose, pkgset_phase)
+     createrepo_phase = pungi.phases.CreaterepoPhase(compose)
+-    atomic_installer_phase = pungi.phases.AtomicInstallerPhase(compose)
++    ostree_installer_phase = pungi.phases.OstreeInstallerPhase(compose)
+     ostree_phase = pungi.phases.OSTreePhase(compose)
+     productimg_phase = pungi.phases.ProductimgPhase(compose, pkgset_phase)
+     createiso_phase = pungi.phases.CreateisoPhase(compose)
+@@ -242,7 +242,7 @@ def run_compose(compose):
+                   buildinstall_phase, productimg_phase, gather_phase,
+                   extrafiles_phase, createiso_phase, liveimages_phase,
+                   livemedia_phase, image_build_phase, image_checksum_phase,
+-                  test_phase, ostree_phase, atomic_installer_phase):
++                  test_phase, ostree_phase, ostree_installer_phase):
+         if phase.skip():
+             continue
+         try:
+@@ -348,13 +348,13 @@ def run_compose(compose):
+     liveimages_phase.start()
+     image_build_phase.start()
+     livemedia_phase.start()
+-    atomic_installer_phase.start()
++    ostree_installer_phase.start()
+ 
+     createiso_phase.stop()
+     liveimages_phase.stop()
+     image_build_phase.stop()
+     livemedia_phase.stop()
+-    atomic_installer_phase.stop()
++    ostree_installer_phase.stop()
+ 
+     image_checksum_phase.start()
+     image_checksum_phase.stop()
+diff --git a/bin/pungi-make-ostree b/bin/pungi-make-ostree
+index 4066bdc..2800588 100755
+--- a/bin/pungi-make-ostree
++++ b/bin/pungi-make-ostree
+@@ -8,8 +8,8 @@ here = sys.path[0]
+ if here != '/usr/bin':
+     sys.path.insert(0, os.path.dirname(here))
+ 
+-from pungi import atomic
++from pungi import ostree
+ 
+ 
+ if __name__ == '__main__':
+-    atomic.main()
++    ostree.main()
+diff --git a/doc/configuration.rst b/doc/configuration.rst
+index 7d4b91e..36b332a 100644
+--- a/doc/configuration.rst
++++ b/doc/configuration.rst
+@@ -142,7 +142,7 @@ Options
+      * live
+      * image-build
+      * live-media
+-     * atomic_installer
++     * ostree-installer
+ 
+        .. note::
+ 
+@@ -950,7 +950,7 @@ runroot environment.
+     * ``treefile`` -- (*str*) Filename of configuration for ``rpm-ostree``.
+     * ``config_url`` -- (*str*) URL for Git repository with the ``treefile``.
+     * ``source_repo_from`` -- (*str*) Name of variant serving as source repository.
+-    * ``atomic_repo`` -- (*str*) Where to put the atomic repository
++    * ``ostree_repo`` -- (*str*) Where to put the ostree repository
+ 
+     These keys are optional:
+ 
+@@ -968,19 +968,19 @@ Example config
+                 "treefile": "fedora-atomic-docker-host.json",
+                 "config_url": "https://git.fedorahosted.org/git/fedora-atomic.git",
+                 "source_repo_from": "Everything",
+-                "atomic_repo": "/mnt/koji/compose/atomic/Rawhide/"
++                "ostree_repo": "/mnt/koji/compose/atomic/Rawhide/"
+             }
+         })
+     ]
+ 
+ 
+-Atomic Installer Settings
++Ostree Installer Settings
+ =========================
+ 
+-The ``atomic_installer`` phase of *Pungi* can produce installer image bundling
++The ``ostree_installer`` phase of *Pungi* can produce installer image bundling
+ an OSTree repository. This always runs in Koji as a ``runroot`` task.
+ 
+-**atomic**
++**ostree_installer**
+     (*dict*) -- a variant/arch mapping of configuration. The format should be
+     ``[(variant_uid_regex, {arch|*: config_dict})]``.
+ 
+@@ -1010,7 +1010,7 @@ Example config
+ --------------
+ ::
+ 
+-    atomic = [
++    ostree_installer = [
+         ("^Atomic$", {
+             "x86_64": {
+                 "source_repo_from": "Everything",
+diff --git a/pungi/atomic.py b/pungi/atomic.py
+deleted file mode 100644
+index 627ce34..0000000
+--- a/pungi/atomic.py
++++ /dev/null
+@@ -1,95 +0,0 @@
+-# -*- coding: utf-8 -*-
+-
+-"""
+-This module contains functions required by pungi-make-atomic.
+-It is expected to be runnable in Koji runroot.
+-"""
+-
+-import argparse
+-import os
+-from kobo import shortcuts
+-import tempfile
+-import shutil
+-import re
+-
+-from .wrappers import scm
+-
+-
+-def make_log_file(log_dir, filename):
+-    """Return path to log file with given name, if log_dir is set."""
+-    if not log_dir:
+-        return None
+-    return os.path.join(log_dir, '{}.log'.format(filename))
+-
+-
+-def init_atomic_repo(repo, log_dir=None):
+-    """If the atomic repo does not exist, initialize it."""
+-    log_file = make_log_file(log_dir, 'init-atomic-repo')
+-    if not os.path.isdir(repo):
+-        shortcuts.run(['ostree', 'init', '--repo={}'.format(repo), '--mode=archive-z2'],
+-                      logfile=log_file)
+-
+-
+-def make_ostree_repo(repo, config, log_dir=None):
+-    log_file = make_log_file(log_dir, 'create-atomic-repo')
+-    shortcuts.run(['rpm-ostree', 'compose', 'tree', '--repo={}'.format(repo), config],
+-                  logfile=log_file)
+-
+-
+-def clone_repo(repodir, url, branch):
+-    scm.get_dir_from_scm(
+-        {'scm': 'git', 'repo': url, 'branch': branch, 'dir': '.'}, repodir)
+-
+-
+-def tweak_mirrorlist(repodir, source_repo):
+-    for file in os.listdir(repodir):
+-        if file.endswith('.repo'):
+-            tweak_file(os.path.join(repodir, file), source_repo)
+-
+-
+-def tweak_file(path, source_repo):
+-    """Replace mirrorlist line in repo file with baseurl pointing to source_repo."""
+-    with open(path, 'r') as f:
+-        contents = f.read()
+-    replacement = 'baseurl={}'.format(source_repo)
+-    contents = re.sub(r'^mirrorlist=.*$', replacement, contents)
+-    with open(path, 'w') as f:
+-        f.write(contents)
+-
+-
+-def prepare_config(workdir, config_url, config_branch, source_repo):
+-    repodir = os.path.join(workdir, 'config_repo')
+-    clone_repo(repodir, config_url, config_branch)
+-    tweak_mirrorlist(repodir, source_repo)
+-    return repodir
+-
+-
+-def run(opts):
+-    workdir = tempfile.mkdtemp()
+-    repodir = prepare_config(workdir, opts.config_url, opts.config_branch,
+-                             opts.source_repo)
+-    init_atomic_repo(opts.atomic_repo, log_dir=opts.log_dir)
+-    treefile = os.path.join(repodir, opts.treefile)
+-    make_ostree_repo(opts.atomic_repo, treefile, log_dir=opts.log_dir)
+-    shutil.rmtree(workdir)
+-
+-
+-def main(args=None):
+-    parser = argparse.ArgumentParser()
+-    parser.add_argument('--log-dir',
+-                        help='where to log output')
+-
+-    parser.add_argument('atomic_repo', metavar='ATOMIC_REPO',
+-                        help='where to put the atomic repo')
+-    parser.add_argument('--treefile', required=True,
+-                        help='treefile for rpm-ostree')
+-    parser.add_argument('--config-url', required=True,
+-                        help='git repository with the treefile')
+-    parser.add_argument('--config-branch', default='master',
+-                        help='git branch to be used')
+-    parser.add_argument('--source-repo', required=True,
+-                        help='yum repo used as source for')
+-
+-    opts = parser.parse_args(args)
+-
+-    run(opts)
+diff --git a/pungi/ostree.py b/pungi/ostree.py
+new file mode 100644
+index 0000000..de2cfcd
+--- /dev/null
++++ b/pungi/ostree.py
+@@ -0,0 +1,95 @@
++# -*- coding: utf-8 -*-
++
++"""
++This module contains functions required by pungi-make-ostree.
++It is expected to be runnable in Koji runroot.
++"""
++
++import argparse
++import os
++from kobo import shortcuts
++import tempfile
++import shutil
++import re
++
++from .wrappers import scm
++
++
++def make_log_file(log_dir, filename):
++    """Return path to log file with given name, if log_dir is set."""
++    if not log_dir:
++        return None
++    return os.path.join(log_dir, '{}.log'.format(filename))
++
++
++def init_ostree_repo(repo, log_dir=None):
++    """If the ostree repo does not exist, initialize it."""
++    log_file = make_log_file(log_dir, 'init-ostree-repo')
++    if not os.path.isdir(repo):
++        shortcuts.run(['ostree', 'init', '--repo={}'.format(repo), '--mode=archive-z2'],
++                      logfile=log_file)
++
++
++def make_ostree_repo(repo, config, log_dir=None):
++    log_file = make_log_file(log_dir, 'create-ostree-repo')
++    shortcuts.run(['rpm-ostree', 'compose', 'tree', '--repo={}'.format(repo), config],
++                  logfile=log_file)
++
++
++def clone_repo(repodir, url, branch):
++    scm.get_dir_from_scm(
++        {'scm': 'git', 'repo': url, 'branch': branch, 'dir': '.'}, repodir)
++
++
++def tweak_mirrorlist(repodir, source_repo):
++    for file in os.listdir(repodir):
++        if file.endswith('.repo'):
++            tweak_file(os.path.join(repodir, file), source_repo)
++
++
++def tweak_file(path, source_repo):
++    """Replace mirrorlist line in repo file with baseurl pointing to source_repo."""
++    with open(path, 'r') as f:
++        contents = f.read()
++    replacement = 'baseurl={}'.format(source_repo)
++    contents = re.sub(r'^mirrorlist=.*$', replacement, contents)
++    with open(path, 'w') as f:
++        f.write(contents)
++
++
++def prepare_config(workdir, config_url, config_branch, source_repo):
++    repodir = os.path.join(workdir, 'config_repo')
++    clone_repo(repodir, config_url, config_branch)
++    tweak_mirrorlist(repodir, source_repo)
++    return repodir
++
++
++def run(opts):
++    workdir = tempfile.mkdtemp()
++    repodir = prepare_config(workdir, opts.config_url, opts.config_branch,
++                             opts.source_repo)
++    init_ostree_repo(opts.ostree_repo, log_dir=opts.log_dir)
++    treefile = os.path.join(repodir, opts.treefile)
++    make_ostree_repo(opts.ostree_repo, treefile, log_dir=opts.log_dir)
++    shutil.rmtree(workdir)
++
++
++def main(args=None):
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--log-dir',
++                        help='where to log output')
++
++    parser.add_argument('ostree_repo', metavar='OSTREE_REPO',
++                        help='where to put the ostree repo')
++    parser.add_argument('--treefile', required=True,
++                        help='treefile for rpm-ostree')
++    parser.add_argument('--config-url', required=True,
++                        help='git repository with the treefile')
++    parser.add_argument('--config-branch', default='master',
++                        help='git branch to be used')
++    parser.add_argument('--source-repo', required=True,
++                        help='yum repo used as source for')
++
++    opts = parser.parse_args(args)
++
++    run(opts)
+diff --git a/pungi/phases/__init__.py b/pungi/phases/__init__.py
+index 343266a..1dff888 100644
+--- a/pungi/phases/__init__.py
++++ b/pungi/phases/__init__.py
+@@ -30,4 +30,4 @@ from test import TestPhase  # noqa
+ from image_checksum import ImageChecksumPhase    # noqa
+ from livemedia_phase import LiveMediaPhase  # noqa
+ from ostree import OSTreePhase  # noqa
+-from atomic_installer import AtomicInstallerPhase  # noqa
++from ostree_installer import OstreeInstallerPhase  # noqa
+diff --git a/pungi/phases/atomic_installer.py b/pungi/phases/atomic_installer.py
+deleted file mode 100644
+index 3390a74..0000000
+--- a/pungi/phases/atomic_installer.py
++++ /dev/null
+@@ -1,134 +0,0 @@
+-# -*- coding: utf-8 -*-
+-
+-import os
+-from kobo.threads import ThreadPool, WorkerThread
+-import shutil
+-from productmd import images
+-
+-from .base import ConfigGuardedPhase
+-from .. import util
+-from ..paths import translate_path
+-from ..wrappers import kojiwrapper, iso, lorax
+-
+-
+-class AtomicInstallerPhase(ConfigGuardedPhase):
+-    name = 'atomic'
+-
+-    config_options = [
+-        {
+-            "name": "atomic",
+-            "expected_types": [list],
+-            "optional": True,
+-        }
+-    ]
+-
+-    def __init__(self, compose):
+-        super(AtomicInstallerPhase, self).__init__(compose)
+-        self.pool = ThreadPool(logger=self.compose._logger)
+-
+-    def run(self):
+-        for variant in self.compose.get_variants():
+-            for arch in variant.arches:
+-                for conf in util.get_arch_variant_data(self.compose.conf, self.name, arch, variant):
+-                    self.pool.add(AtomicInstallerThread(self.pool))
+-                    self.pool.queue_put((self.compose, variant, arch, conf))
+-
+-        self.pool.start()
+-
+-
+-class AtomicInstallerThread(WorkerThread):
+-    def process(self, item, num):
+-        compose, variant, arch, config = item
+-        self.num = num
+-        with util.failable(compose, variant, arch, 'atomic_installer', 'Atomic'):
+-            self.worker(compose, variant, arch, config)
+-
+-    def worker(self, compose, variant, arch, config):
+-        msg = 'Atomic phase for variant %s, arch %s' % (variant.uid, arch)
+-        self.pool.log_info('[BEGIN] %s' % msg)
+-        self.logdir = compose.paths.log.topdir('{}/atomic'.format(arch))
+-
+-        source_variant = compose.variants[config['source_repo_from']]
+-        source_repo = translate_path(
+-            compose, compose.paths.compose.repository(arch, source_variant, create_dir=False))
+-
+-        self._run_atomic_cmd(compose, variant, arch, config, source_repo)
+-
+-        disc_type = compose.conf.get('disc_types', {}).get('dvd', 'dvd')
+-        filename = compose.get_image_name(arch, variant, disc_type=disc_type,
+-                                          format=config.get('filename'))
+-        self._copy_image(compose, variant, arch, filename)
+-        self._add_to_manifest(compose, variant, arch, filename)
+-        self.pool.log_info('[DONE ] %s' % msg)
+-
+-    def _get_release(self, compose, config):
+-        if 'release' in config and config['release'] is None:
+-            return compose.image_release
+-        return config.get('release', None)
+-
+-    def _copy_image(self, compose, variant, arch, filename):
+-        iso_path = compose.paths.compose.iso_path(arch, variant, filename)
+-        source_dir = compose.paths.compose.os_tree(arch, variant)
+-        boot_iso = os.path.join(source_dir, 'images', 'boot.iso')
+-
+-        try:
+-            os.link(boot_iso, iso_path)
+-        except OSError:
+-            shutil.copy2(boot_iso, iso_path)
+-
+-    def _add_to_manifest(self, compose, variant, arch, filename):
+-        full_iso_path = compose.paths.compose.iso_path(arch, variant, filename)
+-        iso_path = compose.paths.compose.iso_path(arch, variant, filename, relative=True)
+-        iso_wrapper = iso.IsoWrapper()
+-        implant_md5 = iso_wrapper.get_implanted_md5(full_iso_path)
+-
+-        img = images.Image(compose.im)
+-        img.path = iso_path
+-        img.mtime = util.get_mtime(full_iso_path)
+-        img.size = util.get_file_size(full_iso_path)
+-        img.arch = arch
+-        img.type = "boot"
+-        img.format = "iso"
+-        img.disc_number = 1
+-        img.disc_count = 1
+-        img.bootable = True
+-        img.subvariant = variant.name
+-        img.implant_md5 = implant_md5
+-        try:
+-            img.volume_id = iso_wrapper.get_volume_id(full_iso_path)
+-        except RuntimeError:
+-            pass
+-        compose.im.add(variant.uid, arch, img)
+-
+-    def _run_atomic_cmd(self, compose, variant, arch, config, source_repo):
+-        image_dir = compose.paths.compose.os_tree(arch, variant, create_dir=False)
+-        lorax_wrapper = lorax.LoraxWrapper()
+-        cmd = lorax_wrapper.get_lorax_cmd(
+-            compose.conf['release_name'],
+-            compose.conf["release_version"],
+-            self._get_release(compose, config),
+-            repo_baseurl=source_repo,
+-            output_dir=image_dir,
+-            variant=variant.uid,
+-            nomacboot=True,
+-            buildinstallpackages=config.get('installpkgs'),
+-            add_template=config.get('add_template'),
+-            add_arch_template=config.get('add_arch_template'),
+-            add_template_var=config.get('add_template_var'),
+-            add_arch_template_var=config.get('add_arch_template_var')
+-        )
+-
+-        runroot_channel = compose.conf.get("runroot_channel", None)
+-        runroot_tag = compose.conf["runroot_tag"]
+-
+-        packages = ['pungi', 'lorax']
+-        log_file = os.path.join(self.logdir, 'runroot.log')
+-        koji = kojiwrapper.KojiWrapper(compose.conf["koji_profile"])
+-        koji_cmd = koji.get_runroot_cmd(runroot_tag, arch, cmd,
+-                                        channel=runroot_channel,
+-                                        use_shell=True, task_id=True,
+-                                        packages=packages, mounts=[compose.topdir])
+-        output = koji.run_runroot_cmd(koji_cmd, log_file=log_file)
+-        if output["retcode"] != 0:
+-            raise RuntimeError("Runroot task failed: %s. See %s for more details."
+-                               % (output["task_id"], log_file))
+diff --git a/pungi/phases/ostree.py b/pungi/phases/ostree.py
+index 79e58d4..810716e 100644
+--- a/pungi/phases/ostree.py
++++ b/pungi/phases/ostree.py
+@@ -41,16 +41,16 @@ class OSTreeThread(WorkerThread):
+ 
+         msg = 'OSTree phase for variant %s, arch %s' % (variant.uid, arch)
+         self.pool.log_info('[BEGIN] %s' % msg)
+-        self.logdir = compose.paths.log.topdir('{}/atomic'.format(arch))
++        self.logdir = compose.paths.log.topdir('{}/ostree'.format(arch))
+ 
+         source_variant = compose.variants[config['source_repo_from']]
+         source_repo = translate_path(compose, compose.paths.compose.repository(arch, source_variant))
+ 
+-        self._run_atomic_cmd(compose, variant, arch, config, source_repo)
++        self._run_ostree_cmd(compose, variant, arch, config, source_repo)
+ 
+         self.pool.log_info('[DONE ] %s' % msg)
+ 
+-    def _run_atomic_cmd(self, compose, variant, arch, config, source_repo):
++    def _run_ostree_cmd(self, compose, variant, arch, config, source_repo):
+         cmd = [
+             'pungi-make-ostree',
+             '--log-dir={}'.format(self.logdir),
+@@ -58,7 +58,7 @@ class OSTreeThread(WorkerThread):
+             '--config-url={}'.format(config['config_url']),
+             '--config-branch={}'.format(config.get('config_branch', 'master')),
+             '--source-repo={}'.format(source_repo),
+-            config['atomic_repo']
++            config['ostree_repo']
+         ]
+ 
+         runroot_channel = compose.conf.get("runroot_channel", None)
+diff --git a/pungi/phases/ostree_installer.py b/pungi/phases/ostree_installer.py
+new file mode 100644
+index 0000000..a781c4f
+--- /dev/null
++++ b/pungi/phases/ostree_installer.py
+@@ -0,0 +1,134 @@
++# -*- coding: utf-8 -*-
++
++import os
++from kobo.threads import ThreadPool, WorkerThread
++import shutil
++from productmd import images
++
++from .base import ConfigGuardedPhase
++from .. import util
++from ..paths import translate_path
++from ..wrappers import kojiwrapper, iso, lorax
++
++
++class OstreeInstallerPhase(ConfigGuardedPhase):
++    name = 'ostree_installer'
++
++    config_options = [
++        {
++            "name": "ostree_installer",
++            "expected_types": [list],
++            "optional": True,
++        }
++    ]
++
++    def __init__(self, compose):
++        super(OstreeInstallerPhase, self).__init__(compose)
++        self.pool = ThreadPool(logger=self.compose._logger)
++
++    def run(self):
++        for variant in self.compose.get_variants():
++            for arch in variant.arches:
++                for conf in util.get_arch_variant_data(self.compose.conf, self.name, arch, variant):
++                    self.pool.add(OstreeInstallerThread(self.pool))
++                    self.pool.queue_put((self.compose, variant, arch, conf))
++
++        self.pool.start()
++
++
++class OstreeInstallerThread(WorkerThread):
++    def process(self, item, num):
++        compose, variant, arch, config = item
++        self.num = num
++        with util.failable(compose, variant, arch, 'ostree-installer', 'Ostree installer'):
++            self.worker(compose, variant, arch, config)
++
++    def worker(self, compose, variant, arch, config):
++        msg = 'Ostree phase for variant %s, arch %s' % (variant.uid, arch)
++        self.pool.log_info('[BEGIN] %s' % msg)
++        self.logdir = compose.paths.log.topdir('{}/ostree'.format(arch))
++
++        source_variant = compose.variants[config['source_repo_from']]
++        source_repo = translate_path(
++            compose, compose.paths.compose.repository(arch, source_variant, create_dir=False))
++
++        self._run_ostree_cmd(compose, variant, arch, config, source_repo)
++
++        disc_type = compose.conf.get('disc_types', {}).get('dvd', 'dvd')
++        filename = compose.get_image_name(arch, variant, disc_type=disc_type,
++                                          format=config.get('filename'))
++        self._copy_image(compose, variant, arch, filename)
++        self._add_to_manifest(compose, variant, arch, filename)
++        self.pool.log_info('[DONE ] %s' % msg)
++
++    def _get_release(self, compose, config):
++        if 'release' in config and config['release'] is None:
++            return compose.image_release
++        return config.get('release', None)
++
++    def _copy_image(self, compose, variant, arch, filename):
++        iso_path = compose.paths.compose.iso_path(arch, variant, filename)
++        source_dir = compose.paths.compose.os_tree(arch, variant)
++        boot_iso = os.path.join(source_dir, 'images', 'boot.iso')
++
++        try:
++            os.link(boot_iso, iso_path)
++        except OSError:
++            shutil.copy2(boot_iso, iso_path)
++
++    def _add_to_manifest(self, compose, variant, arch, filename):
++        full_iso_path = compose.paths.compose.iso_path(arch, variant, filename)
++        iso_path = compose.paths.compose.iso_path(arch, variant, filename, relative=True)
++        iso_wrapper = iso.IsoWrapper()
++        implant_md5 = iso_wrapper.get_implanted_md5(full_iso_path)
++
++        img = images.Image(compose.im)
++        img.path = iso_path
++        img.mtime = util.get_mtime(full_iso_path)
++        img.size = util.get_file_size(full_iso_path)
++        img.arch = arch
++        img.type = "boot"
++        img.format = "iso"
++        img.disc_number = 1
++        img.disc_count = 1
++        img.bootable = True
++        img.subvariant = variant.name
++        img.implant_md5 = implant_md5
++        try:
++            img.volume_id = iso_wrapper.get_volume_id(full_iso_path)
++        except RuntimeError:
++            pass
++        compose.im.add(variant.uid, arch, img)
++
++    def _run_ostree_cmd(self, compose, variant, arch, config, source_repo):
++        image_dir = compose.paths.compose.os_tree(arch, variant, create_dir=False)
++        lorax_wrapper = lorax.LoraxWrapper()
++        cmd = lorax_wrapper.get_lorax_cmd(
++            compose.conf['release_name'],
++            compose.conf["release_version"],
++            self._get_release(compose, config),
++            repo_baseurl=source_repo,
++            output_dir=image_dir,
++            variant=variant.uid,
++            nomacboot=True,
++            buildinstallpackages=config.get('installpkgs'),
++            add_template=config.get('add_template'),
++            add_arch_template=config.get('add_arch_template'),
++            add_template_var=config.get('add_template_var'),
++            add_arch_template_var=config.get('add_arch_template_var')
++        )
++
++        runroot_channel = compose.conf.get("runroot_channel", None)
++        runroot_tag = compose.conf["runroot_tag"]
++
++        packages = ['pungi', 'lorax']
++        log_file = os.path.join(self.logdir, 'runroot.log')
++        koji = kojiwrapper.KojiWrapper(compose.conf["koji_profile"])
++        koji_cmd = koji.get_runroot_cmd(runroot_tag, arch, cmd,
++                                        channel=runroot_channel,
++                                        use_shell=True, task_id=True,
++                                        packages=packages, mounts=[compose.topdir])
++        output = koji.run_runroot_cmd(koji_cmd, log_file=log_file)
++        if output["retcode"] != 0:
++            raise RuntimeError("Runroot task failed: %s. See %s for more details."
++                               % (output["task_id"], log_file))
+diff --git a/tests/test_atomic_installer_phase.py b/tests/test_atomic_installer_phase.py
+deleted file mode 100644
+index 33f4961..0000000
+--- a/tests/test_atomic_installer_phase.py
++++ /dev/null
+@@ -1,317 +0,0 @@
+-#!/usr/bin/env python
+-# -*- coding: utf-8 -*-
+-
+-
+-import unittest
+-import mock
+-
+-import os
+-import sys
+-
+-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+-
+-from tests import helpers
+-from pungi.phases import atomic_installer as atomic
+-
+-
+-class AtomicInstallerPhaseTest(helpers.PungiTestCase):
+-
+-    def test_validate(self):
+-        compose = helpers.DummyCompose(self.topdir, {
+-            'atomic': [
+-                ("^Atomic$", {
+-                    "x86_64": {
+-                        "source_repo_from": "Everything",
+-                        "release": None,
+-                        "filename": "%(release_short)s-%(variant)s-%(arch)s-%(version)s-%(compose_date)s.iso",
+-                        "installpkgs": ["fedora-productimg-atomic"],
+-                        "add_template": ["/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl"],
+-                        "add_template_var": [
+-                            "ostree_osname=fedora-atomic",
+-                            "ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host",
+-                        ],
+-                        "add_arch_template": ["/spin-kickstarts/atomic-installer/lorax-embed-repo.tmpl"],
+-                        "add_arch_template_var": [
+-                            "ostree_repo=https://kojipkgs.fedoraproject.org/compose/atomic/Rawhide/",
+-                            "ostree_osname=fedora-atomic",
+-                            "ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host",
+-                        ]
+-                    }
+-                })
+-            ]
+-        })
+-
+-        phase = atomic.AtomicInstallerPhase(compose)
+-        try:
+-            phase.validate()
+-        except:
+-            self.fail('Correct config must validate')
+-
+-    def test_validate_bad_conf(self):
+-        compose = helpers.DummyCompose(self.topdir, {
+-            'atomic': 'yes please'
+-        })
+-
+-        phase = atomic.AtomicInstallerPhase(compose)
+-        with self.assertRaises(ValueError):
+-            phase.validate()
+-
+-    @mock.patch('pungi.phases.atomic_installer.ThreadPool')
+-    def test_run(self, ThreadPool):
+-        cfg = mock.Mock()
+-        compose = helpers.DummyCompose(self.topdir, {
+-            'atomic': [
+-                ('^Everything$', {'x86_64': cfg})
+-            ]
+-        })
+-
+-        pool = ThreadPool.return_value
+-
+-        phase = atomic.AtomicInstallerPhase(compose)
+-        phase.run()
+-
+-        self.assertEqual(len(pool.add.call_args_list), 1)
+-        self.assertEqual(pool.queue_put.call_args_list,
+-                         [mock.call((compose, compose.variants['Everything'], 'x86_64', cfg))])
+-
+-    @mock.patch('pungi.phases.atomic_installer.ThreadPool')
+-    def test_skip_without_config(self, ThreadPool):
+-        compose = helpers.DummyCompose(self.topdir, {})
+-        compose.just_phases = None
+-        compose.skip_phases = []
+-        phase = atomic.AtomicInstallerPhase(compose)
+-        self.assertTrue(phase.skip())
+-
+-
+-class AtomicThreadTest(helpers.PungiTestCase):
+-
+-    def assertImageAdded(self, compose, ImageCls, IsoWrapper):
+-        image = ImageCls.return_value
+-        self.assertEqual(image.path, 'Everything/x86_64/iso/image-name')
+-        self.assertEqual(image.mtime, 13579)
+-        self.assertEqual(image.size, 1024)
+-        self.assertEqual(image.arch, 'x86_64')
+-        self.assertEqual(image.type, "boot")
+-        self.assertEqual(image.format, "iso")
+-        self.assertEqual(image.disc_number, 1)
+-        self.assertEqual(image.disc_count, 1)
+-        self.assertEqual(image.bootable, True)
+-        self.assertEqual(image.implant_md5, IsoWrapper.return_value.get_implanted_md5.return_value)
+-        self.assertEqual(compose.im.add.mock_calls,
+-                         [mock.call('Everything', 'x86_64', image)])
+-
+-    @mock.patch('productmd.images.Image')
+-    @mock.patch('pungi.util.get_mtime')
+-    @mock.patch('pungi.util.get_file_size')
+-    @mock.patch('pungi.wrappers.iso.IsoWrapper')
+-    @mock.patch('os.link')
+-    @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
+-    def test_run(self, KojiWrapper, link, IsoWrapper,
+-                 get_file_size, get_mtime, ImageCls):
+-        compose = helpers.DummyCompose(self.topdir, {
+-            'release_name': 'Fedora',
+-            'release_version': 'Rawhide',
+-            'koji_profile': 'koji',
+-            'runroot_tag': 'rrt',
+-        })
+-        pool = mock.Mock()
+-        cfg = {
+-            'source_repo_from': 'Everything',
+-            'release': '20160321.n.0',
+-            'filename': 'Fedora-Atomic.iso',
+-        }
+-        koji = KojiWrapper.return_value
+-        koji.run_runroot_cmd.return_value = {
+-            'task_id': 1234,
+-            'retcode': 0,
+-            'output': 'Foo bar\n',
+-        }
+-        get_file_size.return_value = 1024
+-        get_mtime.return_value = 13579
+-        final_iso_path = self.topdir + '/compose/Everything/x86_64/iso/image-name'
+-
+-        t = atomic.AtomicInstallerThread(pool)
+-
+-        t.process((compose, compose.variants['Everything'], 'x86_64', cfg), 1)
+-
+-        self.assertEqual(koji.get_runroot_cmd.call_args_list,
+-                         [mock.call('rrt', 'x86_64',
+-                                    ['lorax',
+-                                     '--product=Fedora',
+-                                     '--version=Rawhide',
+-                                     '--release=20160321.n.0',
+-                                     '--source=file://{}/compose/Everything/x86_64/os'.format(self.topdir),
+-                                     '--variant=Everything',
+-                                     '--nomacboot',
+-                                     self.topdir + '/compose/Everything/x86_64/os'],
+-                                    channel=None, mounts=[self.topdir],
+-                                    packages=['pungi', 'lorax'],
+-                                    task_id=True, use_shell=True)])
+-        self.assertEqual(koji.run_runroot_cmd.call_args_list,
+-                         [mock.call(koji.get_runroot_cmd.return_value,
+-                                    log_file=self.topdir + '/logs/x86_64/atomic/runroot.log')])
+-        self.assertEqual(link.call_args_list,
+-                         [mock.call(self.topdir + '/compose/Everything/x86_64/os/images/boot.iso',
+-                                    final_iso_path)])
+-        self.assertEqual(get_file_size.call_args_list, [mock.call(final_iso_path)])
+-        self.assertEqual(get_mtime.call_args_list, [mock.call(final_iso_path)])
+-        self.assertImageAdded(compose, ImageCls, IsoWrapper)
+-        self.assertEqual(compose.get_image_name.call_args_list,
+-                         [mock.call('x86_64', compose.variants['Everything'],
+-                                    disc_type='dvd', format='Fedora-Atomic.iso')])
+-
+-    @mock.patch('productmd.images.Image')
+-    @mock.patch('pungi.util.get_mtime')
+-    @mock.patch('pungi.util.get_file_size')
+-    @mock.patch('pungi.wrappers.iso.IsoWrapper')
+-    @mock.patch('os.link')
+-    @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
+-    def test_run_with_implicit_release(self, KojiWrapper, link,
+-                                       IsoWrapper, get_file_size, get_mtime, ImageCls):
+-        compose = helpers.DummyCompose(self.topdir, {
+-            'release_name': 'Fedora',
+-            'release_version': 'Rawhide',
+-            'koji_profile': 'koji',
+-            'runroot_tag': 'rrt',
+-        })
+-        pool = mock.Mock()
+-        cfg = {
+-            'source_repo_from': 'Everything',
+-            'release': None,
+-            "installpkgs": ["fedora-productimg-atomic"],
+-            "add_template": ["/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl"],
+-            "add_template_var": [
+-                "ostree_osname=fedora-atomic",
+-                "ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host",
+-            ],
+-            "add_arch_template": ["/spin-kickstarts/atomic-installer/lorax-embed-repo.tmpl"],
+-            "add_arch_template_var": [
+-                "ostree_repo=https://kojipkgs.fedoraproject.org/compose/atomic/Rawhide/",
+-                "ostree_osname=fedora-atomic",
+-                "ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host",
+-            ],
+-        }
+-        koji = KojiWrapper.return_value
+-        koji.run_runroot_cmd.return_value = {
+-            'task_id': 1234,
+-            'retcode': 0,
+-            'output': 'Foo bar\n',
+-        }
+-        get_file_size.return_value = 1024
+-        get_mtime.return_value = 13579
+-        final_iso_path = self.topdir + '/compose/Everything/x86_64/iso/image-name'
+-
+-        t = atomic.AtomicInstallerThread(pool)
+-
+-        t.process((compose, compose.variants['Everything'], 'x86_64', cfg), 1)
+-
+-        self.assertEqual(
+-            koji.get_runroot_cmd.call_args_list,
+-            [mock.call('rrt', 'x86_64',
+-                       ['lorax',
+-                        '--product=Fedora',
+-                        '--version=Rawhide', '--release=20151203.t.0',
+-                        '--source=file://{}/compose/Everything/x86_64/os'.format(self.topdir),
+-                        '--variant=Everything',
+-                        '--nomacboot',
+-                        '--installpkgs=fedora-productimg-atomic',
+-                        '--add-template=/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl',
+-                        '--add-arch-template=/spin-kickstarts/atomic-installer/lorax-embed-repo.tmpl',
+-                        '--add-template-var=ostree_osname=fedora-atomic',
+-                        '--add-template-var=ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host',
+-                        '--add-arch-template-var=ostree_repo=https://kojipkgs.fedoraproject.org/compose/atomic/Rawhide/',
+-                        '--add-arch-template-var=ostree_osname=fedora-atomic',
+-                        '--add-arch-template-var=ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host',
+-                        self.topdir + '/compose/Everything/x86_64/os'],
+-                       channel=None, mounts=[self.topdir],
+-                       packages=['pungi', 'lorax'],
+-                       task_id=True, use_shell=True)])
+-        self.assertEqual(koji.run_runroot_cmd.call_args_list,
+-                         [mock.call(koji.get_runroot_cmd.return_value,
+-                                    log_file=self.topdir + '/logs/x86_64/atomic/runroot.log')])
+-        self.assertEqual(link.call_args_list,
+-                         [mock.call(self.topdir + '/compose/Everything/x86_64/os/images/boot.iso',
+-                                    final_iso_path)])
+-        self.assertEqual(get_file_size.call_args_list, [mock.call(final_iso_path)])
+-        self.assertEqual(get_mtime.call_args_list, [mock.call(final_iso_path)])
+-        self.assertImageAdded(compose, ImageCls, IsoWrapper)
+-        self.assertEqual(compose.get_image_name.call_args_list,
+-                         [mock.call('x86_64', compose.variants['Everything'],
+-                                    disc_type='dvd', format=None)])
+-
+-    @mock.patch('productmd.images.Image')
+-    @mock.patch('pungi.util.get_mtime')
+-    @mock.patch('pungi.util.get_file_size')
+-    @mock.patch('pungi.wrappers.iso.IsoWrapper')
+-    @mock.patch('os.link')
+-    @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
+-    def test_fail_crash(self, KojiWrapper, link,
+-                        IsoWrapper, get_file_size, get_mtime, ImageCls):
+-        compose = helpers.DummyCompose(self.topdir, {
+-            'release_name': 'Fedora',
+-            'release_version': 'Rawhide',
+-            'koji_profile': 'koji',
+-            'runroot_tag': 'rrt',
+-            'failable_deliverables': [
+-                ('^.+$', {'*': ['atomic_installer']})
+-            ],
+-        })
+-        pool = mock.Mock()
+-        cfg = {
+-            'source_repo_from': 'Everything',
+-            'release': None,
+-            'filename': 'Fedora-Atomic.iso',
+-        }
+-        koji = KojiWrapper.return_value
+-        koji.run_runroot_cmd.side_effect = helpers.boom
+-
+-        t = atomic.AtomicInstallerThread(pool)
+-
+-        t.process((compose, compose.variants['Everything'], 'x86_64', cfg), 1)
+-        compose.log_info.assert_has_calls([
+-            mock.call('[FAIL] Atomic (variant Everything, arch x86_64) failed, but going on anyway.'),
+-            mock.call('BOOM')
+-        ])
+-
+-    @mock.patch('productmd.images.Image')
+-    @mock.patch('pungi.util.get_mtime')
+-    @mock.patch('pungi.util.get_file_size')
+-    @mock.patch('pungi.wrappers.iso.IsoWrapper')
+-    @mock.patch('os.link')
+-    @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
+-    def test_fail_runroot_fail(self, KojiWrapper, link,
+-                               IsoWrapper, get_file_size, get_mtime, ImageCls):
+-        compose = helpers.DummyCompose(self.topdir, {
+-            'release_name': 'Fedora',
+-            'release_version': 'Rawhide',
+-            'koji_profile': 'koji',
+-            'runroot_tag': 'rrt',
+-            'failable_deliverables': [
+-                ('^.+$', {'*': ['atomic_installer']})
+-            ],
+-        })
+-        pool = mock.Mock()
+-        cfg = {
+-            'source_repo_from': 'Everything',
+-            'release': None,
+-            'filename': 'Fedora-Atomic.iso',
+-        }
+-        koji = KojiWrapper.return_value
+-        koji.run_runroot_cmd.return_value = {
+-            'output': 'Failed',
+-            'task_id': 1234,
+-            'retcode': 1,
+-        }
+-
+-        t = atomic.AtomicInstallerThread(pool)
+-
+-        t.process((compose, compose.variants['Everything'], 'x86_64', cfg), 1)
+-        compose.log_info.assert_has_calls([
+-            mock.call('[FAIL] Atomic (variant Everything, arch x86_64) failed, but going on anyway.'),
+-            mock.call('Runroot task failed: 1234. See %s/logs/x86_64/atomic/runroot.log for more details.'
+-                      % self.topdir)
+-        ])
+-
+-
+-if __name__ == '__main__':
+-    unittest.main()
+diff --git a/tests/test_atomic_script.py b/tests/test_atomic_script.py
+deleted file mode 100755
+index 4b0b396..0000000
+--- a/tests/test_atomic_script.py
++++ /dev/null
+@@ -1,55 +0,0 @@
+-#!/usr/bin/env python
+-# -*- coding: utf-8 -*-
+-
+-
+-import unittest
+-import mock
+-
+-import os
+-import sys
+-
+-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'bin'))
+-
+-from tests import helpers
+-from pungi import atomic
+-
+-
+-class OstreeScriptTest(helpers.PungiTestCase):
+-
+-    def _dummy_config_repo(self, scm_dict, target, logger=None):
+-        helpers.touch(os.path.join(target, 'fedora-atomic-docker-host.json'))
+-        helpers.touch(os.path.join(target, 'fedora-rawhide.repo'))
+-
+-    @mock.patch('tempfile.mkdtemp')
+-    @mock.patch('kobo.shortcuts.run')
+-    @mock.patch('pungi.wrappers.scm.get_dir_from_scm')
+-    def test_full_run(self, get_dir_from_scm, run, tempfile):
+-        tempfile.return_value = self.topdir
+-        get_dir_from_scm.side_effect = self._dummy_config_repo
+-
+-        atomic.main([
+-            '--log-dir={}'.format(os.path.join(self.topdir, 'logs', 'Atomic')),
+-            '--treefile={}'.format('fedora-atomic-docker-host.json'),
+-            '--config-url=https://git.fedorahosted.org/git/fedora-atomic.git',
+-            '--config-branch=f24',
+-            '--source-repo=https://kojipkgs.fedoraproject.org/repo',
+-            os.path.join(self.topdir, 'atomic'),
+-        ])
+-
+-        self.maxDiff = None
+-        self.assertEqual(get_dir_from_scm.call_args_list,
+-                         [mock.call({'scm': 'git', 'repo': 'https://git.fedorahosted.org/git/fedora-atomic.git',
+-                                     'branch': 'f24', 'dir': '.'},
+-                                    self.topdir + '/config_repo')])
+-        self.assertItemsEqual(
+-            run.call_args_list,
+-            [mock.call(['ostree', 'init', '--repo={}/atomic'.format(self.topdir), '--mode=archive-z2'],
+-                       logfile=self.topdir + '/logs/Atomic/init-atomic-repo.log'),
+-             mock.call(['rpm-ostree', 'compose', 'tree', '--repo={}/atomic'.format(self.topdir),
+-                        self.topdir + '/config_repo/fedora-atomic-docker-host.json'],
+-                       logfile=self.topdir + '/logs/Atomic/create-atomic-repo.log')])
+-
+-
+-if __name__ == '__main__':
+-    unittest.main()
+diff --git a/tests/test_ostree_installer_phase.py b/tests/test_ostree_installer_phase.py
+new file mode 100644
+index 0000000..add4528
+--- /dev/null
++++ b/tests/test_ostree_installer_phase.py
+@@ -0,0 +1,317 @@
++#!/usr/bin/env python
++# -*- coding: utf-8 -*-
++
++
++import unittest
++import mock
++
++import os
++import sys
++
++sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
++
++from tests import helpers
++from pungi.phases import ostree_installer as ostree
++
++
++class OstreeInstallerPhaseTest(helpers.PungiTestCase):
++
++    def test_validate(self):
++        compose = helpers.DummyCompose(self.topdir, {
++            'ostree_installer': [
++                ("^Atomic$", {
++                    "x86_64": {
++                        "source_repo_from": "Everything",
++                        "release": None,
++                        "filename": "%(release_short)s-%(variant)s-%(arch)s-%(version)s-%(compose_date)s.iso",
++                        "installpkgs": ["fedora-productimg-atomic"],
++                        "add_template": ["/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl"],
++                        "add_template_var": [
++                            "ostree_osname=fedora-atomic",
++                            "ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host",
++                        ],
++                        "add_arch_template": ["/spin-kickstarts/atomic-installer/lorax-embed-repo.tmpl"],
++                        "add_arch_template_var": [
++                            "ostree_repo=https://kojipkgs.fedoraproject.org/compose/atomic/Rawhide/",
++                            "ostree_osname=fedora-atomic",
++                            "ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host",
++                        ]
++                    }
++                })
++            ]
++        })
++
++        phase = ostree.OstreeInstallerPhase(compose)
++        try:
++            phase.validate()
++        except:
++            self.fail('Correct config must validate')
++
++    def test_validate_bad_conf(self):
++        compose = helpers.DummyCompose(self.topdir, {
++            'ostree_installer': 'yes please'
++        })
++
++        phase = ostree.OstreeInstallerPhase(compose)
++        with self.assertRaises(ValueError):
++            phase.validate()
++
++    @mock.patch('pungi.phases.ostree_installer.ThreadPool')
++    def test_run(self, ThreadPool):
++        cfg = mock.Mock()
++        compose = helpers.DummyCompose(self.topdir, {
++            'ostree_installer': [
++                ('^Everything$', {'x86_64': cfg})
++            ]
++        })
++
++        pool = ThreadPool.return_value
++
++        phase = ostree.OstreeInstallerPhase(compose)
++        phase.run()
++
++        self.assertEqual(len(pool.add.call_args_list), 1)
++        self.assertEqual(pool.queue_put.call_args_list,
++                         [mock.call((compose, compose.variants['Everything'], 'x86_64', cfg))])
++
++    @mock.patch('pungi.phases.ostree_installer.ThreadPool')
++    def test_skip_without_config(self, ThreadPool):
++        compose = helpers.DummyCompose(self.topdir, {})
++        compose.just_phases = None
++        compose.skip_phases = []
++        phase = ostree.OstreeInstallerPhase(compose)
++        self.assertTrue(phase.skip())
++
++
++class OstreeThreadTest(helpers.PungiTestCase):
++
++    def assertImageAdded(self, compose, ImageCls, IsoWrapper):
++        image = ImageCls.return_value
++        self.assertEqual(image.path, 'Everything/x86_64/iso/image-name')
++        self.assertEqual(image.mtime, 13579)
++        self.assertEqual(image.size, 1024)
++        self.assertEqual(image.arch, 'x86_64')
++        self.assertEqual(image.type, "boot")
++        self.assertEqual(image.format, "iso")
++        self.assertEqual(image.disc_number, 1)
++        self.assertEqual(image.disc_count, 1)
++        self.assertEqual(image.bootable, True)
++        self.assertEqual(image.implant_md5, IsoWrapper.return_value.get_implanted_md5.return_value)
++        self.assertEqual(compose.im.add.mock_calls,
++                         [mock.call('Everything', 'x86_64', image)])
++
++    @mock.patch('productmd.images.Image')
++    @mock.patch('pungi.util.get_mtime')
++    @mock.patch('pungi.util.get_file_size')
++    @mock.patch('pungi.wrappers.iso.IsoWrapper')
++    @mock.patch('os.link')
++    @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
++    def test_run(self, KojiWrapper, link, IsoWrapper,
++                 get_file_size, get_mtime, ImageCls):
++        compose = helpers.DummyCompose(self.topdir, {
++            'release_name': 'Fedora',
++            'release_version': 'Rawhide',
++            'koji_profile': 'koji',
++            'runroot_tag': 'rrt',
++        })
++        pool = mock.Mock()
++        cfg = {
++            'source_repo_from': 'Everything',
++            'release': '20160321.n.0',
++            'filename': 'Fedora-Atomic.iso',
++        }
++        koji = KojiWrapper.return_value
++        koji.run_runroot_cmd.return_value = {
++            'task_id': 1234,
++            'retcode': 0,
++            'output': 'Foo bar\n',
++        }
++        get_file_size.return_value = 1024
++        get_mtime.return_value = 13579
++        final_iso_path = self.topdir + '/compose/Everything/x86_64/iso/image-name'
++
++        t = ostree.OstreeInstallerThread(pool)
++
++        t.process((compose, compose.variants['Everything'], 'x86_64', cfg), 1)
++
++        self.assertEqual(koji.get_runroot_cmd.call_args_list,
++                         [mock.call('rrt', 'x86_64',
++                                    ['lorax',
++                                     '--product=Fedora',
++                                     '--version=Rawhide',
++                                     '--release=20160321.n.0',
++                                     '--source=file://{}/compose/Everything/x86_64/os'.format(self.topdir),
++                                     '--variant=Everything',
++                                     '--nomacboot',
++                                     self.topdir + '/compose/Everything/x86_64/os'],
++                                    channel=None, mounts=[self.topdir],
++                                    packages=['pungi', 'lorax'],
++                                    task_id=True, use_shell=True)])
++        self.assertEqual(koji.run_runroot_cmd.call_args_list,
++                         [mock.call(koji.get_runroot_cmd.return_value,
++                                    log_file=self.topdir + '/logs/x86_64/ostree/runroot.log')])
++        self.assertEqual(link.call_args_list,
++                         [mock.call(self.topdir + '/compose/Everything/x86_64/os/images/boot.iso',
++                                    final_iso_path)])
++        self.assertEqual(get_file_size.call_args_list, [mock.call(final_iso_path)])
++        self.assertEqual(get_mtime.call_args_list, [mock.call(final_iso_path)])
++        self.assertImageAdded(compose, ImageCls, IsoWrapper)
++        self.assertEqual(compose.get_image_name.call_args_list,
++                         [mock.call('x86_64', compose.variants['Everything'],
++                                    disc_type='dvd', format='Fedora-Atomic.iso')])
++
++    @mock.patch('productmd.images.Image')
++    @mock.patch('pungi.util.get_mtime')
++    @mock.patch('pungi.util.get_file_size')
++    @mock.patch('pungi.wrappers.iso.IsoWrapper')
++    @mock.patch('os.link')
++    @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
++    def test_run_with_implicit_release(self, KojiWrapper, link,
++                                       IsoWrapper, get_file_size, get_mtime, ImageCls):
++        compose = helpers.DummyCompose(self.topdir, {
++            'release_name': 'Fedora',
++            'release_version': 'Rawhide',
++            'koji_profile': 'koji',
++            'runroot_tag': 'rrt',
++        })
++        pool = mock.Mock()
++        cfg = {
++            'source_repo_from': 'Everything',
++            'release': None,
++            "installpkgs": ["fedora-productimg-atomic"],
++            "add_template": ["/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl"],
++            "add_template_var": [
++                "ostree_osname=fedora-atomic",
++                "ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host",
++            ],
++            "add_arch_template": ["/spin-kickstarts/atomic-installer/lorax-embed-repo.tmpl"],
++            "add_arch_template_var": [
++                "ostree_repo=https://kojipkgs.fedoraproject.org/compose/atomic/Rawhide/",
++                "ostree_osname=fedora-atomic",
++                "ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host",
++            ],
++        }
++        koji = KojiWrapper.return_value
++        koji.run_runroot_cmd.return_value = {
++            'task_id': 1234,
++            'retcode': 0,
++            'output': 'Foo bar\n',
++        }
++        get_file_size.return_value = 1024
++        get_mtime.return_value = 13579
++        final_iso_path = self.topdir + '/compose/Everything/x86_64/iso/image-name'
++
++        t = ostree.OstreeInstallerThread(pool)
++
++        t.process((compose, compose.variants['Everything'], 'x86_64', cfg), 1)
++
++        self.assertEqual(
++            koji.get_runroot_cmd.call_args_list,
++            [mock.call('rrt', 'x86_64',
++                       ['lorax',
++                        '--product=Fedora',
++                        '--version=Rawhide', '--release=20151203.t.0',
++                        '--source=file://{}/compose/Everything/x86_64/os'.format(self.topdir),
++                        '--variant=Everything',
++                        '--nomacboot',
++                        '--installpkgs=fedora-productimg-atomic',
++                        '--add-template=/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl',
++                        '--add-arch-template=/spin-kickstarts/atomic-installer/lorax-embed-repo.tmpl',
++                        '--add-template-var=ostree_osname=fedora-atomic',
++                        '--add-template-var=ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host',
++                        '--add-arch-template-var=ostree_repo=https://kojipkgs.fedoraproject.org/compose/atomic/Rawhide/',
++                        '--add-arch-template-var=ostree_osname=fedora-atomic',
++                        '--add-arch-template-var=ostree_ref=fedora-atomic/Rawhide/x86_64/docker-host',
++                        self.topdir + '/compose/Everything/x86_64/os'],
++                       channel=None, mounts=[self.topdir],
++                       packages=['pungi', 'lorax'],
++                       task_id=True, use_shell=True)])
++        self.assertEqual(koji.run_runroot_cmd.call_args_list,
++                         [mock.call(koji.get_runroot_cmd.return_value,
++                                    log_file=self.topdir + '/logs/x86_64/ostree/runroot.log')])
++        self.assertEqual(link.call_args_list,
++                         [mock.call(self.topdir + '/compose/Everything/x86_64/os/images/boot.iso',
++                                    final_iso_path)])
++        self.assertEqual(get_file_size.call_args_list, [mock.call(final_iso_path)])
++        self.assertEqual(get_mtime.call_args_list, [mock.call(final_iso_path)])
++        self.assertImageAdded(compose, ImageCls, IsoWrapper)
++        self.assertEqual(compose.get_image_name.call_args_list,
++                         [mock.call('x86_64', compose.variants['Everything'],
++                                    disc_type='dvd', format=None)])
++
++    @mock.patch('productmd.images.Image')
++    @mock.patch('pungi.util.get_mtime')
++    @mock.patch('pungi.util.get_file_size')
++    @mock.patch('pungi.wrappers.iso.IsoWrapper')
++    @mock.patch('os.link')
++    @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
++    def test_fail_crash(self, KojiWrapper, link,
++                        IsoWrapper, get_file_size, get_mtime, ImageCls):
++        compose = helpers.DummyCompose(self.topdir, {
++            'release_name': 'Fedora',
++            'release_version': 'Rawhide',
++            'koji_profile': 'koji',
++            'runroot_tag': 'rrt',
++            'failable_deliverables': [
++                ('^.+$', {'*': ['ostree-installer']})
++            ],
++        })
++        pool = mock.Mock()
++        cfg = {
++            'source_repo_from': 'Everything',
++            'release': None,
++            'filename': 'Fedora-Atomic.iso',
++        }
++        koji = KojiWrapper.return_value
++        koji.run_runroot_cmd.side_effect = helpers.boom
++
++        t = ostree.OstreeInstallerThread(pool)
++
++        t.process((compose, compose.variants['Everything'], 'x86_64', cfg), 1)
++        compose.log_info.assert_has_calls([
++            mock.call('[FAIL] Ostree installer (variant Everything, arch x86_64) failed, but going on anyway.'),
++            mock.call('BOOM')
++        ])
++
++    @mock.patch('productmd.images.Image')
++    @mock.patch('pungi.util.get_mtime')
++    @mock.patch('pungi.util.get_file_size')
++    @mock.patch('pungi.wrappers.iso.IsoWrapper')
++    @mock.patch('os.link')
++    @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
++    def test_fail_runroot_fail(self, KojiWrapper, link,
++                               IsoWrapper, get_file_size, get_mtime, ImageCls):
++        compose = helpers.DummyCompose(self.topdir, {
++            'release_name': 'Fedora',
++            'release_version': 'Rawhide',
++            'koji_profile': 'koji',
++            'runroot_tag': 'rrt',
++            'failable_deliverables': [
++                ('^.+$', {'*': ['ostree-installer']})
++            ],
++        })
++        pool = mock.Mock()
++        cfg = {
++            'source_repo_from': 'Everything',
++            'release': None,
++            'filename': 'Fedora-Atomic.iso',
++        }
++        koji = KojiWrapper.return_value
++        koji.run_runroot_cmd.return_value = {
++            'output': 'Failed',
++            'task_id': 1234,
++            'retcode': 1,
++        }
++
++        t = ostree.OstreeInstallerThread(pool)
++
++        t.process((compose, compose.variants['Everything'], 'x86_64', cfg), 1)
++        compose.log_info.assert_has_calls([
++            mock.call('[FAIL] Ostree installer (variant Everything, arch x86_64) failed, but going on anyway.'),
++            mock.call('Runroot task failed: 1234. See %s/logs/x86_64/ostree/runroot.log for more details.'
++                      % self.topdir)
++        ])
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/tests/test_ostree_phase.py b/tests/test_ostree_phase.py
+index fe0036c..9f8fdf1 100755
+--- a/tests/test_ostree_phase.py
++++ b/tests/test_ostree_phase.py
+@@ -24,7 +24,7 @@ class OSTreePhaseTest(helpers.PungiTestCase):
+                         "treefile": "fedora-atomic-docker-host.json",
+                         "config_url": "https://git.fedorahosted.org/git/fedora-atomic.git",
+                         "source_repo_from": "Everything",
+-                        "atomic_repo": "/mnt/koji/compose/atomic/Rawhide/"
++                        "ostree_repo": "/mnt/koji/compose/atomic/Rawhide/"
+                     }
+                 })
+             ]
+@@ -86,7 +86,7 @@ class OSTreeThreadTest(helpers.PungiTestCase):
+             'config_url': 'https://git.fedorahosted.org/git/fedora-atomic.git',
+             'config_branch': 'f24',
+             'treefile': 'fedora-atomic-docker-host.json',
+-            'atomic_repo': '/other/place/for/atomic'
++            'ostree_repo': '/other/place/for/atomic'
+         }
+         koji = KojiWrapper.return_value
+         koji.run_runroot_cmd.return_value = {
+@@ -102,7 +102,7 @@ class OSTreeThreadTest(helpers.PungiTestCase):
+         self.assertEqual(koji.get_runroot_cmd.call_args_list,
+                          [mock.call('rrt', 'x86_64',
+                                     ['pungi-make-ostree',
+-                                     '--log-dir={}/logs/x86_64/atomic'.format(self.topdir),
++                                     '--log-dir={}/logs/x86_64/ostree'.format(self.topdir),
+                                      '--treefile=fedora-atomic-docker-host.json',
+                                      '--config-url=https://git.fedorahosted.org/git/fedora-atomic.git',
+                                      '--config-branch=f24',
+@@ -113,7 +113,7 @@ class OSTreeThreadTest(helpers.PungiTestCase):
+                                     task_id=True, use_shell=True)])
+         self.assertEqual(koji.run_runroot_cmd.call_args_list,
+                          [mock.call(koji.get_runroot_cmd.return_value,
+-                                    log_file=self.topdir + '/logs/x86_64/atomic/runroot.log')])
++                                    log_file=self.topdir + '/logs/x86_64/ostree/runroot.log')])
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/tests/test_ostree_script.py b/tests/test_ostree_script.py
+new file mode 100755
+index 0000000..744af4d
+--- /dev/null
++++ b/tests/test_ostree_script.py
+@@ -0,0 +1,57 @@
++#!/usr/bin/env python
++# -*- coding: utf-8 -*-
++
++
++import unittest
++import mock
++
++import os
++import sys
++
++sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
++sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'bin'))
++
++from tests import helpers
++from pungi import ostree
++
++
++class OstreeScriptTest(helpers.PungiTestCase):
++
++    def _dummy_config_repo(self, scm_dict, target, logger=None):
++        helpers.touch(os.path.join(target, 'fedora-atomic-docker-host.json'))
++        helpers.touch(os.path.join(target, 'fedora-rawhide.repo'))
++
++    @mock.patch('tempfile.mkdtemp')
++    @mock.patch('kobo.shortcuts.run')
++    @mock.patch('pungi.wrappers.scm.get_dir_from_scm')
++    def test_full_run(self, get_dir_from_scm, run, tempfile):
++        tempfile.return_value = self.topdir
++        get_dir_from_scm.side_effect = self._dummy_config_repo
++
++        repo = os.path.join(self.topdir, 'atomic')
++
++        ostree.main([
++            '--log-dir={}'.format(os.path.join(self.topdir, 'logs', 'Atomic')),
++            '--treefile={}'.format('fedora-atomic-docker-host.json'),
++            '--config-url=https://git.fedorahosted.org/git/fedora-atomic.git',
++            '--config-branch=f24',
++            '--source-repo=https://kojipkgs.fedoraproject.org/repo',
++            repo,
++        ])
++
++        self.maxDiff = None
++        self.assertEqual(get_dir_from_scm.call_args_list,
++                         [mock.call({'scm': 'git', 'repo': 'https://git.fedorahosted.org/git/fedora-atomic.git',
++                                     'branch': 'f24', 'dir': '.'},
++                                    self.topdir + '/config_repo')])
++        self.assertItemsEqual(
++            run.call_args_list,
++            [mock.call(['ostree', 'init', '--repo={}'.format(repo), '--mode=archive-z2'],
++                       logfile=self.topdir + '/logs/Atomic/init-ostree-repo.log'),
++             mock.call(['rpm-ostree', 'compose', 'tree', '--repo={}'.format(repo),
++                        self.topdir + '/config_repo/fedora-atomic-docker-host.json'],
++                       logfile=self.topdir + '/logs/Atomic/create-ostree-repo.log')])
++
++
++if __name__ == '__main__':
++    unittest.main()
+-- 
+2.7.3
+

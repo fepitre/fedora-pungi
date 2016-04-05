@@ -1,7 +1,7 @@
 From 05384eae584476bfca3bd4bf31958d1e5dbb20a6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Mon, 4 Apr 2016 15:13:35 +0200
-Subject: [PATCH 3/3] [ostree] Fix call to kobo.shortcuts.run
+Subject: [PATCH 3/6] [ostree] Fix call to kobo.shortcuts.run
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
