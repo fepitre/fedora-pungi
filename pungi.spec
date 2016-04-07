@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -59,10 +59,12 @@ make man
 gzip _build/man/pungi.1
 
 %install
-%{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
-%{__install} -d $RPM_BUILD_ROOT/var/cache/pungi
-%{__install} -d $RPM_BUILD_ROOT%{_mandir}/man1
-%{__install} doc/_build/man/pungi.1.gz $RPM_BUILD_ROOT%{_mandir}/man1
+%{__python} setup.py install -O1 --skip-build --root %{buildroot}
+%{__install} -d %{buildroot}/var/cache/pungi
+%{__install} -d %{buildroot}%{_mandir}/man1
+%{__install} doc/_build/man/pungi.1.gz %{buildroot}%{_mandir}/man1
+# this script has to be run by python3 and setup.py is too dumb
+sed -i 's|/usr/bin/python$|/usr/bin/python3|' %{buildroot}/%{_bindir}/pungi-pylorax-find-templates
 
 %check
 ./tests/data/specs/build.sh
@@ -81,6 +83,9 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Thu Apr 06 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.2-2
+- make sure that the shebang of pungi-pylorax-find-templates is python3
+
 * Wed Apr 05 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.2-1
 - Merge #257 `[ostree] Enable marking ostree phase as failable` (ausil)
 - [ostree] Enable marking ostree phase as failable (lsedlar)
