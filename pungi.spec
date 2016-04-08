@@ -1,6 +1,6 @@
 Name:           pungi
-Version:        4.1.2
-Release:        2%{?dist}
+Version:        4.1.3
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -83,6 +83,17 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Fri Apr 08 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.3-1
+- enable the compose test (dennis)
+- [ostree-installer] Copy all lorax outputs (lsedlar)
+- [ostree] Log to stdout as well (lsedlar)
+- [ostree-installer] Use separate directory for logs (lsedlar)
+- Merge #260 `Maybe fix ostree?` (ausil)
+- [ostree-installer] Put lorax output into work dir (lsedlar)
+- [ostree] Add test check for modified repo baseurl (lsedlar)
+- [ostree] Move cloning repo back to compose box (lsedlar)
+- [ostree] Mount ostree directory in koji (lsedlar)
+
 * Thu Apr 06 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.2-2
 - make sure that the shebang of pungi-pylorax-find-templates is python3
 
