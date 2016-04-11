@@ -1,12 +1,14 @@
 Name:           pungi
 Version:        4.1.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
+Patch0:         0001-ostree-installer-Clone-repo-with-templates.patch
+Patch1:         0002-pkgset-Print-more-detailed-logs-when-rpm-is-not-foun.patch
 
 BuildRequires:  python-nose, python-nose-cov, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -48,6 +50,8 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
+%patch0 -p1
+%patch1 -p1
 
 %build
 %{__python} setup.py build
@@ -83,6 +87,10 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Mon Apr 11 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.3-2
+- add patch to print more info for missing rpms
+- add patch to clone repo with extra lorax templates for ostree_installer
+
 * Fri Apr 08 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.3-1
 - enable the compose test (dennis)
 - [ostree-installer] Copy all lorax outputs (lsedlar)
