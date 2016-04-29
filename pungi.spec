@@ -1,15 +1,12 @@
 Name:           pungi
-Version:        4.1.3
-Release:        3%{?dist}
+Version:        4.1.4
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
-Patch0:         0001-ostree-installer-Clone-repo-with-templates.patch
-Patch1:         0002-pkgset-Print-more-detailed-logs-when-rpm-is-not-foun.patch
-Patch2:         0001-ostree-installer-Install-ostree-in-runroot.patch
 
 BuildRequires:  python-nose, python-nose-cov, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -51,9 +48,6 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
 
 %build
 %{__python} setup.py build
@@ -89,6 +83,43 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Fri Apr 29 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.4-1
+- Merge #273 `Deduplicate configuration a bit` (dennis)
+- Merge #280 `[createrepo] Use more verbose output` (dennis)
+- Merge #283 `Pungi should log when it tries to publish notifications.`
+  (dennis)
+- [createiso] Add back running isohybrid on x86 disk images (dennis)
+- [createiso] Remove chdir() (lsedlar)
+- [pkgset] Fix caching RPMs (lsedlar)
+- [createrepo] Use more verbose output (lsedlar)
+- Pungi should log when it tries to publish notifications. (rbean)
+- [pkgset] Use context manager for opening file list (lsedlar)
+- [pkgset] Add tests for writing filelists (lsedlar)
+- [pkgset] Simplify finding RPM in koji buildroot (lsedlar)
+- [pkgset] Clean up koji package set (lsedlar)
+- [pkgset] Add test for pkgset merging (lsedlar)
+- [pkgset] Add tests for KojiPackageSet (lsedlar)
+- [pkgset] Clean up Koji source (lsedlar)
+- [pkgset] Add tests for Koji source (lsedlar)
+- Add common global settings for images (lsedlar)
+- Remove duplicated and dead code (lsedlar)
+- [live-media] Add check for live_media_version option (lsedlar)
+- [scm-wrapper] Remove unused method (lsedlar)
+- [scm-wrapper] Report when file wrapper did not match anything (lsedlar)
+- [scm-wrapper] Use context manager for managing temp dir (lsedlar)
+- [scm-wrapper] Reduce code duplication in RPM wrapper (lsedlar)
+- [scm-wrapper] Copy files directly (lsedlar)
+- [scm-wrapper] Reduce code duplication (lsedlar)
+- [scm-wrapper] Add tests for SCM wrappers (lsedlar)
+- [ostree] Set each repo to point to current compose (lsedlar)
+- [ostree-installer] Drop filename setting (lsedlar)
+- Merge #269 `Improve logging of failable deliverables` (ausil)
+- [ostree-installer] Fix example documentation (lsedlar)
+- Improve logging of failable deliverables (lsedlar)
+- [ostree-installer] Install ostree in runroot (lsedlar)
+- [pkgset] Print more detailed logs when rpm is not found (lsedlar)
+- [ostree-installer] Clone repo with templates (lsedlar)
+
 * Tue Apr 12 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.3-3
 - add patch to install ostree in the ostree_installer runroot
 
