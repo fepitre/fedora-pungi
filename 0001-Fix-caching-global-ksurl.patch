@@ -1,0 +1,34 @@
+From 5aadf4ac39d85eeee969d7f3edd474e170a0c86c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Thu, 5 May 2016 10:44:27 +0200
+Subject: [PATCH] Fix caching global ksurl
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The config object from Kobo does not allow keys starting with
+underscore, so we prefix it with `private_` instead.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/base.py | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/pungi/phases/base.py b/pungi/phases/base.py
+index 18d6f8a..6e24249 100644
+--- a/pungi/phases/base.py
++++ b/pungi/phases/base.py
+@@ -145,7 +145,7 @@ class ImageConfigMixin(object):
+     def global_ksurl(self):
+         """Get global ksurl setting, making sure to resolve it only once."""
+         # The global setting is cached in the configuration object.
+-        if '_global_ksurl' not in self.compose.conf:
++        if 'private_global_ksurl' not in self.compose.conf:
+             ksurl = self.compose.conf.get('global_ksurl')
+-            self.compose.conf['_global_ksurl'] = util.resolve_git_url(ksurl)
+-        return self.compose.conf['_global_ksurl']
++            self.compose.conf['private_global_ksurl'] = util.resolve_git_url(ksurl)
++        return self.compose.conf['private_global_ksurl']
+-- 
+2.7.4
+
