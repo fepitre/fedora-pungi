@@ -1,13 +1,12 @@
 Name:           pungi
-Version:        4.1.4
-Release:        2%{?dist}
+Version:        4.1.5
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
-Patch0:         0001-Fix-caching-global-ksurl.patch
 
 BuildRequires:  python-nose, python-nose-cov, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -49,7 +48,6 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
-%patch0 -p1
 
 %build
 %{__python} setup.py build
@@ -85,6 +83,15 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Mon May 16 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.5-1
+- [ostree] Put variant name in ostree log dir (lsedlar)
+- Merge #294 `[ostree] Initialize empty repo` (dennis)
+- [util] Resolve git+https URLs (lsedlar)
+- [ostree] Initialize empty repo (lsedlar)
+- [test] Add checks for created images (lsedlar)
+- Fix caching global ksurl (lsedlar)
+- include tests/fixtures in manifest (dennis)
+
 * Fri May 06 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.4-2
 - add patch to fix caching global ksurl
 
