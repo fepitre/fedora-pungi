@@ -1,5 +1,5 @@
 Name:           pungi
-Version:        4.1.5
+Version:        4.1.6
 Release:        1%{?dist}
 Summary:        Distribution compose tool
 
@@ -83,6 +83,14 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Tue May 24 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.6-1
+- [ostree-installer] Allow using external repos as source (lsedlar)
+- [image-build] Allow using external install trees (lsedlar)
+- Add type to base product for layered releases (lsedlar)
+- Merge #303 `[ostree] Use unique work and log paths` (dennis)
+- [ostree] Use unique work and log paths (lsedlar)
+- [arch] Add mock rpmUtils module (lsedlar)
+
 * Mon May 16 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.5-1
 - [ostree] Put variant name in ostree log dir (lsedlar)
 - Merge #294 `[ostree] Initialize empty repo` (dennis)
