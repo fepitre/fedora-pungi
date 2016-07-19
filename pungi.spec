@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.7
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -83,6 +83,9 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Tue Jul 19 2016 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.1.7-2
+- https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
+
 * Thu Jun 23 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.7-1
 - [scm] Add logging for exporting local files (lsedlar)
 - [extra-files] Only copy files when there is a config (lsedlar)
