@@ -1,6 +1,6 @@
 Name:           pungi
-Version:        4.1.7
-Release:        2%{?dist}
+Version:        4.1.8
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -83,6 +83,28 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Wed Aug 10 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.8-1
+- [createiso] Use shell script for runroot (lsedlar)
+- Merge #357 `Improve error messages for gathering packages` (dennis)
+- [test] Only check bootability for images on x86_64 and i386 (lsedlar)
+- Improve error messages for gathering packages (lsedlar)
+- Merge #339 `Refactor failables, step 1` (dennis)
+- Refactor failables (lsedlar)
+- Stop setting release in OSBS phase (lsedlar)
+- Merge #351 `Remove ambiguous imports` (dennis)
+- [test] Correctly check bootable ISOs (lsedlar)
+- Remove ambiguous imports (lsedlar)
+- Merge #347 `Remove duplicate definition of find_old_composes.`
+  (lubomir.sedlar)
+- Merge #342 `Simplify naming format placeholders` (dennis)
+- Merge #345 `createrepo: use separate logs for different pkg_type` (dennis)
+- Remove duplicate definition of find_old_composes... (rbean)
+- [createrepo] fix 'createrepo_deltas' option (qwan)
+- createrepo: use separate logs for different pkg_type (lsedlar)
+- Simplify naming format placeholders (lsedlar)
+- Treat variants without comps groups as having all of them (lsedlar)
+- Always generate rpms.json file (lsedlar)
+
 * Tue Jul 19 2016 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.1.7-2
 - https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
 
