@@ -19,7 +19,7 @@ BuildRequires:  python-sphinx, texlive-latex-bin-bin, texlive-collection-fontsre
 BuildRequires:  texlive-times, texlive-cmap, texlive-babel-english, texlive-fancyhdr
 BuildRequires:  texlive-fancybox, texlive-titlesec, texlive-framed, texlive-threeparttable
 BuildRequires:  texlive-mdwtools, texlive-wrapfig, texlive-parskip, texlive-upquote
-BuildRequires:  texlive-multirow
+BuildRequires:  texlive-multirow, texlive-capt-of, texlive-eqparbox
 
 Requires:       createrepo >= 0.4.11
 Requires:       yum => 3.4.3-28
