@@ -63,8 +63,6 @@ gzip _build/man/pungi.1
 %{__install} -d %{buildroot}/var/cache/pungi
 %{__install} -d %{buildroot}%{_mandir}/man1
 %{__install} doc/_build/man/pungi.1.gz %{buildroot}%{_mandir}/man1
-# this script has to be run by python3 and setup.py is too dumb
-sed -i 's|/usr/bin/python$|/usr/bin/python3|' %{buildroot}/%{_bindir}/pungi-pylorax-find-templates
 
 %check
 ./tests/data/specs/build.sh
