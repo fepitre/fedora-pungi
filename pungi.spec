@@ -275,10 +275,10 @@ cd tests && ./test_compose.sh
 - [ostree] Move cloning repo back to compose box (lsedlar)
 - [ostree] Mount ostree directory in koji (lsedlar)
 
-* Thu Apr 06 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.2-2
+* Thu Apr 07 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.2-2
 - make sure that the shebang of pungi-pylorax-find-templates is python3
 
-* Wed Apr 05 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.2-1
+* Wed Apr 06 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.2-1
 - Merge #257 `[ostree] Enable marking ostree phase as failable` (ausil)
 - [ostree] Enable marking ostree phase as failable (lsedlar)
 - [koji-wrapper] Initialize wrappers sequentially (lsedlar)
@@ -532,7 +532,7 @@ cd tests && ./test_compose.sh
 - Load multilib configuration from local dir in development (lsedlar)
 - Allow running scripts with any python in PATH (lsedlar)
 
-* Tue Aug 08 2015 Dennis Gilmore <dennis@ausil.us> 4.0.3-1
+* Tue Sep 08 2015 Dennis Gilmore <dennis@ausil.us> 4.0.3-1
 - Merge #54 `fix log_info for image_build (fails if image_build is skipped)`
   (lkocman)
 - image_build: self.log_info -> self.compose.log_info (lkocman)
