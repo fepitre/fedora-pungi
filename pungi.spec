@@ -68,7 +68,7 @@ gzip _build/man/pungi.1
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
 %{__install} -d %{buildroot}/var/cache/pungi
 %{__install} -d %{buildroot}%{_mandir}/man1
-%{__install} doc/_build/man/pungi.1.gz %{buildroot}%{_mandir}/man1
+%{__install} -m 0644 doc/_build/man/pungi.1.gz %{buildroot}%{_mandir}/man1
 
 %check
 ./tests/data/specs/build.sh
