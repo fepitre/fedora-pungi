@@ -1,12 +1,13 @@
 Name:           pungi
 Version:        4.1.9
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+Patch0:         0001-use-new-chroot-when-making-ostree-s.patch
 
 BuildRequires:  python-nose, python-nose-cov, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -35,8 +36,9 @@ Requires:       python-kickstart
 Requires:       libselinux-python
 Requires:       createrepo_c
 Requires:       python-lxml
-Requires:       koji
-Requires:       jigdo
+Requires:       koji >= 1.10.1-13
+# This is optional do not Require it
+#eRquires:       jigdo
 Requires:       cvs
 Requires:       yum-utils
 Requires:       isomd5sum
@@ -54,6 +56,7 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 %{__python} setup.py build
@@ -87,6 +90,9 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Thu Sep 29 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.9-2
+- add patch to enable use of --new-chroot for ostree tasks
+
 * Wed Sep 21 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.9-1
 - ostree_installer: Add --isfinal lorax argument (lsedlar)
 - Recreate JSON dump of configuration (lsedlar)

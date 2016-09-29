@@ -1,0 +1,82 @@
+From 4e90f81fc149f2f13f558c158eee158df2f9c563 Mon Sep 17 00:00:00 2001
+From: Dennis Gilmore <dennis@ausil.us>
+Date: Wed, 28 Sep 2016 20:58:17 -0500
+Subject: [PATCH] use --new-chroot when making ostree's
+
+to complement https://pagure.io/koji/pull-request/162 we need to adjust pungi
+rpm-ostree uses bublewrap that does not work in mock. --new-chroot to mock
+enables the use of systemd-nspawn instead of chroot resulting in working
+rpm-ostree again
+
+Signed-off-by: Dennis Gilmore <dennis@ausil.us>
+---
+ pungi.spec                    | 2 +-
+ pungi/phases/ostree.py        | 3 ++-
+ pungi/wrappers/kojiwrapper.py | 5 ++++-
+ tests/test_ostree_phase.py    | 2 +-
+ 4 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/pungi.spec b/pungi.spec
+index 45df630..32f13e0 100644
+--- a/pungi.spec
++++ b/pungi.spec
+@@ -27,7 +27,7 @@ Requires:       python-kickstart
+ Requires:       libselinux-python
+ Requires:       createrepo_c
+ Requires:       python-lxml
+-Requires:       koji
++Requires:       koji >= 1.10.1-13
+ Requires:       jigdo
+ Requires:       cvs
+ Requires:       yum-utils
+diff --git a/pungi/phases/ostree.py b/pungi/phases/ostree.py
+index c25ab84..d60bb68 100644
+--- a/pungi/phases/ostree.py
++++ b/pungi/phases/ostree.py
+@@ -93,7 +93,8 @@ class OSTreeThread(WorkerThread):
+         koji_cmd = koji.get_runroot_cmd(runroot_tag, arch, cmd,
+                                         channel=runroot_channel,
+                                         use_shell=True, task_id=True,
+-                                        packages=packages, mounts=mounts)
++                                        packages=packages, mounts=mounts,
++                                        new_chroot=True)
+         output = koji.run_runroot_cmd(koji_cmd, log_file=log_file)
+         if output["retcode"] != 0:
+             raise RuntimeError("Runroot task failed: %s. See %s for more details."
+diff --git a/pungi/wrappers/kojiwrapper.py b/pungi/wrappers/kojiwrapper.py
+index 98626ca..85a933a 100644
+--- a/pungi/wrappers/kojiwrapper.py
++++ b/pungi/wrappers/kojiwrapper.py
+@@ -59,12 +59,15 @@ class KojiWrapper(object):
+         else:
+             raise RuntimeError('Unsupported authentication type in Koji')
+ 
+-    def get_runroot_cmd(self, target, arch, command, quiet=False, use_shell=True, channel=None, packages=None, mounts=None, weight=None, task_id=True):
++    def get_runroot_cmd(self, target, arch, command, quiet=False, use_shell=True, channel=None, packages=None, mounts=None, weight=None, task_id=True, new_chroot=False):
+         cmd = [self.executable, "runroot"]
+ 
+         if quiet:
+             cmd.append("--quiet")
+ 
++        if new_chroot:
++            cmd.append("--new-chroot")
++
+         if use_shell:
+             cmd.append("--use-shell")
+ 
+diff --git a/tests/test_ostree_phase.py b/tests/test_ostree_phase.py
+index 8a4092f..dcf583a 100755
+--- a/tests/test_ostree_phase.py
++++ b/tests/test_ostree_phase.py
+@@ -108,7 +108,7 @@ class OSTreeThreadTest(helpers.PungiTestCase):
+                                      self.repo],
+                                     channel=None, mounts=[self.topdir, self.repo],
+                                     packages=['pungi', 'ostree', 'rpm-ostree'],
+-                                    task_id=True, use_shell=True)])
++                                    task_id=True, use_shell=True, new_chroot=True)])
+         self.assertEqual(koji.run_runroot_cmd.call_args_list,
+                          [mock.call(koji.get_runroot_cmd.return_value,
+                                     log_file=self.topdir + '/logs/x86_64/Everything/ostree-1/runroot.log')])
+-- 
+2.9.3
+
