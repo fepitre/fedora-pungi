@@ -1,13 +1,12 @@
 Name:           pungi
-Version:        4.1.9
-Release:        2%{?dist}
+Version:        4.1.10
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-use-new-chroot-when-making-ostree-s.patch
 
 BuildRequires:  python-nose, python-nose-cov, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -56,7 +55,6 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
-%patch0 -p1
 
 %build
 %{__python} setup.py build
@@ -90,6 +88,23 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Sat Oct 08 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.10-1
+- pungi: Replace kickstart repo url (mark)
+- ostree-installer: Reduce duplication in tests (lsedlar)
+- ostree-installer: Generate correct volume ID (lsedlar)
+- ostree-installer: Use ostree as type in filename (lsedlar)
+- ostree: Use $basearch in repo file (lsedlar)
+- config: Accept empty branch in SCM dict (lsedlar)
+- Remove duplicated version from pungi script (lsedlar)
+- use --new-chroot when making ostree's (dennis)
+- Create git tags without release (lsedlar)
+- Translate paths without double slash (lsedlar)
+- Remove shebangs from non-executable files (lsedlar)
+- Remove FSF address from comments (lsedlar)
+- Update contributing guide (lsedlar)
+- init: Remove keep_original_comps option (lsedlar)
+- tests: Use unittest2 consistently (lsedlar)
+
 * Thu Sep 29 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.9-2
 - add patch to enable use of --new-chroot for ostree tasks
 
