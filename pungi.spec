@@ -11,7 +11,7 @@ Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-pungi-Fix-tests-on-non-x86_64-arches.patch
 Patch1:         0002-pungi-Fix-incorrectly-skipped-tests.patch
 
-BuildRequires:  python-nose, python-nose-cov, python-mock
+BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
 BuildRequires:  python-lockfile, kobo, kobo-rpmlib, python-kickstart, createrepo_c
 BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax
@@ -77,9 +77,8 @@ gzip _build/man/pungi.1
 %{__install} -m 0644 doc/_build/man/pungi.1.gz %{buildroot}%{_mandir}/man1
 
 %check
+nosetests --exe
 ./tests/data/specs/build.sh
-%{__python} setup.py test
-nosetests --exe --with-cov --cov-report html --cov-config tox.ini
 cd tests && ./test_compose.sh
 
 %files
