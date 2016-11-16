@@ -7,6 +7,9 @@ Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+# These patches are added here to fix running tests. They are proposed in upstream as well.
+Patch0:         0001-pungi-Fix-tests-on-non-x86_64-arches.patch
+Patch1:         0002-pungi-Fix-incorrectly-skipped-tests.patch
 
 BuildRequires:  python-nose, python-nose-cov, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -55,6 +58,8 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
+%patch0 -p1
+%patch1 -p1
 
 %build
 %{__python} setup.py build

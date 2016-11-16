@@ -1,0 +1,33 @@
+From b7813d34ac8e7986fbf2e8b1e4fc35427655ee8a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Wed, 16 Nov 2016 09:43:19 +0100
+Subject: [PATCH 2/2] pungi: Fix incorrectly skipped tests
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The test was not correctly being skipped in Koji build, causing build
+failure.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ tests/test_pungi.py | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/tests/test_pungi.py b/tests/test_pungi.py
+index d770d2a..a519ddf 100644
+--- a/tests/test_pungi.py
++++ b/tests/test_pungi.py
+@@ -776,8 +776,7 @@ class TestPungi(unittest.TestCase):
+             "dummy-glibc-debuginfo-common-2.14-5.x86_64.rpm",
+         ])
+ 
+-    # This test is broken.
+-    @unittest.skip
++    @unittest.skip('This test is broken')
+     def test_bash_multilib_nogreedy(self):
+         packages = [
+             "dummy-bash.+",
+-- 
+2.7.4
+

@@ -1,0 +1,36 @@
+From 3c1e2fba662cd635b20d2daf2c5acacfee407876 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Wed, 16 Nov 2016 09:20:10 +0100
+Subject: [PATCH] pungi: Fix tests on non-x86_64 arches
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+If the test did not specify an arch explicitly, it fell back on whatever
+arch the current machine has. This was causing failures when building
+RPM.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ tests/test_pungi.py | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/tests/test_pungi.py b/tests/test_pungi.py
+index a3297e7..d770d2a 100644
+--- a/tests/test_pungi.py
++++ b/tests/test_pungi.py
+@@ -65,6 +65,11 @@ class TestPungi(unittest.TestCase):
+         p.write_kickstart(self.ks, repos, groups, packages, prepopulate=prepopulate,
+                           multilib_whitelist=multilib_whitelist)
+         kwargs.setdefault('cache_dir', self.tmp_dir)
++        # Unless the test specifies an arch, we need to default to x86_64.
++        # Otherwise the arch of current machine will be used, which will cause
++        # failure most of the time.
++        kwargs.setdefault('arch', 'x86_64')
++
+         p.run_pungi(self.ks, self.tmp_dir, 'DP', **kwargs)
+         with open(self.out, "r") as f:
+             pkg_map = p.get_packages(f.read())
+-- 
+2.7.4
+
