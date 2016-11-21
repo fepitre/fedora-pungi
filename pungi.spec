@@ -1,15 +1,12 @@
 Name:           pungi
 Version:        4.1.11
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-# These patches are added here to fix running tests. They are proposed in upstream as well.
-Patch0:         0001-pungi-Fix-tests-on-non-x86_64-arches.patch
-Patch1:         0002-pungi-Fix-incorrectly-skipped-tests.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -50,6 +47,7 @@ Requires:       gettext
 #Requires:       syslinux
 Requires:       git
 Requires:       python-jsonschema
+Requires:       libguestfs-tools-c
 
 BuildArch:      noarch
 
@@ -58,8 +56,6 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
 
 %build
 %{__python} setup.py build
@@ -92,6 +88,9 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Mon Nov 21 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.11-2
+- Add missing dependency on libguestfs-tools-c
+
 * Tue Nov 15 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.11-1
 - [ostree] Allow extra repos to get packages for composing OSTree repository
   (qwan)
