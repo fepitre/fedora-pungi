@@ -1,12 +1,14 @@
 Name:           pungi
 Version:        4.1.11
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+Patch0:         0001-Expose-lorax-s-rootfs-size-argument.patch
+Patch1:         0002-ostree-installer-Use-dvd-ostree-as-type-in-metadata.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -56,6 +58,8 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 
 %prep
 %setup -q
+%patch0 -p1
+%patch1 -p1
 
 %build
 %{__python} setup.py build
@@ -88,6 +92,9 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Thu Dec 08 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.11-3
+- Backport patches for ostree installer
+
 * Mon Nov 21 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.11-2
 - Add missing dependency on libguestfs-tools-c
 
