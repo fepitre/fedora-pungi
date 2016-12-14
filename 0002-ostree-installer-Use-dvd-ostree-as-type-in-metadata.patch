@@ -1,7 +1,7 @@
 From ec4fb785e5e68d09b6790963085d33787337ac0d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Thu, 6 Oct 2016 13:12:34 +0200
-Subject: [PATCH 2/2] ostree-installer: Use dvd-ostree as type in metadata
+Subject: [PATCH 2/4] ostree-installer: Use dvd-ostree as type in metadata
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

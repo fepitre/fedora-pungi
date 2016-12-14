@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.11
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -9,6 +9,8 @@ URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-Expose-lorax-s-rootfs-size-argument.patch
 Patch1:         0002-ostree-installer-Use-dvd-ostree-as-type-in-metadata.patch
+Patch2:         0003-Make-KojiWrapper-parse-krb_rdns.patch
+Patch3:         0004-Make-KojiWrapper-support-krb_login-with-keytab.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -60,6 +62,8 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 %setup -q
 %patch0 -p1
 %patch1 -p1
+%patch2 -p1
+%patch3 -p1
 
 %build
 %{__python} setup.py build
@@ -92,6 +96,9 @@ cd tests && ./test_compose.sh
 /var/cache/pungi
 
 %changelog
+* Wed Dec 14 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.11-4
+- Add patches for koji kerberos auth
+
 * Thu Dec 08 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.11-3
 - Backport patches for ostree installer
 

@@ -1,0 +1,31 @@
+From c17d72c5e1a73dd7c173ba791710d66b92e73e24 Mon Sep 17 00:00:00 2001
+From: Patrick Uiterwijk <puiterwijk@redhat.com>
+Date: Tue, 13 Dec 2016 13:51:48 +0000
+Subject: [PATCH 4/4] Make KojiWrapper support krb_login with keytab
+
+Using getattr so we also work with versions of koji that do not
+read principal and keytab from the config file.
+
+Signed-off-by: Patrick Uiterwijk <puiterwijk@redhat.com>
+---
+ pungi/wrappers/kojiwrapper.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/pungi/wrappers/kojiwrapper.py b/pungi/wrappers/kojiwrapper.py
+index 8dcb5aa..0dcac90 100644
+--- a/pungi/wrappers/kojiwrapper.py
++++ b/pungi/wrappers/kojiwrapper.py
+@@ -55,7 +55,9 @@ class KojiWrapper(object):
+                                       os.path.expanduser(self.koji_module.config.ca),
+                                       os.path.expanduser(self.koji_module.config.serverca))
+         elif auth_type == 'kerberos':
+-            self.koji_proxy.krb_login()
++            self.koji_proxy.krb_login(
++                getattr(self.koji_module.config, 'principal', None),
++                getattr(self.koji_module.config, 'keytab', None))
+         else:
+             raise RuntimeError('Unsupported authentication type in Koji')
+ 
+-- 
+2.9.3
+
