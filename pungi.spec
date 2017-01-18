@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.12
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -9,11 +9,12 @@ URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 # from https://pagure.io/fork/puiterwijk/pungi/c/63aa7db5aad4690b72898d01fa82270c1f503241
 Patch0:         63aa7db5aad4690b72898d01fa82270c1f503241.patch
+Patch1:         0001-replace-basearch-when-updating-the-ref.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
 BuildRequires:  python-lockfile, kobo, kobo-rpmlib, python-kickstart, createrepo_c
-BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax
+BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax, python-rpm
 BuildRequires:  yum => 3.4.3-28, createrepo >= 0.4.11
 BuildRequires:  gettext, git-core, cvs
 BuildRequires:  python-jsonschema
@@ -71,6 +72,7 @@ notification to Fedora Message Bus.
 %prep
 %setup -q
 %patch0 -p1 
+%patch1 -p1
 
 %build
 %{__python} setup.py build
@@ -112,6 +114,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-fedmsg-notification
 
 %changelog
+* Tue Jan 17 2017 Dennis Gilmore <dennis@ausil.us> - 4.1.12-3
+- add patch to replace ${basearch} in the ostree ref
+
 * Tue Jan 17 2017 Dennis Gilmore <dennis@ausil.us> - 4.1.12-2
 - add patch from Patrick to give us some ostree debuging
 

@@ -1,0 +1,37 @@
+From 575fd872661f288c90d2fc8498e4db9ffddc4a9e Mon Sep 17 00:00:00 2001
+From: Dennis Gilmore <dennis@ausil.us>
+Date: Wed, 18 Jan 2017 14:22:43 -0600
+Subject: [PATCH] replace ${basearch} when updating the ref
+
+pungi-make-ostree has to run on the target arch so that rpm
+scriptlets can be ran.as a reult we can ask rpm what the
+basearch is for the running environment
+
+Signed-off-by: Dennis Gilmore <dennis@ausil.us>
+---
+ pungi/ostree/tree.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/pungi/ostree/tree.py b/pungi/ostree/tree.py
+index 68b6d70..2b97af4 100644
+--- a/pungi/ostree/tree.py
++++ b/pungi/ostree/tree.py
+@@ -16,6 +16,7 @@
+ 
+ import os
+ import json
++import rpmUtils.arch
+ from kobo import shortcuts
+ 
+ from pungi.util import makedirs
+@@ -67,6 +68,7 @@ class Tree(OSTree):
+             return
+         ref = get_ref_from_treefile(self.treefile)
+         commitid = get_commitid_from_commitid_file(self.commitid_file)
++        ref = ref.replace('${basearch}', rpmUtils.arch.getBaseArch())
+         print('Ref: %r, Commit ID: %r' % (ref, commitid))
+         if ref and commitid:
+             print('Updating ref')
+-- 
+2.11.0
+
