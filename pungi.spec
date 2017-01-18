@@ -7,8 +7,8 @@ Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-# from https://pagure.io/fork/puiterwijk/pungi/c/e599eb06e2cb8fc3cc3f7a97378a7b7bb5c19030
-Patch0:         e599eb06e2cb8fc3cc3f7a97378a7b7bb5c19030.patch
+# from https://pagure.io/fork/puiterwijk/pungi/c/63aa7db5aad4690b72898d01fa82270c1f503241
+Patch0:         63aa7db5aad4690b72898d01fa82270c1f503241.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3

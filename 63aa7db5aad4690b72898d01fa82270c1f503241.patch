@@ -1,6 +1,6 @@
-From e599eb06e2cb8fc3cc3f7a97378a7b7bb5c19030 Mon Sep 17 00:00:00 2001
+From 63aa7db5aad4690b72898d01fa82270c1f503241 Mon Sep 17 00:00:00 2001
 From: Patrick Uiterwijk <puiterwijk@redhat.com>
-Date: Jan 18 2017 18:50:34 +0000
+Date: Jan 18 2017 18:52:45 +0000
 Subject: Add some debugging about ref updating
 
 
@@ -26,4 +26,30 @@ index 1b616b2..68b6d70 100644
              # Let's write the tag out ourselves
              heads_dir = os.path.join(self.repo, 'refs', 'heads')
              if not os.path.exists(heads_dir):
+diff --git a/pungi/ostree/utils.py b/pungi/ostree/utils.py
+index fb5e330..02540c9 100644
+--- a/pungi/ostree/utils.py
++++ b/pungi/ostree/utils.py
+@@ -37,8 +37,10 @@ def get_ref_from_treefile(treefile):
+             try:
+                 parsed = json.loads(f.read())
+                 ref = parsed['ref']
+-            except Exception:
+-                pass
++            except Exception as e:
++                print('Unable to get ref from treefile: %s' % e)
++    else:
++        print('Unable to open treefile')
+     return ref
+ 
+ 
+@@ -48,6 +50,8 @@ def get_commitid_from_commitid_file(commitid_file):
+     if os.path.isfile(commitid_file):
+         with open(commitid_file, 'r') as f:
+             commitid = f.read().replace('\n', '')
++    else:
++        print('Unable to find commitid file')
+     return commitid
+ 
+ 
 
