@@ -1,16 +1,12 @@
 Name:           pungi
-Version:        4.1.11
-Release:        4%{?dist}
+Version:        4.1.12
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-Expose-lorax-s-rootfs-size-argument.patch
-Patch1:         0002-ostree-installer-Use-dvd-ostree-as-type-in-metadata.patch
-Patch2:         0003-Make-KojiWrapper-parse-krb_rdns.patch
-Patch3:         0004-Make-KojiWrapper-support-krb_login-with-keytab.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd
@@ -26,6 +22,8 @@ BuildRequires:  texlive-times, texlive-cmap, texlive-babel-english, texlive-fanc
 BuildRequires:  texlive-fancybox, texlive-titlesec, texlive-framed, texlive-threeparttable
 BuildRequires:  texlive-mdwtools, texlive-wrapfig, texlive-parskip, texlive-upquote
 BuildRequires:  texlive-multirow, texlive-capt-of, texlive-eqparbox, tex(color.cfg)
+BuildRequires:  tex(fncychap.sty)
+BuildRequires:  tex(tabulary.sty)
 
 Requires:       createrepo >= 0.4.11
 Requires:       yum => 3.4.3-28
@@ -58,12 +56,18 @@ BuildArch:      noarch
 %description
 A tool to create anaconda based installation trees/isos of a set of rpms.
 
+%package utils
+Summary:    Utilities for working with finished composes
+Requires:   pungi = %{version}-%{release}
+
+%description utils
+These utilities work with finished composes produced by Pungi. They can be used
+for creating unified ISO images, validating config file or sending progress
+notification to Fedora Message Bus.
+
+
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
 
 %build
 %{__python} setup.py build
@@ -90,12 +94,66 @@ cd tests && ./test_compose.sh
 %doc AUTHORS doc/_build/latex/Pungi.pdf doc/_build/epub/Pungi.epub doc/_build/text/*
 %{python_sitelib}/%{name}
 %{python_sitelib}/%{name}-%{version}-py?.?.egg-info
-%{_bindir}/*
+%{_bindir}/%{name}
+%{_bindir}/%{name}-koji
+%{_bindir}/comps_filter
+%{_bindir}/%{name}-make-ostree
 %{_mandir}/man1/pungi.1.gz
 %{_datadir}/pungi
 /var/cache/pungi
 
+%files utils
+%{python_sitelib}/%{name}_utils
+%{_bindir}/%{name}-create-unified-isos
+%{_bindir}/%{name}-config-validate
+%{_bindir}/%{name}-fedmsg-notification
+
 %changelog
+* Tue Jan 17 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.12-1
+- unified-iso: Fall back to default config (lsedlar)
+- osbs: optionally check GPG signatures (qwan)
+- ostree-installer:  Allow multiple repos in ostree installer (qwan)
+- Update tox.ini (lsedlar)
+- unified-iso: Create isos with debuginfo packages (lsedlar)
+- Create temporary dirs under compose's workdir (qwan)
+- spec: Update upstream and source URL (lsedlar)
+- unified-iso: Create work/ dir if missing (lsedlar)
+- spec: Copy %%check section from Fedora (lsedlar)
+- Update MANIFEST.in to include test data (lsedlar)
+- osbs: Add better example to documentation (lsedlar)
+- metadata: Correctly parse lorax .treeinfo (lsedlar)
+- spec: Add a separate subpackage for extra utils (lsedlar)
+- Add script to generate unified ISOs (lsedlar)
+- osbs: Validate config in tests (lsedlar)
+- osbs: Verify the .repo files contain correct URL (lsedlar)
+- osbs: Enable specifying extra repos (lsedlar)
+- pungi-make-ostree: change 'tree' command '--log-dir' arg to be required
+  (qwan)
+- Add test for krb_login with principal and keytab (puiterwijk)
+- Make sure that the profile name is parsed correctly (puiterwijk)
+- Make KojiWrapper support krb_login with keytab (puiterwijk)
+- Make KojiWrapper parse krb_rdns (puiterwijk)
+- Update documentation (lsedlar)
+- image-build: Allow failure only on some arches (lsedlar)
+- live-media: Allow some arches to fail (lsedlar)
+- image-build: Use install_tree from parent for nested variants (lsedlar)
+- config: Report unknown options as warnings (lsedlar)
+- pungi: Fix --nosource option (lsedlar)
+- pungi: Handle missing SRPM (lsedlar)
+- ostree-installer: Add 'installer' sub-command to pungi-make-ostree (qwan)
+- ostree: Add 'tree' sub-command to pungi-make-ostree script (qwan)
+- metadata: Allow creating internal releases (lsedlar)
+- Add CLI option to create ci compose (lsedlar)
+- Fix PhaseLoggerMixin in case of compose has _logger = None (qwan)
+- ostree-installer: Use dvd-ostree as type in metadata (lsedlar)
+- image-build: Reduce duplication (lsedlar)
+- createrepo: Add tests for adding product certificates (lsedlar)
+- createrepo: Add tests for retrieving product certificates (lsedlar)
+- Include phase name in log for some phases (qwan)
+- Expose lorax's --rootfs-size argument (walters)
+- pungi: Include noarch debuginfo (lsedlar)
+- media-split: Print sensible message for unlimited size (lsedlar)
+
 * Wed Dec 14 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.11-4
 - Add patches for koji kerberos auth
 
