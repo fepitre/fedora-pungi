@@ -9,7 +9,7 @@ URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 
 BuildRequires:  python-nose, python-mock
-BuildRequires:  python-devel, python-setuptools, python2-productmd
+BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
 BuildRequires:  python-lockfile, kobo, kobo-rpmlib, python-kickstart, createrepo_c
 BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax
 BuildRequires:  yum => 3.4.3-28, createrepo >= 0.4.11
@@ -32,7 +32,7 @@ Requires:       repoview
 Requires:       python-lockfile
 Requires:       kobo
 Requires:       kobo-rpmlib
-Requires:       python-productmd
+Requires:       python-productmd >= 1.3
 Requires:       python-kickstart
 Requires:       libselinux-python
 Requires:       createrepo_c
