@@ -1,0 +1,29 @@
+From e599eb06e2cb8fc3cc3f7a97378a7b7bb5c19030 Mon Sep 17 00:00:00 2001
+From: Patrick Uiterwijk <puiterwijk@redhat.com>
+Date: Jan 18 2017 18:50:34 +0000
+Subject: Add some debugging about ref updating
+
+
+Signed-off-by: Patrick Uiterwijk <puiterwijk@redhat.com>
+
+---
+
+diff --git a/pungi/ostree/tree.py b/pungi/ostree/tree.py
+index 1b616b2..68b6d70 100644
+--- a/pungi/ostree/tree.py
++++ b/pungi/ostree/tree.py
+@@ -63,10 +63,13 @@ class Tree(OSTree):
+         if self.extra_config:
+             tag_ref = self.extra_config.get('tag_ref', True)
+         if not tag_ref:
++            print('Not updating ref as configured')
+             return
+         ref = get_ref_from_treefile(self.treefile)
+         commitid = get_commitid_from_commitid_file(self.commitid_file)
++        print('Ref: %r, Commit ID: %r' % (ref, commitid))
+         if ref and commitid:
++            print('Updating ref')
+             # Let's write the tag out ourselves
+             heads_dir = os.path.join(self.repo, 'refs', 'heads')
+             if not os.path.exists(heads_dir):
+

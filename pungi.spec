@@ -1,12 +1,14 @@
 Name:           pungi
 Version:        4.1.12
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+# from https://pagure.io/fork/puiterwijk/pungi/c/e599eb06e2cb8fc3cc3f7a97378a7b7bb5c19030
+Patch0:         e599eb06e2cb8fc3cc3f7a97378a7b7bb5c19030.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -68,6 +70,7 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
+%patch0 -p1 
 
 %build
 %{__python} setup.py build
@@ -109,6 +112,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-fedmsg-notification
 
 %changelog
+* Tue Jan 17 2017 Dennis Gilmore <dennis@ausil.us> - 4.1.12-2
+- add patch from Patrick to give us some ostree debuging
+
 * Tue Jan 17 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.12-1
 - unified-iso: Fall back to default config (lsedlar)
 - osbs: optionally check GPG signatures (qwan)
