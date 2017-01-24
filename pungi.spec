@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.12
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -10,6 +10,8 @@ Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 # from https://pagure.io/fork/puiterwijk/pungi/c/63aa7db5aad4690b72898d01fa82270c1f503241
 Patch0:         63aa7db5aad4690b72898d01fa82270c1f503241.patch
 Patch1:         0001-replace-basearch-when-updating-the-ref.patch
+Patch2:         0001-image-build-Expand-arches-for-can_fail.patch
+Patch3:         0002-image-build-Pass-arches-around-as-a-list.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -73,6 +75,8 @@ notification to Fedora Message Bus.
 %setup -q
 %patch0 -p1 
 %patch1 -p1
+%patch2 -p1
+%patch3 -p1
 
 %build
 %{__python} setup.py build
@@ -114,6 +118,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-fedmsg-notification
 
 %changelog
+* Tue Jan 24 2017 Dennis Gilmore <dennis@ausil.us> - 4.1.12-4
+- add patches for pagure pr#517
+
 * Tue Jan 17 2017 Dennis Gilmore <dennis@ausil.us> - 4.1.12-3
 - add patch to replace ${basearch} in the ostree ref
 

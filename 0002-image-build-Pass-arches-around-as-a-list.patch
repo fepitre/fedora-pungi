@@ -1,0 +1,241 @@
+From 8418b68fb0e1253f688b97c91df9ace6a38ebd02 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Tue, 24 Jan 2017 08:36:33 +0100
+Subject: [PATCH 2/2] image-build: Pass arches around as a list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Instead of joining the arches as a comma separated string and splitting
+it again later. Ultimately we do need the original format to pass to
+koji wrapper, but we can produce that value later.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/image_build.py   | 16 ++++++++++------
+ tests/test_imagebuildphase.py | 41 +++++++++++++++++++++--------------------
+ 2 files changed, 31 insertions(+), 26 deletions(-)
+
+diff --git a/pungi/phases/image_build.py b/pungi/phases/image_build.py
+index b795125..bd18d3a 100644
+--- a/pungi/phases/image_build.py
++++ b/pungi/phases/image_build.py
+@@ -75,7 +75,7 @@ class ImageBuildPhase(base.PhaseLoggerMixin, base.ImageConfigMixin, base.ConfigG
+     def _get_arches(self, image_conf, arches):
+         if 'arches' in image_conf['image-build']:
+             arches = set(image_conf['image-build'].get('arches', [])) & arches
+-        return ','.join(sorted(arches))
++        return sorted(arches)
+ 
+     def _set_release(self, image_conf):
+         """If release is set explicitly to None, replace it with date and respin."""
+@@ -122,9 +122,9 @@ class ImageBuildPhase(base.PhaseLoggerMixin, base.ImageConfigMixin, base.ConfigG
+ 
+                 can_fail = image_conf['image-build'].pop('failable', [])
+                 if can_fail == ['*']:
+-                    can_fail = image_conf['image-build']['arches'].split(',')
++                    can_fail = image_conf['image-build']['arches']
+                 if can_fail:
+-                    image_conf['image-build']['can_fail'] = ','.join(sorted(can_fail))
++                    image_conf['image-build']['can_fail'] = sorted(can_fail)
+ 
+                 cmd = {
+                     "format": format,
+@@ -162,8 +162,7 @@ class CreateImageBuildThread(WorkerThread):
+             self.worker(num, compose, variant, subvariant, cmd)
+ 
+     def worker(self, num, compose, variant, subvariant, cmd):
+-        arches = cmd["image_conf"]["image-build"]['arches'].split(',')
+-        failable_arches = self.failable_arches.split(',')
++        arches = cmd["image_conf"]["image-build"]['arches']
+         dash_arches = '-'.join(arches)
+         log_file = compose.paths.log.log_file(
+             dash_arches,
+@@ -180,6 +179,11 @@ class CreateImageBuildThread(WorkerThread):
+         # writes conf file for koji image-build
+         self.pool.log_info("Writing image-build config for %s.%s into %s" % (
+             variant, dash_arches, cmd["conf_file"]))
++
++        # Join the arches into a single string. This is the value expected by
++        # koji config file.
++        cmd["image_conf"]["image-build"]['arches'] = ','.join(cmd["image_conf"]["image-build"]['arches'])
++
+         koji_cmd = koji_wrapper.get_image_build_cmd(cmd["image_conf"],
+                                                     conf_file_dest=cmd["conf_file"],
+                                                     scratch=cmd['scratch'])
+@@ -207,7 +211,7 @@ class CreateImageBuildThread(WorkerThread):
+                         image_infos.append({'path': path, 'suffix': suffix, 'type': format, 'arch': arch})
+                         break
+ 
+-        if len(image_infos) != len(cmd['format']) * (len(arches) - len(failable_arches)):
++        if len(image_infos) != len(cmd['format']) * (len(arches) - len(self.failable_arches)):
+             self.pool.log_error(
+                 "Error in koji task %s. Expected to find same amount of images "
+                 "as in suffixes attr in image-build (%s) for each arch (%s). Got '%s'." %
+diff --git a/tests/test_imagebuildphase.py b/tests/test_imagebuildphase.py
+index 328b2b3..d3185e2 100644
+--- a/tests/test_imagebuildphase.py
++++ b/tests/test_imagebuildphase.py
+@@ -66,11 +66,11 @@ class TestImageBuildPhase(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'amd64',
++                    'arches': ['amd64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+-                    'can_fail': 'x86_64',
++                    'can_fail': ['x86_64'],
+                 }
+             },
+             "conf_file": self.topdir + '/work/image-build/Client/docker_Fedora-Docker-Base.cfg',
+@@ -91,11 +91,11 @@ class TestImageBuildPhase(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'amd64,x86_64',
++                    'arches': ['amd64', 'x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+-                    'can_fail': 'x86_64',
++                    'can_fail': ['x86_64'],
+                 }
+             },
+             "conf_file": self.topdir + '/work/image-build/Server/docker_Fedora-Docker-Base.cfg',
+@@ -151,7 +151,7 @@ class TestImageBuildPhase(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'amd64,x86_64',
++                    'arches': ['amd64', 'x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+@@ -207,7 +207,7 @@ class TestImageBuildPhase(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'amd64,x86_64',
++                    'arches': ['amd64', 'x86_64'],
+                     'version': '25',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+@@ -305,7 +305,7 @@ class TestImageBuildPhase(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'x86_64',
++                    'arches': ['x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+@@ -369,7 +369,7 @@ class TestImageBuildPhase(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'x86_64',
++                    'arches': ['x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+@@ -430,7 +430,7 @@ class TestImageBuildPhase(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'x86_64',
++                    'arches': ['x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+@@ -603,11 +603,11 @@ class TestImageBuildPhase(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'x86_64',
++                    'arches': ['x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+-                    'can_fail': 'x86_64',
++                    'can_fail': ['x86_64'],
+                 }
+             },
+             "conf_file": self.topdir + '/work/image-build/Server-optional/docker_Fedora-Docker-Base.cfg',
+@@ -663,11 +663,11 @@ class TestImageBuildPhase(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'amd64,x86_64',
++                    'arches': ['amd64', 'x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+-                    'can_fail': 'amd64,x86_64',
++                    'can_fail': ['amd64', 'x86_64'],
+                 }
+             },
+             "conf_file": self.topdir + '/work/image-build/Server/docker_Fedora-Docker-Base.cfg',
+@@ -703,7 +703,7 @@ class TestCreateImageBuildThread(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'amd64,x86_64',
++                    'arches': ['amd64', 'x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+@@ -743,6 +743,7 @@ class TestCreateImageBuildThread(PungiTestCase):
+         with mock.patch('time.sleep'):
+             t.process((compose, cmd), 1)
+ 
++        self.assertEqual(cmd['image_conf']['image-build']['arches'], 'amd64,x86_64')
+         self.assertItemsEqual(
+             koji_wrapper.get_image_build_cmd.call_args_list,
+             [mock.call(cmd['image_conf'],
+@@ -832,11 +833,11 @@ class TestCreateImageBuildThread(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'amd64,x86_64',
++                    'arches': ['amd64', 'x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+-                    "can_fail": 'amd64,x86_64',
++                    "can_fail": ['amd64', 'x86_64'],
+                 }
+             },
+             "conf_file": 'amd64,x86_64-Client-Fedora-Docker-Base-docker',
+@@ -880,11 +881,11 @@ class TestCreateImageBuildThread(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'amd64,x86_64',
++                    'arches': ['amd64', 'x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+-                    'can_fail': 'amd64,x86_64',
++                    'can_fail': ['amd64', 'x86_64'],
+                 }
+             },
+             "conf_file": 'amd64,x86_64-Client-Fedora-Docker-Base-docker',
+@@ -923,11 +924,11 @@ class TestCreateImageBuildThread(PungiTestCase):
+                     'target': 'f24',
+                     'disk_size': 3,
+                     'name': 'Fedora-Docker-Base',
+-                    'arches': 'amd64,x86_64',
++                    'arches': ['amd64', 'x86_64'],
+                     'version': 'Rawhide',
+                     'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
+                     'distro': 'Fedora-20',
+-                    'can_fail': 'amd64',
++                    'can_fail': ['amd64'],
+                 }
+             },
+             "conf_file": 'amd64,x86_64-Client-Fedora-Docker-Base-docker',
+-- 
+2.11.0
+
