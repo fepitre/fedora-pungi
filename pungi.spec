@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.12
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -118,6 +118,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-fedmsg-notification
 
 %changelog
+* Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.12-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
 * Tue Jan 24 2017 Dennis Gilmore <dennis@ausil.us> - 4.1.12-4
 - add patches for pagure pr#517
 
