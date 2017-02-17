@@ -1,65 +1,840 @@
-%{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-
 Name:           pungi
-Version:        3.12
-Release:        3%{?dist}.1
+Version:        4.1.12
+Release:        5%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
-URL:            https://fedorahosted.org/pungi
-Source0:        https://fedorahosted.org/pungi/attachment/wiki/%{version}/%{name}-%{version}.tar.bz2
-Patch0:         0001-replace-tabs-with-spaces.patch
-Patch1:         0001-Make-our-OS-iso-bootable-on-aarch64.patch
-Requires:       yum => 3.4.3-28, repoview, createrepo >= 0.4.11
-Requires:       lorax, python-lockfile
-BuildRequires:  python-devel
+URL:            https://pagure.io/pungi
+Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+# from https://pagure.io/fork/puiterwijk/pungi/c/63aa7db5aad4690b72898d01fa82270c1f503241
+Patch0:         63aa7db5aad4690b72898d01fa82270c1f503241.patch
+Patch1:         0001-replace-basearch-when-updating-the-ref.patch
+Patch2:         0001-image-build-Expand-arches-for-can_fail.patch
+Patch3:         0002-image-build-Pass-arches-around-as-a-list.patch
+
+BuildRequires:  python-nose, python-mock
+BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
+BuildRequires:  python-lockfile, kobo, kobo-rpmlib, python-kickstart, createrepo_c
+BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax, python-rpm
+BuildRequires:  yum => 3.4.3-28, createrepo >= 0.4.11
+BuildRequires:  gettext, git-core, cvs
+BuildRequires:  python-jsonschema
+
+#deps for doc building
+BuildRequires:  python-sphinx, texlive-latex-bin-bin, texlive-collection-fontsrecommended
+BuildRequires:  texlive-times, texlive-cmap, texlive-babel-english, texlive-fancyhdr
+BuildRequires:  texlive-fancybox, texlive-titlesec, texlive-framed, texlive-threeparttable
+BuildRequires:  texlive-mdwtools, texlive-wrapfig, texlive-parskip, texlive-upquote
+BuildRequires:  texlive-multirow, texlive-capt-of, texlive-eqparbox, tex(color.cfg)
+BuildRequires:  tex(fncychap.sty)
+BuildRequires:  tex(tabulary.sty)
+
+Requires:       createrepo >= 0.4.11
+Requires:       yum => 3.4.3-28
+Requires:       lorax >= 22.1
+Requires:       repoview
+Requires:       python-lockfile
+Requires:       kobo
+Requires:       kobo-rpmlib
+Requires:       python-productmd >= 1.3
+Requires:       python-kickstart
+Requires:       libselinux-python
+Requires:       createrepo_c
+Requires:       python-lxml
+Requires:       koji >= 1.10.1-13
+# This is optional do not Require it
+#eRquires:       jigdo
+Requires:       cvs
+Requires:       yum-utils
+Requires:       isomd5sum
+Requires:       genisoimage
+Requires:       gettext
+# this is x86 only 
+#Requires:       syslinux
+Requires:       git
+Requires:       python-jsonschema
+Requires:       libguestfs-tools-c
 
 BuildArch:      noarch
 
 %description
 A tool to create anaconda based installation trees/isos of a set of rpms.
 
+%package utils
+Summary:    Utilities for working with finished composes
+Requires:   pungi = %{version}-%{release}
+
+%description utils
+These utilities work with finished composes produced by Pungi. They can be used
+for creating unified ISO images, validating config file or sending progress
+notification to Fedora Message Bus.
+
 
 %prep
 %setup -q
-%patch0 -p1
+%patch0 -p1 
 %patch1 -p1
+%patch2 -p1
+%patch3 -p1
 
 %build
 %{__python} setup.py build
-
+cd doc
+make latexpdf
+make epub
+make text
+make man
+gzip _build/man/pungi.1
 
 %install
-rm -rf $RPM_BUILD_ROOT
-%{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
-%{__install} -d $RPM_BUILD_ROOT/var/cache/pungi
-%{__install} -d $RPM_BUILD_ROOT/%{_mandir}/man8
-%{__install} doc/pungi.8 $RPM_BUILD_ROOT/%{_mandir}/man8/
-%{__mv} $RPM_BUILD_ROOT/%{_bindir}/pungi.py $RPM_BUILD_ROOT/%{_bindir}/pungi
+%{__python} setup.py install -O1 --skip-build --root %{buildroot}
+%{__install} -d %{buildroot}/var/cache/pungi
+%{__install} -d %{buildroot}%{_mandir}/man1
+%{__install} -m 0644 doc/_build/man/pungi.1.gz %{buildroot}%{_mandir}/man1
 
- 
-%clean
-rm -rf $RPM_BUILD_ROOT
-
+%check
+nosetests --exe
+./tests/data/specs/build.sh
+cd tests && ./test_compose.sh
 
 %files
-%defattr(-,root,root,-)
-%doc Authors Changelog COPYING GPL ToDo doc/README
-# For noarch packages: sitelib
-%{python_sitelib}/pypungi
-%if 0%{?fedora} >= 9 || 0%{?rhel} >= 6
-  %{python_sitelib}/%{name}-%{version}-py?.?.egg-info
-%endif
-%{_bindir}/pungi
+%license COPYING GPL
+%doc AUTHORS doc/_build/latex/Pungi.pdf doc/_build/epub/Pungi.epub doc/_build/text/*
+%{python_sitelib}/%{name}
+%{python_sitelib}/%{name}-%{version}-py?.?.egg-info
+%{_bindir}/%{name}
+%{_bindir}/%{name}-koji
+%{_bindir}/comps_filter
+%{_bindir}/%{name}-make-ostree
+%{_mandir}/man1/pungi.1.gz
 %{_datadir}/pungi
-%{_mandir}/man8/pungi.8.gz
 /var/cache/pungi
 
+%files utils
+%{python_sitelib}/%{name}_utils
+%{_bindir}/%{name}-create-unified-isos
+%{_bindir}/%{name}-config-validate
+%{_bindir}/%{name}-fedmsg-notification
 
 %changelog
-* Fri Feb 26 2016 Dennis Gilmore <dennis@ausil.us> - 3.12-3.1
-- rebuild
+* Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.12-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Tue Jan 24 2017 Dennis Gilmore <dennis@ausil.us> - 4.1.12-4
+- add patches for pagure pr#517
+
+* Tue Jan 17 2017 Dennis Gilmore <dennis@ausil.us> - 4.1.12-3
+- add patch to replace ${basearch} in the ostree ref
+
+* Tue Jan 17 2017 Dennis Gilmore <dennis@ausil.us> - 4.1.12-2
+- add patch from Patrick to give us some ostree debuging
+
+* Tue Jan 17 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.12-1
+- unified-iso: Fall back to default config (lsedlar)
+- osbs: optionally check GPG signatures (qwan)
+- ostree-installer:  Allow multiple repos in ostree installer (qwan)
+- Update tox.ini (lsedlar)
+- unified-iso: Create isos with debuginfo packages (lsedlar)
+- Create temporary dirs under compose's workdir (qwan)
+- spec: Update upstream and source URL (lsedlar)
+- unified-iso: Create work/ dir if missing (lsedlar)
+- spec: Copy %%check section from Fedora (lsedlar)
+- Update MANIFEST.in to include test data (lsedlar)
+- osbs: Add better example to documentation (lsedlar)
+- metadata: Correctly parse lorax .treeinfo (lsedlar)
+- spec: Add a separate subpackage for extra utils (lsedlar)
+- Add script to generate unified ISOs (lsedlar)
+- osbs: Validate config in tests (lsedlar)
+- osbs: Verify the .repo files contain correct URL (lsedlar)
+- osbs: Enable specifying extra repos (lsedlar)
+- pungi-make-ostree: change 'tree' command '--log-dir' arg to be required
+  (qwan)
+- Add test for krb_login with principal and keytab (puiterwijk)
+- Make sure that the profile name is parsed correctly (puiterwijk)
+- Make KojiWrapper support krb_login with keytab (puiterwijk)
+- Make KojiWrapper parse krb_rdns (puiterwijk)
+- Update documentation (lsedlar)
+- image-build: Allow failure only on some arches (lsedlar)
+- live-media: Allow some arches to fail (lsedlar)
+- image-build: Use install_tree from parent for nested variants (lsedlar)
+- config: Report unknown options as warnings (lsedlar)
+- pungi: Fix --nosource option (lsedlar)
+- pungi: Handle missing SRPM (lsedlar)
+- ostree-installer: Add 'installer' sub-command to pungi-make-ostree (qwan)
+- ostree: Add 'tree' sub-command to pungi-make-ostree script (qwan)
+- metadata: Allow creating internal releases (lsedlar)
+- Add CLI option to create ci compose (lsedlar)
+- Fix PhaseLoggerMixin in case of compose has _logger = None (qwan)
+- ostree-installer: Use dvd-ostree as type in metadata (lsedlar)
+- image-build: Reduce duplication (lsedlar)
+- createrepo: Add tests for adding product certificates (lsedlar)
+- createrepo: Add tests for retrieving product certificates (lsedlar)
+- Include phase name in log for some phases (qwan)
+- Expose lorax's --rootfs-size argument (walters)
+- pungi: Include noarch debuginfo (lsedlar)
+- media-split: Print sensible message for unlimited size (lsedlar)
+
+* Wed Dec 14 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.11-4
+- Add patches for koji kerberos auth
+
+* Thu Dec 08 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.11-3
+- Backport patches for ostree installer
+
+* Mon Nov 21 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.11-2
+- Add missing dependency on libguestfs-tools-c
+
+* Tue Nov 15 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.11-1
+- [ostree] Allow extra repos to get packages for composing OSTree repository
+  (qwan)
+- pungi: Run in-process for testing (lsedlar)
+- pungi: Only add logger once (lsedlar)
+- pungi: Connect yum callback to logger (lsedlar)
+- extra-files: Nice error message on missing RPM (lsedlar)
+- compose: Drop unused argument (lsedlar)
+- compose: Search all nested variants (lsedlar)
+- ostree-installer: Capture all lorax logs (lsedlar)
+- lorax-wrapper: Put all log files into compose logs (lsedlar)
+- pungi: Fix reading multilib config files (lsedlar)
+- pungi: Fulltree should not apply for input multilib package (lsedlar)
+- pungi: Add tests for depsolving (lsedlar)
+- Update ostree phase documentation (lsedlar)
+- [ostree] Allow adding versioning metadata (qwan)
+  (lubomir.sedlar)
+- [ostree] New option to enable generating ostree summary file (qwan)
+- pungi: Avoid removing from list (lsedlar)
+- pungi: Allow globs in %%multilib-whitelist (dmach)
+- pungi: Exclude RPMs that are in lookaside (dmach)
+- pungi: Fix excluding SRPMs (dmach)
+- pungi: Speed up blacklist processing (dmach)
+- Update tests to use ostree write-commit-id (puiterwijk)
+- ostree: Use the write-commitid-to feature rather than parsing ostree logs
+  (puiterwijk)
+- checks: Check for createrepo_c (lsedlar)
+- checks: Update tests to not require python modules (lsedlar)
+- Remove executable permissions on test scripts (puiterwijk)
+- Add more require checks (puiterwijk)
+- Fix package name for createrepo and mergerepo (puiterwijk)
+- not using 'git -C path' which is not supported by git 1.x (qwan)
+- pungi-koji: add option for not creating latest symbol link (qwan)
+- Replace mount/umount with guestfsmount and 'fusermount -u' (qwan)
+- config: Don't abort on deprecated options (lsedlar)
+- metadata: Treeinfo should point to packages and repo (lsedlar)
+- Send notification when compose fails to start (lsedlar)
+- metadata: Stop crashing for non-bootable products (lsedlar)
+- createiso: Do not split bootable media (lsedlar)
+- doc: Fix a typo in progress notification example (lsedlar)
+- Dump images.json after checksumming (lsedlar)
+- metadata: Correctly clone buildinstall .treeinfo (lsedlar)
+- createiso: Include layered product name in iso name (lsedlar)
+- buildinstall: Only transform arch for lorax (lsedlar)
+- iso-wrapper: Remove the class (lsedlar)
+- config: Validate variant regular expressions (lsedlar)
+
+* Sat Oct 08 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.10-1
+- pungi: Replace kickstart repo url (mark)
+- ostree-installer: Reduce duplication in tests (lsedlar)
+- ostree-installer: Generate correct volume ID (lsedlar)
+- ostree-installer: Use ostree as type in filename (lsedlar)
+- ostree: Use $basearch in repo file (lsedlar)
+- config: Accept empty branch in SCM dict (lsedlar)
+- Remove duplicated version from pungi script (lsedlar)
+- use --new-chroot when making ostree's (dennis)
+- Create git tags without release (lsedlar)
+- Translate paths without double slash (lsedlar)
+- Remove shebangs from non-executable files (lsedlar)
+- Remove FSF address from comments (lsedlar)
+- Update contributing guide (lsedlar)
+- init: Remove keep_original_comps option (lsedlar)
+- tests: Use unittest2 consistently (lsedlar)
+
+* Thu Sep 29 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.9-2
+- add patch to enable use of --new-chroot for ostree tasks
+
+* Wed Sep 21 2016 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.9-1
+- ostree_installer: Add --isfinal lorax argument (lsedlar)
+- Recreate JSON dump of configuration (lsedlar)
+- Merge #385 `Test and clean up pungi.linker` (dennis)
+- Merge #390 `checksums: Never skip checksumming phase` (dennis)
+- variants: Allow multiple explicit optional variants (lsedlar)
+- checksums: Never skip checksumming phase (lsedlar)
+- [linker] Remove dead code (lsedlar)
+- [linker] Add tests (lsedlar)
+- Dump original pungi conf (cqi)
+- ostree: Add tests for sending ostree messages (lsedlar)
+- Send fedmsg message on ostree compose finishg (puiterwijk)
+- createrepo: Add option to use xz compression (lsedlar)
+- Allow user to set a ~/.pungirc for some defaults (riehecky)
+- metadata: Improve error reporting on failed checksum (lsedlar)
+- extra-files: Write a metadata file enumerating extra files (jeremy)
+- Merge #381 `Automatically generate missing image version` (dennis)
+- Automatically generate missing image version (lsedlar)
+- Add JSON Schema for configuration (lsedlar)
+- Allow arbitrary arguments in make test (lsedlar)
+- createiso: Report nice error when tag does not exist (lsedlar)
+- Fix test data build script (lsedlar)
+- [osbs] Add NVRA of created image into main log (lsedlar)
+- [createiso] Remove unused script (lsedlar)
+- Update doc about generating release value (lsedlar)
+- Use label to populate image release (lsedlar)
+- doc: Fix example for image_build (lsedlar)
+- Ignore module imports not at top of file (lsedlar)
+- Merge #367 `Remove unused imports` (dennis)
+- [buildinstall] Fix cleaning output dir (lsedlar)
+- Remove unused imports (lsedlar)
+- Merge #360 `[osbs] Convert build_id to int` (dennis)
+- Merge #361 `Fix config validation script` (dennis)
+- Merge #365 `Make image test at end of compose less strict` (dennis)
+- [test] Make image test at end of compose less strict (lsedlar)
+- [iso] Fix check on failable ISO (lsedlar)
+- Add full Pungi version to log output (lsedlar)
+- Fix config validation script (lsedlar)
+- [osbs] Convert build_id to int (lsedlar)
+- [image-build] Get failable config from correct place (lsedlar)
+
+* Wed Aug 10 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.8-1
+- [createiso] Use shell script for runroot (lsedlar)
+- Merge #357 `Improve error messages for gathering packages` (dennis)
+- [test] Only check bootability for images on x86_64 and i386 (lsedlar)
+- Improve error messages for gathering packages (lsedlar)
+- Merge #339 `Refactor failables, step 1` (dennis)
+- Refactor failables (lsedlar)
+- Stop setting release in OSBS phase (lsedlar)
+- Merge #351 `Remove ambiguous imports` (dennis)
+- [test] Correctly check bootable ISOs (lsedlar)
+- Remove ambiguous imports (lsedlar)
+- Merge #347 `Remove duplicate definition of find_old_composes.`
+  (lubomir.sedlar)
+- Merge #342 `Simplify naming format placeholders` (dennis)
+- Merge #345 `createrepo: use separate logs for different pkg_type` (dennis)
+- Remove duplicate definition of find_old_composes... (rbean)
+- [createrepo] fix 'createrepo_deltas' option (qwan)
+- createrepo: use separate logs for different pkg_type (lsedlar)
+- Simplify naming format placeholders (lsedlar)
+- Treat variants without comps groups as having all of them (lsedlar)
+- Always generate rpms.json file (lsedlar)
+
+* Tue Jul 19 2016 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.1.7-2
+- https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
+
+* Thu Jun 23 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.7-1
+- [scm] Add logging for exporting local files (lsedlar)
+- [extra-files] Only copy files when there is a config (lsedlar)
+- [extra-files] Refactoring (lsedlar)
+- [extra-files] Skip whole phase if not configured (lsedlar)
+- [extra-files] Copy files using existing function (lsedlar)
+- [extra-files] Add tests (lsedlar)
+- [osbs] Add a phase to build images in OSBS (lsedlar)
+- Setup global log file before logging anything (lsedlar)
+- [metadata] Correctly save final flag (lsedlar)
+- Merge #326 `add missing dependencies` (dennis)
+- [createiso] Add test for adding source iso to metadata (lsedlar)
+- Merge #325 `Fix checking optional ISO images in test phase` (dennis)
+- Merge #321 `Add support for top-level variant IDs with dashes.` (dennis)
+- Merge #320 `images.json: Move src images under binary arches.` (dennis)
+- add missing dependencies (nils)
+- Fix checking optional ISO images in test phase (lsedlar)
+- add lxml dependency (nils)
+- images.json: Move src images under binary arches. (dmach)
+- Add support for top-level variant IDs with dashes. (dmach)
+- Fix PYTHONPATH usage in test_compose.sh. (dmach)
+- [createiso] Enable customizing media reserve (lsedlar)
+- [createiso] Add test for splitting media (lsedlar)
+- [media-split] Remove commented-out code (lsedlar)
+- [media-split] Simplify code (lsedlar)
+- [media-split] Add code documentation (lsedlar)
+- [media-split] Add unit tests (lsedlar)
+- Add missing documentation (lsedlar)
+- [buildinstall] Fix bad error message (lsedlar)
+- Merge #309 `Add compatibility for Python 2.6` (dennis)
+- Merge #293 `Add tests for generating discinfo and media.repo files` (dennis)
+- Merge #287 `Use koji profiles to list RPMs in buildroot` (dennis)
+- [ostree-installer] Put images to os/ directory (lsedlar)
+- [ostree] Rename duplicated test (lsedlar)
+- [util] Use koji profile for getting RPMs from buildroot (lsedlar)
+- [util] Add test for getting list of buildroot RPMs (lsedlar)
+- pungi-koji: fix up latest symlink creation (dennis)
+- Use unittest2 if available (lsedlar)
+- Stop using str.format (lsedlar)
+- Stop using functools.total_ordering (lsedlar)
+- The message attribute on exception is deprecated (lsedlar)
+- [ostree] Rename duplicated test (lsedlar)
+- [metadata] Simplify writing media.repo (lsedlar)
+- [metadata] Add test for writing media.repo (lsedlar)
+- [discinfo] Use context manager for file access (lsedlar)
+- [metadata] Add tests for discinfo files (lsedlar)
+
+* Tue May 24 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.6-1
+- [ostree-installer] Allow using external repos as source (lsedlar)
+- [image-build] Allow using external install trees (lsedlar)
+- Add type to base product for layered releases (lsedlar)
+- Merge #303 `[ostree] Use unique work and log paths` (dennis)
+- [ostree] Use unique work and log paths (lsedlar)
+- [arch] Add mock rpmUtils module (lsedlar)
+
+* Mon May 16 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.5-1
+- [ostree] Put variant name in ostree log dir (lsedlar)
+- Merge #294 `[ostree] Initialize empty repo` (dennis)
+- [util] Resolve git+https URLs (lsedlar)
+- [ostree] Initialize empty repo (lsedlar)
+- [test] Add checks for created images (lsedlar)
+- Fix caching global ksurl (lsedlar)
+- include tests/fixtures in manifest (dennis)
+
+* Fri May 06 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.4-2
+- add patch to fix caching global ksurl
+
+* Fri Apr 29 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.4-1
+- Merge #273 `Deduplicate configuration a bit` (dennis)
+- Merge #280 `[createrepo] Use more verbose output` (dennis)
+- Merge #283 `Pungi should log when it tries to publish notifications.`
+>>>>>>> master
+  (dennis)
+- [createiso] Add back running isohybrid on x86 disk images (dennis)
+- [createiso] Remove chdir() (lsedlar)
+- [pkgset] Fix caching RPMs (lsedlar)
+- [createrepo] Use more verbose output (lsedlar)
+- Pungi should log when it tries to publish notifications. (rbean)
+- [pkgset] Use context manager for opening file list (lsedlar)
+- [pkgset] Add tests for writing filelists (lsedlar)
+- [pkgset] Simplify finding RPM in koji buildroot (lsedlar)
+- [pkgset] Clean up koji package set (lsedlar)
+- [pkgset] Add test for pkgset merging (lsedlar)
+- [pkgset] Add tests for KojiPackageSet (lsedlar)
+- [pkgset] Clean up Koji source (lsedlar)
+- [pkgset] Add tests for Koji source (lsedlar)
+- Add common global settings for images (lsedlar)
+- Remove duplicated and dead code (lsedlar)
+- [live-media] Add check for live_media_version option (lsedlar)
+- [scm-wrapper] Remove unused method (lsedlar)
+- [scm-wrapper] Report when file wrapper did not match anything (lsedlar)
+- [scm-wrapper] Use context manager for managing temp dir (lsedlar)
+- [scm-wrapper] Reduce code duplication in RPM wrapper (lsedlar)
+- [scm-wrapper] Copy files directly (lsedlar)
+- [scm-wrapper] Reduce code duplication (lsedlar)
+- [scm-wrapper] Add tests for SCM wrappers (lsedlar)
+- [ostree] Set each repo to point to current compose (lsedlar)
+- [ostree-installer] Drop filename setting (lsedlar)
+- Merge #269 `Improve logging of failable deliverables` (ausil)
+- [ostree-installer] Fix example documentation (lsedlar)
+- Improve logging of failable deliverables (lsedlar)
+- [ostree-installer] Install ostree in runroot (lsedlar)
+- [pkgset] Print more detailed logs when rpm is not found (lsedlar)
+- [ostree-installer] Clone repo with templates (lsedlar)
+
+* Tue Apr 12 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.3-3
+- add patch to install ostree in the ostree_installer runroot
+
+* Mon Apr 11 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.3-2
+- add patch to print more info for missing rpms
+- add patch to clone repo with extra lorax templates for ostree_installer
+
+* Fri Apr 08 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.3-1
+- enable the compose test (dennis)
+- [ostree-installer] Copy all lorax outputs (lsedlar)
+- [ostree] Log to stdout as well (lsedlar)
+- [ostree-installer] Use separate directory for logs (lsedlar)
+- Merge #260 `Maybe fix ostree?` (ausil)
+- [ostree-installer] Put lorax output into work dir (lsedlar)
+- [ostree] Add test check for modified repo baseurl (lsedlar)
+- [ostree] Move cloning repo back to compose box (lsedlar)
+- [ostree] Mount ostree directory in koji (lsedlar)
+
+* Thu Apr 07 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.2-2
+- make sure that the shebang of pungi-pylorax-find-templates is python3
+
+* Wed Apr 06 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.2-1
+- Merge #257 `[ostree] Enable marking ostree phase as failable` (ausil)
+- [ostree] Enable marking ostree phase as failable (lsedlar)
+- [koji-wrapper] Initialize wrappers sequentially (lsedlar)
+- [createiso] Simplify code, test phase (lsedlar)
+- [createiso] Move runroot work to separate script (lsedlar)
+- [ostree] Use explicit work directory (lsedlar)
+- [ostree] Rename atomic to ostree (lsedlar)
+- [ostree] Move cloning config repo to chroot (lsedlar)
+- [ostree] Fix call to kobo.shortcuts.run (lsedlar)
+- [atomic] Stop creating the os directory (lsedlar)
+- [checksum] Add arch to file name (lsedlar)
+
+* Tue Apr 05 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.1-3
+- add some more ostree fixes
+- add a bandaid for ppc until we get a proper fix
+
+* Mon Apr 04 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.1-2
+- add upstream patches for bugfixes in ostree and checksums
+
+* Fri Apr 01 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.1-1
+- install scripts (dennis)
+- Merge #242 `Fix wrong file permissions` (ausil)
+- Add a utility to validate config (lsedlar)
+- [variants] Stop printing stuff to stderr unconditionally (lsedlar)
+- Fix atomic/ostree config validations (lsedlar)
+- [pungi-wrapper] Remove duplicated code (lsedlar)
+- [checks] Add a check for too restrictive umask (lsedlar)
+- [util] Remove umask manipulation from makedirs (lsedlar)
+- Merge #240 `Filter variants and architectures` (ausil)
+- Filter variants and architectures (lsedlar)
+- Refactor checking for failable deliverables (lsedlar)
+- [buildinstall] Do not crash on failure (lsedlar)
+- Reuse helper in all tests (lsedlar)
+- [atomic] Add atomic_installer phase (lsedlar)
+- [ostree] Add ostree phase (lsedlar)
+- [atomic] Add a script to create ostree repo (lsedlar)
+- Merge #232 `Improve logging by adding subvariants` (ausil)
+- Add compose type to release for images (lsedlar)
+- [image-build] Add traceback on failure (lsedlar)
+- [image-build] Use subvariants in logging output (lsedlar)
+- [live-media] Use subvariants in logging (lsedlar)
+- Add tracebacks to all failable phases (lsedlar)
+- ppc no longer needs magic bits in the iso (pbrobinson)
+- [buildinstall] Add more debugging output (lsedlar)
+- [metadata] Stop crashing on empty path from .treeinfo (lsedlar)
+- [checksums] Add label to file name (lsedlar)
+- [buildinstall] Use customized dvd disc type (lsedlar)
+- image_build: fix subvariant handling (awilliam)
+
+* Fri Mar 11 2016 Dennis Gilmore <dennis@ausil.us> - 4.1.0-1
+- upstream 4.1.0 release
+
+* Thu Mar 10 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.9-2
+- new tarball with upstream commits for test suite and pkgset
+
+* Thu Mar 10 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.9-1
+- [init] Update documentation (lsedlar)
+- [init] Iterate over arches just once (lsedlar)
+- [init] Remove duplicated checks for comps (lsedlar)
+- [init] Break long lines (lsedlar)
+- [init] Don't overwrite the same log file (lsedlar)
+- [init] Add config option for keeping original comps (lsedlar)
+- Add tests for the init phase (lsedlar)
+- [checks] Test printing in all cases (lsedlar)
+- [checks] Reduce code duplication (lsedlar)
+- [checks] Relax check for genisoimage (lsedlar)
+- [checks] Remove duplicate msgfmt line (lsedlar)
+- [checks] Relax check for isohybrid command (lsedlar)
+- [checks] Add tests for dependency checking (lsedlar)
+- [checks] Don't always require jigdo (lsedlar)
+- [pkgset] Respect inherit setting (lsedlar)
+- specify that the 4.0 docs are for 4.0.8 (dennis)
+- [live-media] Support release set to None globally (lsedlar)
+- include tests/fixtures/* in the tarball (dennis)
+
+* Wed Mar 09 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.8-2
+- add patch to allow livemedia_release to be None globally
+
+* Tue Mar 08 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.8-1
+- Add README (lsedlar)
+- [doc] Fix formatting (lsedlar)
+- [createiso] Add customizing disc type (lsedlar)
+- [live-images] Add customizing disc type (lsedlar)
+- [buildinstall] Add customizing disc type (lsedlar)
+- [buildinstall] Rename method to not mention symlinks (lsedlar)
+- [gather] Fix documentation of multilib white- and blacklist (lsedlar)
+- [paths] Document and test translate_path (lsedlar)
+- [createrepo] Compute delta RPMS against old compose (lsedlar)
+- [util] Add function to search for old composes (lsedlar)
+- [live-media] Add global settings (lsedlar)
+- [live-media] Rename test case (lsedlar)
+
+* Thu Mar 03 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.7-1
+- Limit the variants with config option 'tree_variants' (dennis)
+- [createrepo-wrapper] Fix --deltas argument (lsedlar)
+- [createrepo-wrapper] Add tests (lsedlar)
+- [koji-wrapper] Retry watching on connection errors (lsedlar)
+- [createrepo-wrapper] Refactor code (lsedlar)
+- [paths] Use variant.uid explicitly (lsedlar)
+- [createrepo] Add tests (lsedlar)
+- [createrepo] Refactor code (lsedlar)
+- [image-build] Fix resolving git urls (lsedlar)
+- [testphase] Don't run repoclosure for empty variants (lsedlar)
+- [live-images] No manifest for appliances (lsedlar)
+
+* Fri Feb 26 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.6-1
+- push the 4.0 docs to a 4.0 branch (dennis)
+- [live-images] Rename log file (lsedlar)
+- [buildinstall] Use -dvd- in volume ids instead of -boot- (lsedlar)
+- [buildinstall] Hardlink boot isos (lsedlar)
+- [doc] Write documentation for kickstart Git URLs (lsedlar)
+- [util] Resolve branches in git urls (lsedlar)
+- [live-images] Fix crash when repo_from is not a list (lsedlar)
+- [buildinstall] Don't copy files for empty variants (lsedlar)
+
+* Tue Feb 23 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.5-1
+- [tests] Fix wrong checks in buildinstall tests (lsedlar)
+- [tests] Use temporary files for buildinstall (lsedlar)
+- [tests] Do not mock open for koji wrapper tests (lsedlar)
+- Merge #179 `Update makefile targets for testing` (ausil)
+- Update makefile targets for testing (lsedlar)
+- [live-images] Set type to raw-xz for appliances (lsedlar)
+- [live-images] Correctly create format (lsedlar)
+- [tests] Dummy compose is no longer private (lsedlar)
+- [tests] Move buildinstall tests to new infrastructure (lsedlar)
+- [tests] Use real paths module in testing (lsedlar)
+- [tests] Move dummy testing compose into separate module (lsedlar)
+- [live-images] Create image dir if needed (lsedlar)
+- [live-images] Add images to manifest (lsedlar)
+- [live-images] Fix path processing (lsedlar)
+- [live-images] Move repo calculation to separate method (lsedlar)
+- [koji-wrapper] Fix getting results from spin-appliance (lsedlar)
+- [live-images] Filter non-image results (lsedlar)
+- [live-images] Rename repos_from to repo_from (lsedlar)
+- [koji-wrapper] Add test for passing release to image-build (lsedlar)
+- [live-images] Automatically populate release with date and respin (lsedlar)
+- [live-media] Respect release set in configuration (lsedlar)
+- [live-images] Build all images specified in config (lsedlar)
+- [live-media] Don't create $basedir arch (lsedlar)
+- Update tests (lsedlar)
+- do not ad to image build and live tasks the variant if it is empty (dennis)
+- when a variant is empty do not add it to the repolist for livemedia (dennis)
+- [live-media] Update tests to use $basearch (lsedlar)
+- [buildinstall] Don't run lorax for empty variants (lsedlar)
+- Merge #159 `use $basearch not $arch in livemedia tasks` (lubomir.sedlar)
+- Merge #158 `do not uses pipes.quotes in livemedia tasks` (lubomir.sedlar)
+- Add documentation for signing support that was added by previous commit
+  (tmlcoch)
+- Support signing of rpm wrapped live images (tmlcoch)
+- Fix terminology - Koji uses sigkey not level (tmlcoch)
+- use $basearch not $arch in livemedia tasks (dennis)
+- do not uses pipes.quotes in livemedia tasks (dennis)
+- [live-images] Don't tweak kickstarts (lsedlar)
+- Allow specifying empty variants (lsedlar)
+- [createrepo] Remove dead assignments (lsedlar)
+- Keep empty query string in resolved git url (lsedlar)
+- [image-build] Use dashes as arch separator in log (lsedlar)
+- [buildinstall] Stop parsing task_id (lsedlar)
+- [koji-wrapper] Get task id from failed runroot (lsedlar)
+- [live-media] Pass ksurl to koji (lsedlar)
+- Merge #146 `[live-media] Properly calculate iso dir` (ausil)
+- [live-media] Properly calculate iso dir (lsedlar)
+- [image-build] Fix tests (lsedlar)
+- add image-build sections (lkocman)
+- [koji-wrapper] Add tests for get_create_image_cmd (lsedlar)
+- [live-images] Add support for spin-appliance (lsedlar)
+- [live-media] Koji option is ksfile, not kickstart (lsedlar)
+- [live-media] Use install tree from another variant (lsedlar)
+- [live-media] Put images into iso dir (lsedlar)
+- [image-build] Koji expects arches as a comma separated string (lsedlar)
+- Merge #139 `Log more details when any deliverable fails` (ausil)
+- [live-media] Version is required argument (lsedlar)
+- [koji-wrapper] Only parse output on success (lsedlar)
+- [koji-wrapper] Add tests for runroot wrapper (lsedlar)
+- [buildinstall] Improve logging (lsedlar)
+- Log more details about failed deliverable (lsedlar)
+- [image-build] Fix failable tests (lsedlar)
+- Merge #135 `Add live media support` (ausil)
+- Merge #133 `media_split: add logger support. Helps with debugging space
+  issues on dvd media` (ausil)
+- [live-media] Add live media phase (lsedlar)
+- [koji-wrapper] Add support for spin-livemedia (lsedlar)
+- [koji-wrapper] Use more descriptive method names (lsedlar)
+- [image-build] Remove dead code (lsedlar)
+- media_split: add logger support. Helps with debugging space issues on dvd
+  media (lkocman)
+- [image-build] Allow running image build scratch tasks (lsedlar)
+- [image-build] Allow dynamic release for images (lsedlar)
+
+* Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 4.0.4-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
+* Wed Jan 20 2016 Dennis Gilmore <dennis@ausil.us> - 4.0.4-1
+- 4.0.4 release (dennis)
+- Merge #123 `Live images: add repo from another variant` (ausil)
+- Merge #125 `[image-build] Stop creating wrong arch dirs` (ausil)
+- Toggle multilib per variant (lsedlar)
+- [live-images] Code cleanup (lsedlar)
+- [live-images] Add documentation (lsedlar)
+- [live-images] Add repos from other variants (lsedlar)
+- [image-build] Stop creating wrong arch dirs (lsedlar)
+- Enable identifying variants in exception traces (lsedlar)
+- Store which deliverables failed (lsedlar)
+- scm.py: use git clone instead git archive for http(s):// (lkocman)
+- Fix filtering of system release packages (lsedlar)
+- Merge #114 `Use install tree/repo from another variant for image build`
+  (ausil)
+- Make system release package filtering optional (lsedlar)
+- [image-build] Optionally do not break whole compose (lsedlar)
+- [image-build] Refactoring (lsedlar)
+- [image-build] Use repo from another variant (lsedlar)
+- [image-build] Take install tree from another variant (lsedlar)
+- Add missing formats to volumeid and image name (lsedlar)
+- [image-build] Use single koji task per variant (lsedlar)
+- Fix image-build modifying config (lsedlar)
+- Fix missing checksums in .treeinfo (lsedlar)
+- Don't crash on generating volid without variant (lsedlar)
+- Merge #99 `Add option to specify non-failing stuff` (ausil)
+- Add repo from current compose (lsedlar)
+- Fix getting compose topdir in CreateImage build thread (lsedlar)
+- Add option to specify non-failing stuff (lsedlar)
+- Allow customizing image name and volume id (lsedlar)
+- Fix notifier tests (lsedlar)
+- Publish a url instead of a file path. (rbean)
+- Add 'topdir' to all fedmsg/notifier messages. (rbean)
+- Merge #75 `Start of development guide` (ausil)
+- Merge #88 `Resolve HEAD in ksurl to actual hash` (ausil)
+- Merge #87 `Add support for customizing lorax options` (ausil)
+- Update fedmsg notification hook to use appropriate config. (rbean)
+- we need to ensure that we send all the tasks to koji on the correct arch
+  (dennis)
+- Resolve HEAD in ksurl to actual hash (lsedlar)
+- Add support for customizing lorax options (lsedlar)
+- Run lorax in separate dirs for each variant (lsedlar)
+- Merge #84 `Allow specifying --installpkgs for lorax` (ausil)
+- Merge #83 `Fix recently discovered bugs` (ausil)
+- Merge #82 `indentation fixs correcting dvd creation` (ausil)
+- Merge #69 `Move messaging into cli options and simplify it` (ausil)
+- Start lorax for each variant separately (lsedlar)
+- Update lorax wrapper to use --installpkgs (lsedlar)
+- Allow specifying which packages to install in variants xml (lsedlar)
+- Add basic tests for buildinstall phase (lsedlar)
+- Fix generating checksum files (lsedlar)
+- Use lowercase hashed directories (lsedlar)
+- indentation fixs correcting dvd creation (dennis)
+- remove glibc32 from the runroot tasks (dennis)
+- fix up the pungi-fedmesg-notification script name (dennis)
+- Add overview of Pungi to documentation (lsedlar)
+- Move messaging into cli options (lsedlar)
+- Extend contributing guide (lsedlar)
+- Load multilib configuration from local dir in development (lsedlar)
+- Allow running scripts with any python in PATH (lsedlar)
+
+* Tue Sep 08 2015 Dennis Gilmore <dennis@ausil.us> 4.0.3-1
+- Merge #54 `fix log_info for image_build (fails if image_build is skipped)`
+  (lkocman)
+- image_build: self.log_info -> self.compose.log_info (lkocman)
+- Revert "Added params needed for Atomic compose to LoraxWrapper" (dennis)
+- Revert "fix up if/elif in _handle_optional_arg_type" (dennis)
+- Add image-build support (lkocman)
+- Add translate path support. Useful for passing pungi repos to image-build
+  (lkocman)
+- import duplicate import of errno from buildinstall (lkocman)
+- handle openning missing images.json (image-less compose re-run) (lkocman)
+- compose: Add compose_label_major_version(). (lkocman)
+- pungi-koji: Don't print traceback if error occurred. (pbabinca)
+- More detailed message for unsigned rpms. (tkopecek)
+- New config option: product_type (default is 'ga'); Set to 'updates' for
+  updates composes. (dmach)
+- kojiwrapper: Add get_signed_wrapped_rpms_paths() and get_build_nvrs()
+  methods. (tmlcoch)
+- live_images: Copy built wrapped rpms from koji into compose. (tmlcoch)
+- kojiwrapper: Add get_wrapped_rpm_path() function. (tmlcoch)
+- live_images: Allow custom name prefix for live ISOs. (tmlcoch)
+- Do not require enabled runroot option for live_images phase. (tmlcoch)
+- Support for rpm wrapped live images. (tmlcoch)
+- Remove redundant line in variants wrapper. (tmlcoch)
+- Merge #36 `Add params needed for Atomic compose to LoraxWrapper` (admiller)
+- live_images: replace hardcoded path substition with translate_path() call
+  (lkocman)
+- live_images fix reference from koji to koji_wrapper (lkocman)
+- fix up if/elif in _handle_optional_arg_type (admiller)
+- Added params needed for Atomic compose to LoraxWrapper (admiller)
+- Merge #24 `Fix empty repodata when hash directories were enabled. ` (dmach)
+- createrepo: Fix empty repodata when hash directories were enabled. (dmach)
+
+* Fri Jul 24 2015 Dennis Gilmore <dennis@ausil.us> - 4.0.2-1
+- Merge #23 `fix treeinfo checksums` (dmach)
+- Fix treeinfo checksums. (dmach)
+- add basic setup for making arm iso's (dennis)
+- gather: Implement hashed directories. (dmach)
+- createiso: Add createiso_skip options to skip createiso on any variant/arch.
+  (dmach)
+- Fix buildinstall for armhfp. (dmach)
+- Fix and document productimg phase. (dmach)
+- Add armhfp arch tests. (dmach)
+- Document configuration options. (dmach)
+- Add dependency of 'runroot' config option on 'koji_profile'. (dmach)
+- Rename product_* to release_*. (dmach)
+- Implement koji profiles. (dmach)
+- Drop repoclosure-%%arch tests. (dmach)
+- Config option create_optional_isos now defaults to False. (dmach)
+- Change createrepo config options defaults. (dmach)
+- Rewrite documentation to Sphinx. (dmach)
+- Fix test data, improve Makefile. (dmach)
+- Update GPL to latest version from https://www.gnu.org/licenses/gpl-2.0.txt
+  (dmach)
+
+* Thu Jun 18 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.0.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
+
+* Thu Jun 11 2015 Dennis Gilmore <dennis@ausil.us> - 4.0.1-1
+- wrap check for selinux enforcing in a try except (dennis)
+- pull in gather.py patches from dmach for test compose (admiller)
+- Add some basic testing, dummy rpm creation, and a testing README (admiller)
+- pungi-koji: use logger instead of print when it's available (lkocman)
+- fix incorrect reference to variable 'product_is_layered' (lkocman)
+- pungi-koji: fix bad module path to verify_label() (lkocman)
+- update the package Requires to ensure we have everything installed to run
+  pungi-koji (dennis)
+- update the package to be installed for productmd to python-productmd (dennis)
+
+* Sun Jun 07 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.9.20150607.gitef7c78c
+- update docs now devel-4-pungi is merged to master, minor spelling fixes
+  (pbrobinson)
+- Fix remaining productmd issues. (dmach)
+- Revert "refactor metadata.py to use productmd's compose.dump for composeinfo"
+  (dmach)
+- Fix LoraxTreeInfo class inheritance. (dmach)
+- Fix pungi -> pungi_wrapper namespace issue. (dmach)
+- fix arg order for checksums.add (admiller)
+- update for productmd checksums.add to TreeInfo (admiller)
+- fix product -> release namespace change for productmd (admiller)
+- update arch manifest.add config order for productmd api call (admiller)
+- update for new productmd named args to rpms (admiller)
+- fix pungi vs pungi_wrapper namespacing in method_deps.py (admiller)
+- add createrepo_c Requires to pungi.spec (admiller)
+- add comps_filter (admiller)
+- refactor metadata.py to use productmd's compose.dump for composeinfo instead
+  of pungi compose_to_composeinfo (admiller)
+- Update compose, phases{buildinstall,createiso,gather/__ini__} to use correct
+  productmd API calls (admiller)
+- Use libselinux-python instead of subprocess (lmacken)
+- Add README for contributors (admiller)
+
+* Wed May 20 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.8.20150520.gitff77a92
+- fix up bad += from early test of implementing different iso labels based on
+  if there is a variant or not (dennis)
+
+* Wed May 20 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.7.20150520.gitdc1be3e
+- make sure we treat the isfinal option as a boolean when fetching it (dennis)
+- if there is a variant use it in the volume id and shorten it. this will make
+  each producst install tree have different volume ids for their isos (dennis)
+- fix up productmd import in the executable (dennis)
+- fixup productmd imports for changes with open sourcing (dennis)
+- tell the scm wrapper to do an absolute import otherwise we hit a circular dep
+  issue and things go wonky (dennis)
+- include the dtd files in /usr/share/pungi (dennis)
+- add missing ) causing a syntax error (dennis)
+- fix up the productmd imports to import the function from the common module
+  (dennis)
+- fix up typo in getting arch for the lorax log file (dennis)
+
+* Sat Mar 14 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.6.20150314.gitd337c34
+- update the git snapshot to pick up some fixes
+
+* Fri Mar 13 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.5.git18d4d2e
+- update Requires for rename of python-productmd
+
+* Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.4.git18d4d2e
+- fix up the pungi logging by putting the arch in the log file name (dennis)
+- change pypungi imports to pungi (dennis)
+- spec file cleanups (dennis)
+
+* Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.3.gita3158ec
+- rename binaries (dennis)
+- Add the option to pass a custom path for the multilib config files (bcl)
+- Call lorax as a process not a library (bcl)
+- Close child fds when using subprocess (bcl)
+- fixup setup.py and MANIFEST.in to make a useable tarball (dennis)
+- switch to BSD style hashes for the iso checksums (dennis)
+- refactor to get better data into .treeinfo (dennis)
+- Initial code merge for Pungi 4.0. (dmach)
+- Initial changes for Pungi 4.0. (dmach)
+- Add --nomacboot option (csieh)
+
+* Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.2.git320724e
+- update git snapshot to switch to executing lorax since it is using dnf
+
+* Thu Mar 12 2015 Dennis Gilmore <dennis@ausil.us> - 4.0-0.1.git64b6c80
+- update to the pungi 4.0 dev branch
 
 * Mon Dec 15 2014 Dennis Gilmore <dennis@ausil.us> - 3.12-3
 - add patch to make the dvd bootable on aarch64
@@ -80,558 +855,3 @@ rm -rf $RPM_BUILD_ROOT
 * Wed Jul 30 2014 Dennis Gilmore <dennis@ausil.us> - 3.09-1
 - implement nameing scheme from
   https://fedoraproject.org/wiki/User:Adamwill/Draft_fedora_image_naming_policy
-  (dennis)
-- implement shortening of the volumeid which has a 32 character limit (dennis)
-
-* Wed Jul 23 2014 Dennis Gilmore <dennis@ausil.us> - 3.08-1
-- fix up some issues with --no-dvd and --workbasedir (dennis)
-
-* Sun Jul 20 2014 Dennis Gilmore <dennis@ausil.us> - 3.07-1
-- add option to not make a dvd
-
-* Mon Jul 14 2014 Dennis Gilmore <dennis@ausil.us> - 3.06-1
-- allow the base work directory to be configurable
-
-* Tue Jul 08 2014 Dennis Gilmore <dennis@ausil.us> - 3.05-1
-- Don't emit media labels with spaces in them. (pjones)
-
-* Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.04-3
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
-
-* Thu May 01 2014 Dennis Gilmore <dennis@ausil.us> - 3.04-2
-- add missing requires on python-lockfile
-
-* Tue Apr 29 2014 Dennis Gilmore <dennis@ausil.us> - 3.04-1
-- Use a lockfile around things that modify the cachedir. (rbean)
-- Improve logging for missing srpms. (rbean)
-- honour the --nosource option (dennis)
-- support ppc64le in pungi (hamzy)
-- Add configurable compression type to pungi (default to xz) (rbean)
-
-* Thu Oct 31 2013 Dennis Gilmore <dennis@ausil.us> - 3.03-1
-- revert to the old way of doing versioning as the change in 3.01 did not work
-
-* Thu Oct 31 2013 Dennis Gilmore <dennis@ausil.us> - 3.02-1
-- fix typo in call to __version__ (Dennis Gilmore)
-
-* Sun Oct 27 2013 Daniel Mach <dmach@redhat.com> - 3.01-1
-- Add 'make log' command to print changelog for spec. (Daniel Mach)
-- Implement %prepopulate config section as an additional package input. (Daniel Mach)
-- Don't automatically apply fulltree on input multilib packages. (Daniel Mach)
-- Implement %multilib-blacklist and %multilib-whitelist config sections. (Daniel Mach)
-- Turn off fulltree for multilib packages. (Daniel Mach)
-- Return package flags: input, fulltree-exclude, langpack, multilib, fulltree (Daniel Mach)
-- Exclude srpms from conditional deps. (Daniel Mach)
-- Improve greedy methods: none, all, build. (Daniel Mach)
-- Add .gitignore. (Daniel Mach)
-- Add 'yaboot' multilib method. (Daniel Mach)
-- Drop pulseaudio-utils from runtime whitelist (Daniel Mach)
-- Remove packages which are in lookaside repos from regular repos. (Daniel Mach)
-- Print repoid to make clear from which repo a package came. (Daniel Mach)
-- Don't pull conditional deps in when --nodeps is used. (Daniel Mach)
-- Multilib fix - consider only *.so* libs which are also listed in Provides. (Daniel Mach)
-- Fix --nodeps by setting Pungi.is_resolve_deps according to config. (Daniel Mach)
-- Add test_arch.py. (Daniel Mach)
-
-* Tue Aug 20 2013 Dennis Gilmore <dennis@ausil.us> - 3.00-1
-- apply patches from Daniel Mach
-- make sure we only use mac support on x86_64
-- make sure deltarpm is disabled
-
-* Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.13-3
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
-
-* Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.13-2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
-
-* Fri Dec 21 2012 Dennis Gilmore <dennis@ausil.us> - 2.13-1
-- strip groups from comps not listed in the kickstart
-- fix ppc64 runtime installation (#888887)
-- dont make isos on arm
-- include ppc64 checksums (#888517)
-
-* Fri Aug 31 2012 Dennis Gilmore <dennis@ausil.us> - 2.12-1
-- ppc64p7 support
-- update locations for ppc files for image composition bz#849731
-- add 32 bit arm arches
-
-* Sat Jul 21 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.11-3
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
-
-* Thu May 03 2012 Dennis Gilmore <dennis@ausil.us> - 2.11-2
-- add patch for bz#816315
- 
-* Mon Apr 16 2012 Dennis Gilmore <dennis@ausil.us> - 2.11-1
-- upstream 2.11 release
-
-* Thu Feb 09 2012 Dennis Gilmore <dennis@ausil.us> - 2.10-1
-- drop all the patches merged into upstream 2.10 release
-
-* Thu Feb 09 2012 Dennis Gilmore <dennis@ausil.us> - 2.9-3
-- hash the Packages dir for consistency between Fedora and Everything trees
-
-* Tue Jan 31 2012 Dennis Gilmore <dennis@ausil.us> - 2.9-2
-- add patch from will woods for yaboot on ppc
-
-* Mon Jan 30 2012 Dennis Gilmore <dennis@ausil.us> - 2.9-1
-- pass isfinal rather than is_beta to lorax 
-
-* Sat Jan 14 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.8-3
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild
-
-* Thu Oct 27 2011 Will Woods <wwoods@redhat.com> - 2.8-2
-- Fix DVD builds for ppc/ppc64
-- Use a consistent ISO label so the bootloader will work (#732298)
-
-* Mon Jul 18 2011 Jesse Keating <jkeating@redhat.com> - 2.8-1
-- Always re-init the yum object (#717089)
-
-* Mon May 16 2011 Dennis Gilmore <dennis@ausil.us> - 2.7-1
-- add --isfinal for turning off the betanag
-
-* Fri Apr 29 2011 Jesse Keating <jkeating@redhat.com> - 2.6-1
-- Make sure lorax makes use of our gathered repo
-
-* Wed Jan 12 2011 Jesse Keating <jkeating@redhat.com> - 2.5-1
-- Use Lorax instead of buildinstall (mgracik)
-
-* Tue Dec 21 2010 Jesse Keating <jkeating@redhat.com> - 2.4-1
-- Enable EFI booting on x86_64 media
-
-* Mon Nov 15 2010 Jesse Keating <jkeating@redhat.com> - 2.3-1
-- Drop split-media support
-
-* Thu Oct 14 2010 Jesse Keating <jkeating@redhat.com> - 2.1.4-1
-- Further fix the pkgorder issue
-
-* Wed Oct 13 2010 Jesse Keating <jkeating@redhat.com> - 2.1.3-1
-- Fix a pkgorder issue
-
-* Tue Jun 29 2010 Jesse Keating <jkeating@redhat.com> - 2.1.2-1
-- Fix a yumconf traceback (thanks James!)
-
-* Fri Jun 04 2010 Jesse Keating <jkeating@redhat.com> - 2.1.1-1
-- Don't do multilib gathering.
-- fixes --force when compose fails during split-tree process. (npetrov)
-- fix pkgorder (npetrov)
-
-* Wed Apr 14 2010 Jesse Keating <jkeating@redhat.com> - 2.1.0-1
-- Update paths for new anaconda layout
-- Drop hints about checksum type
-- Add proxy support from the repo line in the kickstart file
-- Catch all kernel packages
-
-* Tue Sep 15 2009 Jesse Keating <jkeating@redhat.com> - 2.0.20-1
-- One more upstream pkgorder fix
-
-* Tue Sep 15 2009 Jesse Keating <jkeating@redhat.com> - 2.0.19-1
-- More upstream fixes for pkgorder and selfhosting composes
-
-* Mon Sep 14 2009 Jesse Keating <jkeating@redhat.com> - 2.0.18-1
-- Search for dracut for pkgorder
-
-* Mon Aug 10 2009 Jesse Keating <jkeating@redhat.com> - 2.0.17-1
-- Fix pkgorder to not conflict with yum internals.
-- Remove dead code from splittree
-
-* Thu May 21 2009 Jesse Keating <jkeating@redhat.com> - 2.0.16-1
-- Fix boot.iso being on DVD images
-
-* Tue May 19 2009 Jesse Keating <jkeating@redhat.com> - 2.0.15-1
-- Split media on demand rather than via guess work.
-
-* Mon Apr 13 2009 Jesse Keating <jkeating@redhat.com> - 2.0.14-1
-- Fix package excludes in kickstart files
-- Correctly account for ppc bootable isofs overhead
-- Wire in support for composing 'full' trees with all subpackages
-
-* Tue Mar 24 2009 Jesse Keating <jkeating@redhat.com> - 2.0.13-1
-- Add online-docs to pkgorder
-
-* Wed Mar 11 2009 Jesse Keating <jkeating@redhat.com> - 2.0.12-1
-- Update for yum API change
-
-* Mon Mar 09 2009 Jesse Keating <jkeating@redhat.com> - 2.0.11-1
-- Fix size estimation in splittree
-- Disable arch test in splittree for now
-
-* Wed Feb 11 2009 Jesse Keating <jkeating@redhat.com> - 2.0.10-1
-- Fix CD1 overflow issue
-- Name the checksum file after the isos being generated.
-- Use sha256 for checksums
-- Use unique md file names for repodata.
-- Do not include boot.iso on any disc
-- Add the packages that anaconda forces to be installed into the pkgorder
-
-* Thu Dec 04 2008 Jesse Keating <jkeating@redhat.com> - 2.0.9-1
-- Fix for python-2.6 ('default' is no longer a valid config section)
-- Fix splitting srpms
-
-* Tue Nov 4 2008 Jesse Keating <jkeating@redhat.com> - 2.0.8-1
-- Set default disc size to 695
-
-* Tue Nov 4 2008 Jesse Keating <jkeating@redhat.com> - 2.0.7-1
-- Fix splittree to actually use the iso size defined in kickstarts
-- Use https url for bugzilla by default.
-
-* Thu Oct 09 2008 Jesse Keating <jkeating@redhat.com> - 2.0.6-1
-- Handle %packages --default to pick up the default groups.
-- Set iso name to be the same as --name
-- Make sure we don't include the 'sha1:' in the iso SHA1SUM file.
-- Fix .treeinfo to have proper case in file names
-
-* Thu Sep 11 2008 Jesse Keating <jkeating@redhat.com> - 2.0.5-1
-- Add input-methods to pkgorder.  It's a new group, need to get ordering right.
-- Make sure we output sha1sums in binary mode.  This helps windows.
-- Yum api changed, follow so that we don't break.
-
-* Mon Aug 11 2008 Jesse Keating <jkeating@redhat.com> 2.0.4-1
-- Remove unused discs option
-- Don't try to make debuginfo repo for source arch
-- Change the checksum output for images checksumming
-- Get ppc boot images in checksum list
-- Only get repodata and init yum object when needed
-- Fix path issues in info files
-
-* Tue Jul 15 2008 Jesse Keating <jkeating@redhat.com> 2.0.3-1
-- Checksum various files from buildinstall output and put them in .treeinfo
-- Use new hashsum utility to generate sha1sums
-
-* Fri Jul 11 2008 Jesse Keating <jkeating@redhat.com> 2.0.2-1
-- add ability to gather debuginfo.  It is default.
-
-* Tue Jun 24 2008 Jesse Keating <jkeating@redhat.com> - 2.0.1-1
-- Take on splittree and pkgorder from anaconda.
-
-* Fri Jun 13 2008 Jesse Keating <jkeating@redhat.com> - 2.0.0-1
-- New major release
-- Collapse the two classes into one Pungi class
-- Create a pypungi.util module for utility functions
-- Pass along repos/mirrorlists configured in ks file to buildinstall
-- Repo cost is now "cost" in pykickstart
-
-* Tue May 06 2008 Jesse Keating <jkeating@redhat.com> - 1.2.18-1
-- Manifest change for F9, drop syslog-ng
-
-* Thu May 01 2008 Jesse Keating <jkeating@redhat.com> - 1.2.17-1
-- Add a config file for Fedora 9.
-
-* Wed Apr 16 2008 jkeating <jkeating@redhat.com> 1.2.16-1
-- Fix another issue with source repo stuff.
-
-* Wed Apr 16 2008 jkeating <jkeating@redhat.com> 1.2.15-1
-- Disable comps cleanup until xslt is fixed
-- Add support for yum repo costs
-- Adjust manifest for Fedora 9 (kernels, languages, flash)
-
-* Mon Apr 08 2008 Jesse Keating <jkeating@redhat.com> - 1.2.14-1
-- Create repodata for source.
-- Fix SRPM splittree making
-- Bump anaconda require up for fixed splittree
-
-* Tue Apr 01 2008 Jesse Keating <jkeating@redhat.com> - 1.2.13-1
-- Use the yum api for merging comps.
-
-* Fri Mar 14 2008 Jesse Keating <jkeating@redhat.com> - 1.2.12-1
-- Fix source isos
-- Send the right options to buildinstall
-
-* Wed Mar 12 2008 Jesse Keating <jkeating@redhat.com> - 1.2.11-1
-- Make CDs fit again.
-
-* Tue Mar 11 2008 Jesse Keating <jkeating@redhat.com> - 1.2.10-1
-- Handle netinst.iso being renamed to boot.iso
-
-* Wed Mar 05 2008 Jesse Keating <jkeating@redhat.com> - 1.2.9-1
-- Fix ppc split iso generation
-- Exclude repoview from isos
-
-* Fri Jan 25 2008 jkeating <jkeating@redhat.com> 1.2.8-1
-- Put createrepo arguments in correct order
-- Fix comps mashup to be more lenient with the open/close of <comps
-- Handle gzipped comps files.
-- Make sure we get fresh repomd.xml each time we run
-- Don't autoclean the repodata, some of it can be reused
-- Clear out the repodata we copy out temporarily, so that we don't
-  traceback on --force runs.
-
-* Tue Jan 22 2008 jkeating <jkeating@redhat.com> 1.2.7-1
-- Rework how repodata gets generated for media.
-- use createrepo api
-
-* Wed Jan 2 2008 jkeating <jkeating@redhat.com> 1.2.6-1
-- Update the url field for new hosted urls.
-- Add k3b to the Fedora manifest.
-
-* Mon Dec 10 2007 Jesse Keating <jkeating@redhat.com> 1.2.4-1
-- Remove extra files from tarball
-
-* Mon Dec 10 2007 Jesse Keating <jkeating@redhat.com> 1.2.3-1
-- Use a repoview cache.
-- Use a createrepo cache.
-- Change path to isomd5sum
-- Add egg file to spec
-
-* Tue Dec 4 2007 Jesse Keating <jkeating@redhat.com> 1.2.0-1
-- Make logged output reusable in shell
-- Default to making split media of CD size
-- Enable repo includes/excludes.
-- Put a constraint on flavor values
-- Check for selinux enforcing and warn.
-- Add a --force option to reuse an existing destdir
-- Only check for root if you're doing root level tasks (buildinstall)
-- Figure out number of isos on the fly, based on tree size
-- Remove -S -P options, as splittree and packageorder are now
-called from createIsos, if needed.
-- Use downloadPkgs() from yum instead of a homebrew download function.
-- Add a callback to show download progress
-
-* Thu Nov 22 2007 Jesse Keating <jkeating@redhat.com> - 1.1.10-1
-- Print a usage if no options are passed
-- Correct a man page typo
-- Update the F8 config to use released repos
-
-* Mon Oct 29 2007 Jesse Keating <jkeating@redhat.com> - 1.1.9-1
-- Remove oversized cached packages (fixes reget problem)
-
-* Sat Oct 27 2007 Jesse Keating <jkeating@redhat.com> - 1.1.8-1
-- Add eclipse group.
-
-* Tue Oct 23 2007 Jesse Keating <jkeating@redhat.com> - 1.1.7-1
-- Add java-development to the group set.
-
-* Fri Oct 19 2007 Jesse Keating <jkeating@redhat.com> - 1.1.6-1
-- Update the manifest
-
-* Thu Oct 11 2007 Jesse Keating <jkeating@redhat.com> - 1.1.5-1
-- Add a cost to the media repo
-
-* Tue Oct 02 2007 Jesse Keating <jkeating@redhat.com> - 1.1.4-1
-- Make sure we use strings in the config object
-
-* Wed Sep 26 2007 Jesse Keating <jkeating@redhat.com> - 1.1.3-1
-- Pull in all the optional Virt stuff
-- Don't expire the metadata from Media repo.
-
-* Tue Sep 25 2007 Jesse Keating <jkeating@redhat.com> - 1.1.2-1
-- Fix location of media.repo file.
-
-* Tue Sep 18 2007 Jesse Keating <jkeating@redhat.com> - 1.1.1-1
-- Create a media.repo file on the first iso
-
-* Fri Sep 14 2007 Jesse Keating <jkeating@redhat.com> - 1.1.0-1
-- Create repoview content in the tree
-- Move the .composeinfo file into the directory we actually publish
-- Remove python2.5 needs (Mark McLoughlin)
-- Consolidate the download code for easier maint. (Mark McLoughlin)
-- Create a config class that can make using pungi modules easier. (Mark 
-McLoughlin)
-- Use url line in kickstart files as a repo
-- Fix a bug with default dest dir (notting)
-- Include a man page (dcantrell)
-- Fix a bug with file:// based repos
-
-* Thu Aug 30 2007 Jesse Keating <jkeating@redhat.com> - 1.0.2-1
-- Fix some bugs with source iso creation
-- Add source repo to kickstart file
-- Add %end to %packages in kickstart file
-
-* Tue Aug 28 2007 Jesse Keating <jkeating@redhat.com> - 1.0.1-1
-- Default flavor to blank.
-
-* Mon Aug 27 2007 Jesse Keating <jkeating@redhat.com> - 1.0.0-2
-- Fix the licensing tag.
-
-* Mon Aug 27 2007 Jesse Keating <jkeating@redhat.com> - 1.0.0-1
-- Add support for $releasever in repo uris.
-- Add a kickstart file usable for composing Fedora 8 "Fedora"
-- Fix bugs with $basearch and mirrorlist usage.
-- Add a cache dir for pungi (/var/cache/pungi) and a cli option to override
-- Add root check.
-- Use a kickstart file as input now (for cdsize and package manifest)
-- Remove a lot of configurable items and hard set them
-- Move some items to cli flags only (part of moving to pykickstart)
-- hard set product_path to 'Packages'
-- Use group metadata from repos instead of our own comps file
-- Get group files out of configured repos and create a mashup
-  of the comps.  Filter it and make use of it when creating repos.
-- Quiet down creatrepo calls
-- Adjust logging to make use of new facility, use right levels
-- Drop a note when all done with composing
-
-* Tue Aug 21 2007 Jesse Keating <jkeating@redhat.com> - 0.5.0-1
-- Rework how source rpms are pulled in
-  Always pull in 'src' arch packages, just filter them
-  when not needed.  Saves having to reset or create new
-  yum objects.
-- Create a base pungi class that sets logging
-- Inherit this class in Gather and Pungi
-- Adjust logging to make use of new facility, use right levels
-- Drop a note when all done with composing
-- Make Gather() no longer a subclass of yum
-- Be verbose about what we clean (makefile)
-- Create a subclass of yum to work around logging fun
-
-* Wed Aug 01 2007 Jesse Keating <jkeating@redhat.com> - 0.4.1-1
-- Create a new yum object for source downloads as yum
-
-* Sat Jul 28 2007 Jesse Keating <jkeating@redhat.com> - 0.4.0-1
-- split createrepo call to it's own function.  This enables rawhide
-  composes to happen once again. Also breaks API.
-- When raising an error, print the error too
-
-* Tue Jul 24 2007 Jesse Keating <jkeating@redhat.com> - 0.3.9-1
-- Add a few more desktopy things to manifest
-- Rename f7 files to f8; set up config files for f8test1
-- Don't quote things passed to mkisofs, not a shell
-- Always log stdout before checking for stderr output
-- Include memtest86+ in the "Fedora" manifest
-
-* Wed Jun 20 2007 Jesse Keating <jkeating@redhat.com> - 0.3.8-1
-- Only grab the newest of deps.
-- Don't use flavor for a log file if no flavor set (Trac #48)
-- Point to the right manifest file in pungi.conf
-- Add a install target to make (Trac #37)
-- Enable the source repo in yum configs (Trac #47)
-- Use universal newlines in getting process output (Trac #44)
-- Fix logging of broken deps (Trac #39)
-
-* Wed May 30 2007 Jesse Keating <jkeating@redhat.com> - 0.3.7-1
-- Handle the cdsize variable correctly
-- More fixes for cached download stuff
-- Fix default CD size storing
-- Update comps file with what shipped for F7
-
-* Fri May 25 2007 Jesse Keating <jkeating@redhat.coM> - 0.3.6-1
-- Handle the cdsize variable correctly
-
-* Thu May 24 2007 Jesse Keating <jkeating@redhat.coM> - 0.3.5-1
-- Use the right flavor in the Everything configs
-
-* Thu May 24 2007 Jesse Keating <jkeating@redhat.coM> - 0.3.4-1
-- Use a package checksum to verify cached download
-
-* Wed May 23 2007 Jesse Keating <jkeating@redhat.coM> - 0.3.3-1
-- Commit config files used for producing Fedora 7
-- Default pungi.conf file to using Fedora 7 stuff
-
-* Mon May 21 2007 Jesse Keating <jkeating@redhat.coM> - 0.3.2-1
-- Don't quote ISO label, not running mkisofs in shell
-- Apply sparc patches (spot)
-- Fix cached downloads comparing correctly
-- Shorten 'development' to 'devel' in default config, more space for mkisofs
-- Handle config file missing better (jgranado)
-
-* Fri Apr 06 2007 Jesse Keating <jkeating@redhat.com> - 0.3.1-1
-- Fix comments in default config file
-
-* Mon Apr 02 2007 Jesse Keating <jkeating@redhat.com> - 0.3.0-1
-- Remove incompatible fc6 config files
-- Update default config file with comments / new options
-- Update comps file
-- Enable source iso building again.
-- Don't try a rescue if the script doesn't exist (prarit)
-- Pass flavor off to buildinstall if it is set (wwoods)
-- Fix a logic flaw in the depsolving loop
-- Use yum's built in exclude handling
-- Use yum's built in conditional handling for things from comps
-- Do excludes before group handling.
-- Get all potential matches for deps, let install time figure
-  the best one to use.
-- Work around false positive 'unmatched' packages (globs are fun)
-- Change how depsolving is done
-  - Get all potential matches for a dep, instead of our 'best'
-    our 'best' may not be the same as install time best.
-  - Remove anaconda code, use direct yum functions to get deps
-  - Use a True/False flag to depsolve instead of iterating over
-    a dict.
-  - Log what packages are being added for which reasons.
-- Do things faster/smarter if we've only asked for one disc
-- log the rpm2cpio stuff for release notes
-- correctly capture errors from subprocess
-
-* Fri Mar 09 2007 Jesse Keating <jkeating@redhat.com> - 0.2.8-1
-- Call createrepo ourselves for the tree, not buildinstall's job
-- Convert from commands to subprocess for things we call out
-- Add kickstart %packages syntax support to package manifest
-- Make the list we hand off to yum to search for as unique as we can
-
-* Wed Feb 28 2007 Jesse Keating <jkeating@redhat.com> - 0.2.7-1
-- Fix gathering of srpms (thanks skvidal)
-- Update comps from F7 Test2
-
-* Thu Feb 22 2007 Jesse Keating <jkeating@redhat.com> - 0.2.6-1
-- Don't use TMPDIR with buildinstall, it is broken
-
-* Wed Feb 21 2007 Jesse Keating <jkeating@redhat.com> - 0.2.5-1
-- Make use of anaconda's TMPDIR support
-- Put yum tempdirs in the workdir
-- Add a version option to cli arguments
-- Make cdsize a config option
-
-* Thu Feb 15 2007 Jesse Keating <jkeating@redhat.com> - 0.2.4-1
-- Add support for globbing in manifest
-- Add new Make targets (Essien Ita Essien)
-- Add runtime flags for doing specific stages of the compose (Essien Ita Essien)
-- Add ability to define destdir on the cli to override conf file
-- Clean up optionparse stuff, print usage if arg list is too small
-- Fix part of the patch from Essien
-- Add Contributors to the Authors file
-- Adjust the Makefile so that srpm doesn't cause a tag
-- Merged changes from Will Woods
-  - Write out some tree description files
-  - Don't traceback on existing files in download area (not sure this will stay)
-- Style fixed some stuff from Will
-- Add logging patch from jbowes
-- Various logging tweaks
-- Use -d flag in createrepo for sqlite blobs
-- Add pydoc stuff to various functions
-- Support comments in the package manifest
-
-* Tue Feb 06 2007 Jesse Keating <jkeating@redhat.com> - 0.2.3-1
-- Be able to opt-out of a bugurl since buildinstall supports this
-- Make isodir an object of pungi (wwoods)
-- yum bestPackagesFromList takes an arch argument. Fixes ppc64 bug
-- Don't use 'returnSimple' anymore, deprecated in yum api
-
-* Mon Jan 29 2007 Jesse Keating <jkeating@redhat.com> - 0.2.2-1
-- Update the comps file again from F7
-- Fix the ppc boot flags
-- Clean up SRPM-disc junk
-- add bugurl config option for anaconda betanag
-
-* Thu Jan 25 2007 Jesse Keating <jkeating@redhat.com> - 0.2.1-1
-- Add a "flavor" option (such as Desktop)
-- Move packageorder file into workdir
-- Update the comps file from F7
-
-* Wed Jan 24 2007 Jesse Keating <jkeating@redhat.com> - 0.2.0-1
-- Now use a manifest to determine what to pull in, not comps itself
-- Add a minimal-manifest for test composes
-- Add current F7 comps file for test composes
-- Use some anaconda code to depsolve, gets better (and more common) results
-- Bump the iso size to what was used in FC6
-- Move splittree workdirs into work/ at the end of the run
-- Remove our splittree for rawhide
-- Remove old main() sections from pungi.py and gather.py
-- Require yum 3.0.3 or newer
-- Add rescueCD support
-
-* Wed Dec 13 2006 Jesse Keating <jkeating@redhat.com> - 0.1.2-1
-- Fix a bug in DVD repodata
-- Add correct ppc boot args
-- Set ppc arch correctly
-
-* Mon Dec 11 2006 Jesse Keating <jkeating@redhat.com> - 0.1.1-2
-- Need BR python-devel in rawhide
-
-* Mon Dec 11 2006 Jesse Keating <jkeating@redhat.com> - 0.1.1-1
-- Update to 0.1.1
-- Add ability to get srpms
-- Add ability to get relnote files
-- Use a config file system
-- Clean up some docs
-- Add config files for composing FC6 respins
-
-* Wed Nov  8 2006 Jesse Keating <jkeating@redhat.com> - 0.1.0-1
-- Initial spec

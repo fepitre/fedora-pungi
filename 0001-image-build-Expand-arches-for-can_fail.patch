@@ -1,0 +1,104 @@
+From 6c708549c8f6632884bc55abed2f88afa1abe100 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Mon, 23 Jan 2017 16:52:57 +0100
+Subject: [PATCH 1/2] image-build: Expand arches for can_fail
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+We need to work with a list of strings, not a comma-delimited single
+string.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/image_build.py   |  2 +-
+ tests/test_imagebuildphase.py | 60 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 61 insertions(+), 1 deletion(-)
+
+diff --git a/pungi/phases/image_build.py b/pungi/phases/image_build.py
+index 5cfdbb0..b795125 100644
+--- a/pungi/phases/image_build.py
++++ b/pungi/phases/image_build.py
+@@ -122,7 +122,7 @@ class ImageBuildPhase(base.PhaseLoggerMixin, base.ImageConfigMixin, base.ConfigG
+ 
+                 can_fail = image_conf['image-build'].pop('failable', [])
+                 if can_fail == ['*']:
+-                    can_fail = image_conf['image-build']['arches']
++                    can_fail = image_conf['image-build']['arches'].split(',')
+                 if can_fail:
+                     image_conf['image-build']['can_fail'] = ','.join(sorted(can_fail))
+ 
+diff --git a/tests/test_imagebuildphase.py b/tests/test_imagebuildphase.py
+index 86012ac..328b2b3 100644
+--- a/tests/test_imagebuildphase.py
++++ b/tests/test_imagebuildphase.py
+@@ -619,6 +619,66 @@ class TestImageBuildPhase(PungiTestCase):
+         self.assertItemsEqual(phase.pool.queue_put.mock_calls,
+                               [mock.call((compose, server_args))])
+ 
++    @mock.patch('pungi.phases.image_build.ThreadPool')
++    def test_failable_star(self, ThreadPool):
++        compose = DummyCompose(self.topdir, {
++            'image_build': {
++                '^Server$': [
++                    {
++                        'image-build': {
++                            'format': [('docker', 'tar.xz')],
++                            'name': 'Fedora-Docker-Base',
++                            'target': 'f24',
++                            'version': 'Rawhide',
++                            'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
++                            'kickstart': "fedora-docker-base.ks",
++                            'distro': 'Fedora-20',
++                            'disk_size': 3,
++                            'failable': ['*'],
++                        }
++                    }
++                ]
++            },
++            'koji_profile': 'koji',
++        })
++        compose.setup_optional()
++
++        self.assertValidConfig(compose.conf)
++
++        phase = ImageBuildPhase(compose)
++
++        phase.run()
++
++        # assert at least one thread was started
++        self.assertTrue(phase.pool.add.called)
++        server_args = {
++            "format": [('docker', 'tar.xz')],
++            "image_conf": {
++                'image-build': {
++                    'install_tree': self.topdir + '/compose/Server/$arch/os',
++                    'kickstart': 'fedora-docker-base.ks',
++                    'format': 'docker',
++                    'repo': self.topdir + '/compose/Server/$arch/os',
++                    'variant': compose.all_variants['Server'],
++                    'target': 'f24',
++                    'disk_size': 3,
++                    'name': 'Fedora-Docker-Base',
++                    'arches': 'amd64,x86_64',
++                    'version': 'Rawhide',
++                    'ksurl': 'git://git.fedorahosted.org/git/spin-kickstarts.git',
++                    'distro': 'Fedora-20',
++                    'can_fail': 'amd64,x86_64',
++                }
++            },
++            "conf_file": self.topdir + '/work/image-build/Server/docker_Fedora-Docker-Base.cfg',
++            "image_dir": self.topdir + '/compose/Server/%(arch)s/images',
++            "relative_image_dir": 'Server/%(arch)s/images',
++            "link_type": 'hardlink-or-copy',
++            "scratch": False,
++        }
++        self.assertItemsEqual(phase.pool.queue_put.mock_calls,
++                              [mock.call((compose, server_args))])
++
+ 
+ class TestCreateImageBuildThread(PungiTestCase):
+ 
+-- 
+2.11.0
+
