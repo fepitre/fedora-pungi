@@ -1,0 +1,39 @@
+From 1647f7612a2f59b726160122b6d9a6c5ec67ccb2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Mon, 6 Mar 2017 19:31:03 +0100
+Subject: [PATCH] image-build: Remove check for number of images
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+If task does not produce the expected number of images, it should fail
+at Koji level. Also, this check does not really work when some
+architectures are allowed to fail.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/image_build.py | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/pungi/phases/image_build.py b/pungi/phases/image_build.py
+index bd18d3a..1327a0e 100644
+--- a/pungi/phases/image_build.py
++++ b/pungi/phases/image_build.py
+@@ -211,14 +211,6 @@ class CreateImageBuildThread(WorkerThread):
+                         image_infos.append({'path': path, 'suffix': suffix, 'type': format, 'arch': arch})
+                         break
+ 
+-        if len(image_infos) != len(cmd['format']) * (len(arches) - len(self.failable_arches)):
+-            self.pool.log_error(
+-                "Error in koji task %s. Expected to find same amount of images "
+-                "as in suffixes attr in image-build (%s) for each arch (%s). Got '%s'." %
+-                (output["task_id"], len(cmd['format']),
+-                 len(arches), len(image_infos)))
+-            self.fail(compose, cmd)
+-
+         # The usecase here is that you can run koji image-build with multiple --format
+         # It's ok to do it serialized since we're talking about max 2 images per single
+         # image_build record
+-- 
+2.9.3
+
