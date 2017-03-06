@@ -1,12 +1,13 @@
 Name:           pungi
 Version:        4.1.13
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+Patch0:         0001-image-build-Remove-check-for-number-of-images.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -68,6 +69,7 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 %{__python} setup.py build
@@ -109,6 +111,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-fedmsg-notification
 
 %changelog
+* Mon Mar 06 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.13-2
+- Remove check for number of images
+
 * Mon Mar 06 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.13-1
 - Make MANIFEST.in stricter (qwan)
 - Remove one line of log print (qwan)
