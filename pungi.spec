@@ -1,13 +1,12 @@
 Name:           pungi
-Version:        4.1.13
-Release:        2%{?dist}
+Version:        4.1.14
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-image-build-Remove-check-for-number-of-images.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -16,6 +15,9 @@ BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax, python-rpm
 BuildRequires:  yum => 3.4.3-28, createrepo >= 0.4.11
 BuildRequires:  gettext, git-core, cvs
 BuildRequires:  python-jsonschema
+BuildRequires:  python-enum34
+BuildRequires:  python2-dnf
+BuildRequires:  python2-multilib
 
 #deps for doc building
 BuildRequires:  python-sphinx, texlive-latex-bin-bin, texlive-collection-fontsrecommended
@@ -51,6 +53,9 @@ Requires:       gettext
 Requires:       git
 Requires:       python-jsonschema
 Requires:       libguestfs-tools-c
+Requires:       python-enum34
+Requires:       python2-dnf
+Requires:       python2-multilib
 
 BuildArch:      noarch
 
@@ -69,7 +74,6 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
-%patch0 -p1
 
 %build
 %{__python} setup.py build
@@ -98,6 +102,7 @@ cd tests && ./test_compose.sh
 %{python_sitelib}/%{name}-%{version}-py?.?.egg-info
 %{_bindir}/%{name}
 %{_bindir}/%{name}-koji
+%{_bindir}/%{name}-gather
 %{_bindir}/comps_filter
 %{_bindir}/%{name}-make-ostree
 %{_mandir}/man1/pungi.1.gz
@@ -109,8 +114,37 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-create-unified-isos
 %{_bindir}/%{name}-config-validate
 %{_bindir}/%{name}-fedmsg-notification
+%{_bindir}/%{name}-patch-iso
+%{_bindir}/%{name}-compare-depsolving
 
 %changelog
+* Tue Mar 28 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.14-1
+- Not create empty skeleton dirs for empty variants (qwan)
+- Query only active modules in PDC. (jkaluza)
+- Save modules metadata as full yaml object (jkaluza)
+- Implement DNF based depsolving (dmach, mmraka, lsedlar)
+- Add support for modular composes (jkaluza)
+- Add a script for modifying ISO images (lsedlar)
+- iso-wrapper: Add utility for mounting images (lsedlar)
+- buildinstall: Move tweaking configs into a function (lsedlar)
+- image-build: Correctly write can_fail option (lsedlar)
+- pungi-koji: new cmd option '--latest-link-status' (qwan)
+- Print task ID for successful tasks (lsedlar)
+- ostree-installer: Fix logging directory (lsedlar)
+- buildinstall: Print debug info if unmount fails (lsedlar)
+- pkgset: report all unsigned packages (qwan)
+- default createrepo_checksum to sha256 (qwan)
+- unified-iso: Log better error when linking fails (lsedlar)
+- unified-iso: Blacklist extra files metadata (lsedlar)
+- buildinstall: Retry unmounting image (lsedlar)
+- Remove indices from documentation (lsedlar)
+- iso-wrapper: Handle wrong implant md5 (lsedlar)
+- image-build: Remove check for number of images (lsedlar)
+- Extract only first version from specfile (lsedlar)
+- consolidate repo option names (qwan)
+- checks: extend validator with 'alias' (qwan)
+- osbs: write manifest for scratch osbs (qwan)
+
 * Mon Mar 06 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.13-2
 - Remove check for number of images
 
