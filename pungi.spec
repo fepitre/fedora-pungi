@@ -1,12 +1,13 @@
 Name:           pungi
 Version:        4.1.14
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+Patch0:         0001-Fix-createrepo-issue-for-modular-compose-when-multip.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -74,6 +75,7 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 %{__python} setup.py build
@@ -118,6 +120,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-compare-depsolving
 
 %changelog
+* Tue Apr 11 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.14-2
+- Fix createrepo issue for modular compose
+
 * Tue Mar 28 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.14-1
 - Not create empty skeleton dirs for empty variants (qwan)
 - Query only active modules in PDC. (jkaluza)
