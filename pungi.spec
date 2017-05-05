@@ -1,14 +1,12 @@
 Name:           pungi
-Version:        4.1.14
-Release:        3%{?dist}
+Version:        4.1.15
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-Fix-createrepo-issue-for-modular-compose-when-multip.patch
-Patch1:         0001-Expand-compatible-arches-when-gathering-from-modules.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -20,6 +18,7 @@ BuildRequires:  python-jsonschema
 BuildRequires:  python-enum34
 BuildRequires:  python2-dnf
 BuildRequires:  python2-multilib
+BuildRequires:  python2-libcomps
 
 #deps for doc building
 BuildRequires:  python-sphinx, texlive-latex-bin-bin, texlive-collection-fontsrecommended
@@ -58,6 +57,7 @@ Requires:       libguestfs-tools-c
 Requires:       python-enum34
 Requires:       python2-dnf
 Requires:       python2-multilib
+Requires:       python2-libcomps
 
 BuildArch:      noarch
 
@@ -76,8 +76,6 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
 
 %build
 %{__python} setup.py build
@@ -122,6 +120,58 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-compare-depsolving
 
 %changelog
+* Fri May 05 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.15-1
+- pkgset: Remove use of undefined variable (lsedlar)
+- Store RPM artifacts in resulting repository in modulemd metadata. (jkaluza)
+- variants: Remove redundant check (lsedlar)
+- compose: Stop duplicating variant types (lsedlar)
+- gather: Remove handling of impossible state (lsedlar)
+- gather: Clean up code (lsedlar)
+- gather: Add tests for gather phase (lsedlar)
+- scm-wrapper: Remove unused arguments (lsedlar)
+- tests: Avoid creating unused temporary files (lsedlar)
+- tests: Clean up persistent temporary data (lsedlar)
+- docs: Add a logo on the About page (lsedlar)
+- docs: Document origin of the name (lsedlar)
+- gather-dnf: Log exact Requires pulling a package in (lsedlar)
+- gather: Print specific Requires which pulls a package in (lsedlar)
+- gather: Process dependencies sorted (lsedlar)
+- koji-wrapper: Run koji runroot with fresh credentials cache (lsedlar)
+- util: Move get_buildroot_rpms to koji wrapper (lsedlar)
+- osbs: Make git_branch required option (lsedlar)
+- docs: Update createrepo_checksum allowed values (lsedlar)
+- extra-files: Allow configuring used checksums (lsedlar)
+- doc: Document options for media checksums (lsedlar)
+- config: Add sha512 as valid createrepo checksum (lsedlar)
+- util: Report better error on resolving non-existing branch (lsedlar)
+- util: Show choices for volid if all are too long (lsedlar)
+- checks: Fix anyOf validator yield ValidationError on ConfigOptionWarning
+  (qwan)
+- comps-wrapper: Reduce duplication in code (lsedlar)
+- comps-wrapper: Port to libcomps (lsedlar)
+- comps-wrapper: Sort langpacks by name (lsedlar)
+- comps-wrapper: Minor code cleanup (lsedlar)
+- comps-wrapper: Add tests (lsedlar)
+- comps-wrapper: Fix uservisible not being modifiable (lsedlar)
+- comps-wrapper: Return IDs instead of yum.comps.Group (lsedlar)
+- comps-wrapper: Remove unused code (lsedlar)
+- Be explicit about generating release for images (lsedlar)
+- docs: Add examples for generated versions (lsedlar)
+- ostree: Autogenerate a version (lsedlar)
+- Expand compatible arches when gathering from modules. (rbean)
+- gather: Clean up method deps (lsedlar)
+- gather: Report error if there is no input (lsedlar)
+- init: Warn when variants mentions non-existing comps group (lsedlar)
+- Fix createrepo issue for modular compose when multiple threads tried to use
+  the same tmp directory. (jkaluza)
+- unified-iso: Use different type for debuginfo iso (lsedlar)
+- unified-iso: Handle missing paths in metadata (lsedlar)
+- unify repo and repo_from options (qwan)
+- Fix some PEP8 errors in util.py (qwan)
+- move translate_path from paths.py to util.py (qwan)
+- checks.py: support 'append' option (qwan)
+- checks.py: show warning message for alias option (qwan)
+
 * Thu Apr 13 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.14-3
 - Expand compatible arches when gathering from modules
 
