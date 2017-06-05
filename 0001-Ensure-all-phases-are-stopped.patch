@@ -1,0 +1,190 @@
+From 860124c7d3581a6f268d313420aed27e7218b205 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Mon, 29 May 2017 09:56:23 +0200
+Subject: [PATCH] Ensure all phases are stopped
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+If a phase is started successfully, it needs to be stopped as well. In
+most cases when `stop` is called immediately after `start`, this is not
+a problem.
+
+Only when something else happens while a phase is runnning and this
+something fails, Pungi will deadlock and never exit. This something
+could be another phase or just main thread raising an exception.
+
+Fixes: #625
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ bin/pungi-koji           | 48 ++++++++++++++++++++---------------------------
+ pungi/phases/__init__.py | 18 ++++++++++++++++++
+ tests/test_phase_base.py | 49 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 85 insertions(+), 30 deletions(-)
+
+diff --git a/bin/pungi-koji b/bin/pungi-koji
+index c9a3654..480618d 100755
+--- a/bin/pungi-koji
++++ b/bin/pungi-koji
+@@ -354,25 +354,25 @@ def run_compose(compose, create_latest_link=True, latest_link_status=None):
+     pkgset_phase.start()
+     pkgset_phase.stop()
+ 
+-    # BUILDINSTALL phase - start
++    # BUILDINSTALL phase - start, we can run gathering, extra files and
++    # createrepo while buildinstall is in progress.
+     buildinstall_phase.start()
+ 
+-    # GATHER phase
+-    gather_phase.start()
+-    gather_phase.stop()
++    # If any of the following three phases fail, we must ensure that
++    # buildinstall is stopped. Otherwise the whole process will hang.
++    try:
++        gather_phase.start()
++        gather_phase.stop()
++
++        extrafiles_phase.start()
++        extrafiles_phase.stop()
+ 
+-    # EXTRA_FILES phase
+-    extrafiles_phase.start()
+-    extrafiles_phase.stop()
++        createrepo_phase.start()
++        createrepo_phase.stop()
+ 
+-    # CREATEREPO phase
+-    createrepo_phase.start()
+-    createrepo_phase.stop()
++    finally:
++        buildinstall_phase.stop()
+ 
+-    # BUILDINSTALL phase
+-    # must finish before PRODUCTIMG
+-    # must finish before CREATEISO
+-    buildinstall_phase.stop()
+     if not buildinstall_phase.skip():
+         buildinstall_phase.copy_files()
+ 
+@@ -396,20 +396,12 @@ def run_compose(compose, create_latest_link=True, latest_link_status=None):
+             timestamp = pungi.metadata.write_discinfo(compose, arch, variant)
+             pungi.metadata.write_media_repo(compose, arch, variant, timestamp)
+ 
+-    # CREATEISO and LIVEIMAGES phases
+-    createiso_phase.start()
+-    liveimages_phase.start()
+-    image_build_phase.start()
+-    livemedia_phase.start()
+-    ostree_installer_phase.start()
+-    osbs_phase.start()
+-
+-    createiso_phase.stop()
+-    liveimages_phase.stop()
+-    image_build_phase.stop()
+-    livemedia_phase.stop()
+-    ostree_installer_phase.stop()
+-    osbs_phase.stop()
++    # Start all phases for image artifacts
++    pungi.phases.run_all([createiso_phase,
++                          liveimages_phase,
++                          image_build_phase,
++                          ostree_installer_phase,
++                          osbs_phase])
+ 
+     image_checksum_phase.start()
+     image_checksum_phase.stop()
+diff --git a/pungi/phases/__init__.py b/pungi/phases/__init__.py
+index e0db601..044aa46 100644
+--- a/pungi/phases/__init__.py
++++ b/pungi/phases/__init__.py
+@@ -31,3 +31,21 @@ from .livemedia_phase import LiveMediaPhase  # noqa
+ from .ostree import OSTreePhase  # noqa
+ from .ostree_installer import OstreeInstallerPhase  # noqa
+ from .osbs import OSBSPhase  # noqa
++
++
++def run_all(phases):
++    """Start and stop all given phases and make them run in parallel.
++
++    This function makes sure that even if one of the phases fails and raises an
++    exception, all the phases will still be correctly stopped.
++
++    If multiple phases fail, a exception from one of them will be raised, but
++    there are no guarantees which one it will be.
++    """
++    if not phases:
++        return
++    phases[0].start()
++    try:
++        run_all(phases[1:])
++    finally:
++        phases[0].stop()
+diff --git a/tests/test_phase_base.py b/tests/test_phase_base.py
+index ea2992d..d0588fe 100644
+--- a/tests/test_phase_base.py
++++ b/tests/test_phase_base.py
+@@ -8,8 +8,8 @@ import sys
+ 
+ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+ 
+-from pungi.phases import base
+-from tests.helpers import DummyCompose, PungiTestCase
++from pungi.phases import run_all, base
++from tests.helpers import DummyCompose, PungiTestCase, boom
+ 
+ 
+ class Phase1(base.ImageConfigMixin, base.PhaseBase):
+@@ -69,5 +69,50 @@ class ImageConfigMixinTestCase(PungiTestCase):
+         self.assertEqual(resolve_git_url.num, 3, 'Resolver was not called three times')
+ 
+ 
++class TestRunAll(unittest.TestCase):
++    def assertFinalized(self, p):
++        self.assertEqual(p.mock_calls, [mock.call.start(), mock.call.stop()])
++
++    def test_calls_stop(self):
++        p1 = mock.Mock()
++        p2 = mock.Mock()
++
++        run_all([p1, p2])
++
++        self.assertFinalized(p1)
++        self.assertFinalized(p2)
++
++    def test_calls_stop_on_failure(self):
++        p1 = mock.Mock()
++        p2 = mock.Mock()
++        p3 = mock.Mock()
++
++        p2.stop.side_effect = boom
++
++        with self.assertRaises(Exception) as ctx:
++            run_all([p1, p2, p3])
++
++        self.assertEqual('BOOM', str(ctx.exception))
++        self.assertFinalized(p1)
++        self.assertFinalized(p2)
++        self.assertFinalized(p3)
++
++    def test_multiple_fail(self):
++        p1 = mock.Mock(name='p1')
++        p2 = mock.Mock(name='p2')
++        p3 = mock.Mock(name='p3')
++
++        p2.stop.side_effect = boom
++        p3.stop.side_effect = boom
++
++        with self.assertRaises(Exception) as ctx:
++            run_all([p1, p2, p3])
++
++        self.assertEqual('BOOM', str(ctx.exception))
++        self.assertFinalized(p1)
++        self.assertFinalized(p2)
++        self.assertFinalized(p3)
++
++
+ if __name__ == "__main__":
+     unittest.main()
+-- 
+2.9.4
+
