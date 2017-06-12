@@ -1,13 +1,12 @@
 Name:           pungi
-Version:        4.1.15
-Release:        2%{?dist}
+Version:        4.1.16
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-Ensure-all-phases-are-stopped.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -77,7 +76,6 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
-%patch0 -p1
 
 %build
 %{__python} setup.py build
@@ -122,6 +120,26 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-compare-depsolving
 
 %changelog
+* Mon Jun 12 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.16-1
+- Fix changelog generator script (lsedlar)
+- util: Retry resolving git branches (lsedlar)
+- arch: Move exclu(de|sive)arch check to a function (lsedlar)
+- gather-source: Check arch in module source (jkaluza)
+- koji-wrapper: Stop mangling env variables (lsedlar)
+- Ensure all phases are stopped (lsedlar)
+- comps-wrapper: Report unknown package types (lsedlar)
+- Generate proper modular metadata when there are different versions of the
+  same package in the variant (jkaluza)
+- checks: Make gpgkey a boolean option (lsedlar)
+- ostree: Refactor writing repo file (lsedlar)
+- iso-wrapper: Capture debug information for mounting (lsedlar)
+- comps-wrapper: Fix crash on conditional packages (lsedlar)
+- gather: Don't resolve dependencies in lookaside (lsedlar)
+- koji-wrapper: Run all blocking commands with fresh ccache (lsedlar)
+- Add @retry decorator and use it to retry connection on PDC on IOError and in
+  SCM's retry_run. (jkaluza)
+- Remove shebang from non-executable files (lsedlar)
+
 * Mon Jun 05 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.15-2
 - Ensure proper exit on failure
 
