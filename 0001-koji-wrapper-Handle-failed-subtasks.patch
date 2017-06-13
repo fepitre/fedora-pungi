@@ -1,0 +1,37 @@
+From 81b71b9ed30547ac3aa4ac94716fa958f61c7a92 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Mon, 12 Jun 2017 18:15:29 +0200
+Subject: [PATCH] koji-wrapper: Handle failed subtasks
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+If a subtask fails, we can't ask about it's results as that would raise
+an exception. We can safely assume that since the parent succeeded, any
+failed child is actually allowed to fail.
+
+Fixes: #641
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/wrappers/kojiwrapper.py | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/pungi/wrappers/kojiwrapper.py b/pungi/wrappers/kojiwrapper.py
+index 4596b66..b0744bc 100644
+--- a/pungi/wrappers/kojiwrapper.py
++++ b/pungi/wrappers/kojiwrapper.py
+@@ -354,6 +354,11 @@ class KojiWrapper(object):
+             if child_task['method'] not in ['createImage', 'createLiveMedia', 'createAppliance']:
+                 continue
+ 
++            if child_task['state'] != koji.TASK_STATES['CLOSED']:
++                # The subtask is failed, which can happen with the can_fail
++                # option. Let's ignore it then.
++                continue
++
+             is_scratch = child_task['request'][-1].get('scratch', False)
+             task_result = self.koji_proxy.getTaskResult(child_task['id'])
+ 
+-- 
+2.9.4
+
