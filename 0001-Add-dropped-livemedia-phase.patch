@@ -1,0 +1,31 @@
+From d58636851514844cdb794bfec65d74b0b29b5f1f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Mon, 19 Jun 2017 08:58:53 +0200
+Subject: [PATCH] Add dropped livemedia phase
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+After the patch to ensure that all phases are stopped the livemedia
+phase was apparently dropped by accident.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ bin/pungi-koji | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/bin/pungi-koji b/bin/pungi-koji
+index 480618d..739d5b2 100755
+--- a/bin/pungi-koji
++++ b/bin/pungi-koji
+@@ -400,6 +400,7 @@ def run_compose(compose, create_latest_link=True, latest_link_status=None):
+     pungi.phases.run_all([createiso_phase,
+                           liveimages_phase,
+                           image_build_phase,
++                          livemedia_phase,
+                           ostree_installer_phase,
+                           osbs_phase])
+ 
+-- 
+2.9.4
+
