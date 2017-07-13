@@ -22,6 +22,10 @@ BuildRequires:  python2-dnf
 BuildRequires:  python2-multilib
 BuildRequires:  python2-libcomps
 
+%if 0%{?fedora} >= 27
+BuildRequires:  python2-koji
+%endif
+
 #deps for doc building
 BuildRequires:  python-sphinx, texlive-latex-bin-bin, texlive-collection-fontsrecommended
 BuildRequires:  texlive-times, texlive-cmap, texlive-babel-english, texlive-fancyhdr
@@ -60,6 +64,10 @@ Requires:       python-enum34
 Requires:       python2-dnf
 Requires:       python2-multilib
 Requires:       python2-libcomps
+
+%if 0%{?fedora} >= 27
+Requires:       python2-koji
+%endif
 
 BuildArch:      noarch
 
