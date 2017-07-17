@@ -1,14 +1,12 @@
 Name:           pungi
-Version:        4.1.16
-Release:        3%{?dist}
+Version:        4.1.17
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-koji-wrapper-Handle-failed-subtasks.patch
-Patch1:         0001-Add-dropped-livemedia-phase.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -86,8 +84,6 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
 
 %build
 %{__python} setup.py build
@@ -130,8 +126,49 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-fedmsg-notification
 %{_bindir}/%{name}-patch-iso
 %{_bindir}/%{name}-compare-depsolving
+%{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Mon Jul 17 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.17-1
+- checksum: Checksum each image only once (lsedlar)
+- checksum: Refactor creating checksum files (lsedlar)
+- createrepo: Don't use existing metadata with deltas (lsedlar)
+- util: Fix finding older compose (lsedlar)
+- createrepo: Use correct paths for old package dirs (lsedlar)
+- spec: Add missing ostree signature waiting handler (lsedlar)
+- docs: Minor improvements to documentation (lsedlar)
+- ostree: Add notification handler to wait for signature (lsedlar)
+- ostree: Add URL to repo to message (lsedlar)
+- gather: nodeps should take packages from comps groups (lsedlar)
+- unified-iso: handle empty arch (kdreyer)
+- createrepo: handle missing product ids scm dir (kdreyer)
+- comps_wrapper: Code clean up (lsedlar)
+- comps_filter: Filter environments by arch (pholica)
+- notification: Allow specifying multiple scripts (lsedlar)
+- pkgset: Allow populating packages from multiple koji tags (qwan)
+- pungi: Port to argparse (lsedlar)
+- comps_filter: Port to argparse (lsedlar)
+- variants-wrapper: Remove main() function (lsedlar)
+- multilib_yum: Remove main() function (lsedlar)
+- pungi-koji: Port to argparse (lsedlar)
+- ostree: Update tests for no ostree init (lsedlar)
+- ostree: Don't automatically create a repo (walters)
+- osbs: Config validation should accept a list (lsedlar)
+- pkgset: Use release number of a module (mcurlej)
+- docs: Add a basic info about gathering packages (lsedlar)
+- docs: Kobo can be installed via pip now (lsedlar)
+- docs: Add overview of what each phase does (lsedlar)
+- gather: Log tag from which we pulled a package (lsedlar)
+- docs: Document config file format (lsedlar)
+- docs: Move logo to _static subdir (lsedlar)
+- gather: Display source repo of packages (lsedlar)
+- pkgset: Use descriptive name for log file (lsedlar)
+- ostree-installer: Clean up output dir (lsedlar)
+- Ignore more pycodestyle warnings (lsedlar)
+- Allow gather source classes to return SimpleRpmWrapper objects from pkgset
+  phase directly. (jkaluza)
+- tests: use unittest2 if available (lsedlar)
+
 * Mon Jun 19 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.16-3
 - Add dropped livemedia phase
 
