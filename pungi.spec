@@ -1,12 +1,15 @@
 Name:           pungi
 Version:        4.1.17
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+Patch0:         0001-gather-Stop-requiring-comps-file-in-nodeps.patch
+Patch1:         0002-GatherSourceModule-return-rpm_obj-instead-of-the-rpm.patch
+Patch2:         0003-gather-Don-t-pull-multiple-debuginfo-packages.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -84,6 +87,9 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
 
 %build
 %{__python} setup.py build
@@ -129,6 +135,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Thu Jul 20 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.17-2
+- Fixes for modular compose with gather nodeps method
+
 * Mon Jul 17 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.17-1
 - checksum: Checksum each image only once (lsedlar)
 - checksum: Refactor creating checksum files (lsedlar)

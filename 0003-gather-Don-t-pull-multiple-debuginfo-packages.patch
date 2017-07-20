@@ -1,0 +1,54 @@
+From 65078ef9cfdc204994fdd4ab7c202b45b9631340 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Thu, 20 Jul 2017 14:54:54 +0200
+Subject: [PATCH 3/3] gather: Don't pull multiple debuginfo packages
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+When there is a noarch subpackage, all compatible debuginfo would be
+pulled in, which is not desirable.
+
+Example: Server.x86_64 needs pkg.x86_64 and pkg-data.noarch. We only
+want pkg-debuginfo.x86_64, but without this patch even
+pkg-debuginfo.i686 would get in.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/gather/methods/method_nodeps.py | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/pungi/phases/gather/methods/method_nodeps.py b/pungi/phases/gather/methods/method_nodeps.py
+index 4b164be..c7dd891 100644
+--- a/pungi/phases/gather/methods/method_nodeps.py
++++ b/pungi/phases/gather/methods/method_nodeps.py
+@@ -50,9 +50,9 @@ class GatherMethodNodeps(pungi.phases.gather.method.GatherMethodBase):
+             pkg = global_pkgset[i]
+             if not pkg_is_rpm(pkg):
+                 continue
++            if pkg.arch not in valid_arches:
++                continue
+             for gathered_pkg, pkg_arch in packages:
+-                if pkg.arch not in valid_arches:
+-                    continue
+                 if (type(gathered_pkg) in [str, unicode]
+                         and pkg.name != gathered_pkg):
+                     continue
+@@ -86,8 +86,12 @@ class GatherMethodNodeps(pungi.phases.gather.method.GatherMethodBase):
+                 continue
+             if pkg.sourcerpm not in seen_srpms:
+                 continue
+-            if not set(compatible_arches[pkg.arch]) & set(seen_srpms[pkg.sourcerpm]):
+-                # this handles stuff like i386 debuginfo in a i686 package
++            pkg_arches = set(compatible_arches[pkg.arch]) - set(['noarch'])
++            seen_arches = set(seen_srpms[pkg.sourcerpm]) - set(['noarch'])
++            if not (pkg_arches & seen_arches):
++                # We only want to pull in a debuginfo if we have a binary
++                # package for a compatible arch. Noarch packages should not
++                # pull debuginfo (they would pull in all architectures).
+                 continue
+             result["debuginfo"].append({
+                 "path": pkg.file_path,
+-- 
+2.9.4
+

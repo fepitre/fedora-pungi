@@ -1,0 +1,28 @@
+From 5dd6b1b0e7a49d2fa71a98f653e117400d27c173 Mon Sep 17 00:00:00 2001
+From: Jan Kaluza <jkaluza@redhat.com>
+Date: Thu, 20 Jul 2017 13:35:53 +0200
+Subject: [PATCH 2/3] GatherSourceModule: return rpm_obj instead of the
+ rpm_obj.name
+
+Merges: https://pagure.io/pungi/pull-request/680
+Signed-off-by: Jan Kaluza <jkaluza@redhat.com>
+---
+ pungi/phases/gather/sources/source_module.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pungi/phases/gather/sources/source_module.py b/pungi/phases/gather/sources/source_module.py
+index 2845ea5..b39814c 100644
+--- a/pungi/phases/gather/sources/source_module.py
++++ b/pungi/phases/gather/sources/source_module.py
+@@ -65,7 +65,7 @@ class GatherSourceModule(pungi.phases.gather.source.GatherSourceBase):
+                     if (srpm in mmd.components.rpms.keys() and
+                             rpm_obj.name not in mmd.filter.rpms and
+                             rpm_obj.nevra in mmd.artifacts.rpms):
+-                        packages.add((rpm_obj.name, None))
++                        packages.add((rpm_obj, None))
+                         added_rpms.setdefault(mmd_id, [])
+                         added_rpms[mmd_id].append(str(rpm_obj.nevra))
+ 
+-- 
+2.9.4
+
