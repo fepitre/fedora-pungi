@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.17
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -135,6 +135,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Thu Jul 27 2017 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.17-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
 * Thu Jul 20 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.17-2
 - Fixes for modular compose with gather nodeps method
 
