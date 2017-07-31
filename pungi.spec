@@ -28,13 +28,15 @@ BuildRequires:  python2-koji
 %endif
 
 #deps for doc building
-BuildRequires:  python-sphinx, texlive-latex-bin-bin, texlive-collection-fontsrecommended
-BuildRequires:  texlive-times, texlive-cmap, texlive-babel-english, texlive-fancyhdr
-BuildRequires:  texlive-fancybox, texlive-titlesec, texlive-framed, texlive-threeparttable
+BuildRequires:  python-sphinx, texlive-collection-fontsrecommended
+BuildRequires:  texlive-cmap, texlive-babel-english, texlive-fancyhdr
+BuildRequires:  texlive-titlesec, texlive-framed, texlive-threeparttable
 BuildRequires:  texlive-mdwtools, texlive-wrapfig, texlive-parskip, texlive-upquote
-BuildRequires:  texlive-multirow, texlive-capt-of, texlive-eqparbox, tex(color.cfg)
+BuildRequires:  texlive-multirow, texlive-capt-of, texlive-eqparbox
 BuildRequires:  tex(fncychap.sty)
 BuildRequires:  tex(tabulary.sty)
+BuildRequires:  tex(needspace.sty)
+BuildRequires:  latexmk
 
 Requires:       createrepo >= 0.4.11
 Requires:       yum => 3.4.3-28
