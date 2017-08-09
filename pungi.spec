@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.17
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -51,6 +51,7 @@ Requires:       libselinux-python
 Requires:       createrepo_c
 Requires:       python-lxml
 Requires:       koji >= 1.10.1-13
+Requires:       python3-koji-cli-plugins
 # This is optional do not Require it
 #eRquires:       jigdo
 Requires:       cvs
@@ -137,6 +138,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Aug 09 2017 Dusty Mabe <dusty@dustymabe.com> - 4.1.17-4
+- Add requires on python3-koji-cli-plugins for koji runroot plugin
+
 * Thu Jul 27 2017 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.17-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
 
