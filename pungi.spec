@@ -1,15 +1,12 @@
 Name:           pungi
-Version:        4.1.17
-Release:        4%{?dist}
+Version:        4.1.18
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-gather-Stop-requiring-comps-file-in-nodeps.patch
-Patch1:         0002-GatherSourceModule-return-rpm_obj-instead-of-the-rpm.patch
-Patch2:         0003-gather-Don-t-pull-multiple-debuginfo-packages.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -90,9 +87,6 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
 
 %build
 %{__python} setup.py build
@@ -138,6 +132,41 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Tue Aug 22 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.18-1
+- KojiWrapper: include serverca in session_opts (otaylor)
+- Report warning when config sections are not used (lsedlar)
+- pkgset: Download packages with dnf (lsedlar)
+- gather: Fix duplicated log line (lsedlar)
+- gather: Add fulltree-exclude flag to DNF backend (lsedlar)
+- checks: Stop looking for imports (lsedlar)
+- ostree: Simplify configuration (lsedlar)
+- config: Reduce duplication in schema (lsedlar)
+- config: Add option for dumping config schema (lsedlar)
+- scm: Accept unicode as local path (lsedlar)
+- docs: Add documentation for scm_dict (lsedlar)
+- scm-wrapper: Allow running command after git clone (lsedlar)
+- scm-wrapper: Test correct file lists are returned (lsedlar)
+- tests: Fix test_compose.sh paths (lsedlar)
+- gather: Only parse pungi log once (lsedlar)
+- gather: Report missing comps packages (lsedlar)
+- gather: Avoid reading whole log into memory (lsedlar)
+- repoclosure: Allow aborting compose when repoclosure fails (lsedlar)
+- repoclosure: Fix logging errors (lsedlar)
+- tests: Make test-compose cwd independent (lsedlar)
+- Make strict the only option. (rbean)
+- Raise a ValueError with details if module not found in PDC. (rbean)
+- unified-iso: Only link to non-empty variants (lsedlar)
+- gather: Fix excluding debugsource packages from input list (lsedlar)
+- gather: Add debugsource package to tests (lsedlar)
+- Use only one list of patterns/rules for debug packages (opensource)
+- Do not match "*-debugsource-*" as debuginfo package (opensource)
+- Use pungi.util.pkg_is_debug() instead of pungi.gather.is_debug() (opensource)
+- remove the dependency of rpmUtils (qwan)
+- Add support for debugsource packages (lsedlar)
+- gather: Don't pull multiple debuginfo packages (lsedlar)
+- GatherSourceModule: return rpm_obj instead of the rpm_obj.name (jkaluza)
+- gather: Stop requiring comps file in nodeps (lsedlar)
+
 * Wed Aug 09 2017 Dusty Mabe <dusty@dustymabe.com> - 4.1.17-4
 - Add requires on python3-koji-cli-plugins for koji runroot plugin
 
