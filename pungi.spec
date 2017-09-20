@@ -1,5 +1,5 @@
 Name:           pungi
-Version:        4.1.18
+Version:        4.1.19
 Release:        1%{?dist}
 Summary:        Distribution compose tool
 
@@ -10,7 +10,7 @@ Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
-BuildRequires:  python-lockfile, kobo, kobo-rpmlib, python-kickstart, createrepo_c
+BuildRequires:  python-lockfile, kobo-rpmlib, python-kickstart, createrepo_c
 BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax, python-rpm
 BuildRequires:  yum => 3.4.3-28, createrepo >= 0.4.11
 BuildRequires:  gettext, git-core, cvs
@@ -19,6 +19,8 @@ BuildRequires:  python-enum34
 BuildRequires:  python2-dnf
 BuildRequires:  python2-multilib
 BuildRequires:  python2-libcomps
+BuildRequires:  python2-six
+BuildRequires:  kobo >= 0.6
 
 %if 0%{?fedora} >= 27
 BuildRequires:  python2-koji
@@ -40,7 +42,7 @@ Requires:       yum => 3.4.3-28
 Requires:       lorax >= 22.1
 Requires:       repoview
 Requires:       python-lockfile
-Requires:       kobo
+Requires:       kobo >= 0.6
 Requires:       kobo-rpmlib
 Requires:       python-productmd >= 1.3
 Requires:       python-kickstart
@@ -65,6 +67,7 @@ Requires:       python-enum34
 Requires:       python2-dnf
 Requires:       python2-multilib
 Requires:       python2-libcomps
+Requires:       python2-six
 
 %if 0%{?fedora} >= 27
 Requires:       python2-koji
@@ -132,6 +135,34 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Sep 20 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.19-1
+- docs: Mention how input package list are interpreted (lsedlar)
+- Fix pungi-koji --version (dowang)
+- profiler: Fix sorting on Python 3 (lsedlar)
+- util: Fix timezone offset (lsedlar)
+- gather(dnf): Remove dead code (lsedlar)
+- gather(dnf): Don't exclude packages from lookaside (lsedlar)
+- gather(yum): Don't exclude packages from lookaside (lsedlar)
+- gather: Add tests for excluding packages from lookaside (lsedlar)
+- gather: Capture broken deps in test (lsedlar)
+- gather-dnf: Warn about unresolvable dependencies (lsedlar)
+- Fix formatting timezone offset (lsedlar)
+- Add timezone info into logs (lsedlar)
+- log: save imported config files too (qwan)
+- ostree-installer: Only run on empty variants (lsedlar)
+- Allow extracting profiling information from pungi-gather. (rbean)
+- createrepo: Only consider successful compose for deltas (lsedlar)
+- createrepo: Allow selecting variants for delta RPMs (lsedlar)
+- createrepo: Only create delta RPMs for binary repos (lsedlar)
+- image-build: add arch name(s) in image config file name (qwan)
+- Check for correct string class (lsedlar)
+- Open files as binary where needed (lsedlar)
+- buildinstall: No copy if task fails (lsedlar)
+- config: Allow setting default compose type (lsedlar)
+- Use Py3-compatible exception handling (lsedlar)
+- Use Python 3 print function (lsedlar)
+- docs: Abort update script on error (lsedlar)
+
 * Tue Aug 22 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.18-1
 - KojiWrapper: include serverca in session_opts (otaylor)
 - Report warning when config sections are not used (lsedlar)
