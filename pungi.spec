@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.19
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -10,16 +10,24 @@ Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
-BuildRequires:  python-lockfile, kobo-rpmlib, python-kickstart, createrepo_c
-BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax, python-rpm
+BuildRequires:  python-lockfile, kobo-rpmlib, createrepo_c
+BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax
+%if ! 0%{?epel}
+BuildRequires:  python-kickstart
+BuildRequires:  python-rpm
+BuildRequires:  python2-dnf
+BuildRequires:  python2-multilib
+BuildRequires:  python2-six
+%else
+BuildRequires:  pykickstart
+BuildRequires:  rpm-python
+BuildRequires:  python-six
+%endif
 BuildRequires:  yum => 3.4.3-28, createrepo >= 0.4.11
 BuildRequires:  gettext, git-core, cvs
 BuildRequires:  python-jsonschema
 BuildRequires:  python-enum34
-BuildRequires:  python2-dnf
-BuildRequires:  python2-multilib
 BuildRequires:  python2-libcomps
-BuildRequires:  python2-six
 BuildRequires:  kobo >= 0.6
 
 %if 0%{?fedora} >= 27
@@ -27,6 +35,7 @@ BuildRequires:  python2-koji
 %endif
 
 #deps for doc building
+%if ! 0%{?epel}
 BuildRequires:  python-sphinx, texlive-collection-fontsrecommended
 BuildRequires:  texlive-cmap, texlive-babel-english, texlive-fancyhdr
 BuildRequires:  texlive-titlesec, texlive-framed, texlive-threeparttable
@@ -36,6 +45,7 @@ BuildRequires:  tex(fncychap.sty)
 BuildRequires:  tex(tabulary.sty)
 BuildRequires:  tex(needspace.sty)
 BuildRequires:  latexmk
+%endif
 
 Requires:       createrepo >= 0.4.11
 Requires:       yum => 3.4.3-28
@@ -93,18 +103,22 @@ notification to Fedora Message Bus.
 
 %build
 %{__python} setup.py build
+%if ! 0%{?epel}
 cd doc
 make latexpdf
 make epub
 make text
 make man
 gzip _build/man/pungi.1
+%endif
 
 %install
 %{__python} setup.py install -O1 --skip-build --root %{buildroot}
 %{__install} -d %{buildroot}/var/cache/pungi
+%if ! 0%{?epel}
 %{__install} -d %{buildroot}%{_mandir}/man1
 %{__install} -m 0644 doc/_build/man/pungi.1.gz %{buildroot}%{_mandir}/man1
+%endif
 
 %check
 nosetests --exe
@@ -113,7 +127,10 @@ cd tests && ./test_compose.sh
 
 %files
 %license COPYING GPL
-%doc AUTHORS doc/_build/latex/Pungi.pdf doc/_build/epub/Pungi.epub doc/_build/text/*
+%doc AUTHORS
+%if ! 0%{?epel}
+%doc doc/_build/latex/Pungi.pdf doc/_build/epub/Pungi.epub doc/_build/text/*
+%endif
 %{python_sitelib}/%{name}
 %{python_sitelib}/%{name}-%{version}-py?.?.egg-info
 %{_bindir}/%{name}
@@ -121,7 +138,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-gather
 %{_bindir}/comps_filter
 %{_bindir}/%{name}-make-ostree
+%if ! 0%{?epel}
 %{_mandir}/man1/pungi.1.gz
+%endif
 %{_datadir}/pungi
 /var/cache/pungi
 
@@ -135,6 +154,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Mon Oct 02 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.19-2
+- Update dependencies for EPEL 7
+
 * Wed Sep 20 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.19-1
 - docs: Mention how input package list are interpreted (lsedlar)
 - Fix pungi-koji --version (dowang)
