@@ -1,12 +1,13 @@
 Name:           pungi
 Version:        4.1.19
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+Patch0:         0001-config-Allow-comps_file-for-any-gather_source.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -100,6 +101,7 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 %{__python} setup.py build
@@ -154,6 +156,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Oct 18 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.19-3
+- Allow comps_file for any gather_source
+
 * Mon Oct 02 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.19-2
 - Update dependencies for EPEL 7
 
