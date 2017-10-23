@@ -1,0 +1,196 @@
+From be39dc3caf3b61ee77fda0bf15e753854283c7b6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Mon, 23 Oct 2017 16:05:54 +0200
+Subject: [PATCH] buildinstall: Expose template arguments for lorax
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This would be useful for modularity. The templates can be added now and
+variables set via the existing `lorax_option`.
+
+It's not possible to use custom templates not shipped with lorax, as
+passing the path to a random directory is a little bit more tricky.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ doc/configuration.rst        |  4 ++++
+ pungi/checks.py              |  4 ++++
+ pungi/phases/buildinstall.py | 12 ++++++++++++
+ tests/test_buildinstall.py   | 28 +++++++++++++++++++++++++++-
+ 4 files changed, 47 insertions(+), 1 deletion(-)
+
+diff --git a/doc/configuration.rst b/doc/configuration.rst
+index 950a98c..76b03a1 100644
+--- a/doc/configuration.rst
++++ b/doc/configuration.rst
+@@ -486,6 +486,10 @@ Options
+       * ``bugurl`` -- *str* (default ``None``)
+       * ``nomacboot`` -- *bool* (default ``True``)
+       * ``noupgrade`` -- *bool* (default ``True``)
++      * ``add_template`` -- *[str]* (default empty)
++      * ``add_arch_template`` -- *[str]* (default empty)
++      * ``add_template_var`` -- *[str]* (default empty)
++      * ``add_arch_template_var`` -- *[str]* (default empty)
+ **buildinstall_kickstart**
+     (:ref:`scm_dict <scm_support>`) -- If specified, this kickstart file will
+     be copied into each file and pointed to in boot configuration.
+diff --git a/pungi/checks.py b/pungi/checks.py
+index acb3f4b..3a68ef9 100644
+--- a/pungi/checks.py
++++ b/pungi/checks.py
+@@ -997,6 +997,10 @@ def make_schema():
+                     "bugurl": {"type": "string"},
+                     "nomacboot": {"type": "boolean"},
+                     "noupgrade": {"type": "boolean"},
++                    'add_template': {"$ref": "#/definitions/list_of_strings"},
++                    'add_arch_template': {"$ref": "#/definitions/list_of_strings"},
++                    'add_template_var': {"$ref": "#/definitions/list_of_strings"},
++                    'add_arch_template_var': {"$ref": "#/definitions/list_of_strings"},
+                 },
+                 "additionalProperties": False,
+             }),
+diff --git a/pungi/phases/buildinstall.py b/pungi/phases/buildinstall.py
+index 1bacc16..2539e6d 100644
+--- a/pungi/phases/buildinstall.py
++++ b/pungi/phases/buildinstall.py
+@@ -58,6 +58,10 @@ class BuildinstallPhase(PhaseBase):
+         noupgrade = True
+         bugurl = None
+         nomacboot = True
++        add_template = []
++        add_arch_template = []
++        add_template_var = []
++        add_arch_template_var = []
+         for data in get_arch_variant_data(self.compose.conf, 'lorax_options', arch, variant):
+             if not data.get('noupgrade', True):
+                 noupgrade = False
+@@ -65,6 +69,10 @@ class BuildinstallPhase(PhaseBase):
+                 bugurl = data.get('bugurl')
+             if not data.get('nomacboot', True):
+                 nomacboot = False
++            add_template.extend(data.get('add_template', []))
++            add_arch_template.extend(data.get('add_arch_template', []))
++            add_template_var.extend(data.get('add_template_var', []))
++            add_arch_template_var.extend(data.get('add_arch_template_var', []))
+         output_dir = os.path.join(output_dir, variant.uid)
+ 
+         # The paths module will modify the filename (by inserting arch). But we
+@@ -86,6 +94,10 @@ class BuildinstallPhase(PhaseBase):
+                                         volid=volid,
+                                         nomacboot=nomacboot,
+                                         bugurl=bugurl,
++                                        add_template=add_template,
++                                        add_arch_template=add_arch_template,
++                                        add_template_var=add_template_var,
++                                        add_arch_template_var=add_arch_template_var,
+                                         noupgrade=noupgrade,
+                                         log_dir=log_dir)
+         return 'rm -rf %s && %s' % (pipes.quote(output_dir),
+diff --git a/tests/test_buildinstall.py b/tests/test_buildinstall.py
+index 338c854..e80fd3a 100644
+--- a/tests/test_buildinstall.py
++++ b/tests/test_buildinstall.py
+@@ -91,18 +91,24 @@ class TestBuildinstallPhase(PungiTestCase):
+                        buildarch='x86_64', is_final=True, nomacboot=True, noupgrade=True,
+                        volid='vol_id', variant='Server', buildinstallpackages=['bash', 'vim'],
+                        bugurl=None,
++                       add_template=[], add_arch_template=[],
++                       add_template_var=[], add_arch_template_var=[],
+                        log_dir=self.topdir + '/logs/x86_64/buildinstall-Server-logs'),
+              mock.call('Test', '1', '1', self.topdir + '/work/amd64/repo',
+                        self.topdir + '/work/amd64/buildinstall/Server',
+                        buildarch='amd64', is_final=True, nomacboot=True, noupgrade=True,
+                        volid='vol_id', variant='Server', buildinstallpackages=['bash', 'vim'],
+                        bugurl=None,
++                       add_template=[], add_arch_template=[],
++                       add_template_var=[], add_arch_template_var=[],
+                        log_dir=self.topdir + '/logs/amd64/buildinstall-Server-logs'),
+              mock.call('Test', '1', '1', self.topdir + '/work/amd64/repo',
+                        self.topdir + '/work/amd64/buildinstall/Client',
+                        buildarch='amd64', is_final=True, nomacboot=True, noupgrade=True,
+                        volid='vol_id', variant='Client', buildinstallpackages=[],
+                        bugurl=None,
++                       add_template=[], add_arch_template=[],
++                       add_template_var=[], add_arch_template_var=[],
+                        log_dir=self.topdir + '/logs/amd64/buildinstall-Client-logs')])
+         self.assertItemsEqual(
+             get_volid.mock_calls,
+@@ -145,6 +151,8 @@ class TestBuildinstallPhase(PungiTestCase):
+                        buildarch='amd64', is_final=True, nomacboot=True, noupgrade=True,
+                        volid='vol_id', variant='Client', buildinstallpackages=[],
+                        bugurl=None,
++                       add_template=[], add_arch_template=[],
++                       add_template_var=[], add_arch_template_var=[],
+                        log_dir=self.topdir + '/logs/amd64/buildinstall-Client-logs')],
+             any_order=True)
+         self.assertItemsEqual(
+@@ -202,7 +210,13 @@ class TestBuildinstallPhase(PungiTestCase):
+             'buildinstall_method': 'lorax',
+             'lorax_options': [
+                 ('^Server$', {
+-                    'x86_64': {'bugurl': 'http://example.com'},
++                    'x86_64': {
++                        'bugurl': 'http://example.com',
++                        'add_template': ['foo', 'FOO'],
++                        'add_arch_template': ['bar'],
++                        'add_template_var': ['baz=1'],
++                        'add_arch_template_var': ['quux=2'],
++                    },
+                     'amd64': {'noupgrade': False}
+                 }),
+                 ('^Client$', {
+@@ -235,6 +249,8 @@ class TestBuildinstallPhase(PungiTestCase):
+                        self.topdir + '/work/x86_64/buildinstall/Server',
+                        buildarch='x86_64', is_final=True, nomacboot=True, noupgrade=True,
+                        volid='vol_id', variant='Server', buildinstallpackages=['bash', 'vim'],
++                       add_template=['foo', 'FOO'], add_arch_template=['bar'],
++                       add_template_var=['baz=1'], add_arch_template_var=['quux=2'],
+                        bugurl='http://example.com',
+                        log_dir=self.topdir + '/logs/x86_64/buildinstall-Server-logs'),
+              mock.call('Test', '1', '1', self.topdir + '/work/amd64/repo',
+@@ -242,12 +258,16 @@ class TestBuildinstallPhase(PungiTestCase):
+                        buildarch='amd64', is_final=True, nomacboot=True, noupgrade=False,
+                        volid='vol_id', variant='Server', buildinstallpackages=['bash', 'vim'],
+                        bugurl=None,
++                       add_template=[], add_arch_template=[],
++                       add_template_var=[], add_arch_template_var=[],
+                        log_dir=self.topdir + '/logs/amd64/buildinstall-Server-logs'),
+              mock.call('Test', '1', '1', self.topdir + '/work/amd64/repo',
+                        self.topdir + '/work/amd64/buildinstall/Client',
+                        buildarch='amd64', is_final=True, nomacboot=False, noupgrade=True,
+                        volid='vol_id', variant='Client', buildinstallpackages=[],
+                        bugurl=None,
++                       add_template=[], add_arch_template=[],
++                       add_template_var=[], add_arch_template_var=[],
+                        log_dir=self.topdir + '/logs/amd64/buildinstall-Client-logs')])
+         self.assertItemsEqual(
+             get_volid.mock_calls,
+@@ -299,18 +319,24 @@ class TestBuildinstallPhase(PungiTestCase):
+                        buildarch='x86_64', is_final=True, nomacboot=False, noupgrade=False,
+                        volid='vol_id', variant='Server', buildinstallpackages=['bash', 'vim'],
+                        bugurl=None,
++                       add_template=[], add_arch_template=[],
++                       add_template_var=[], add_arch_template_var=[],
+                        log_dir=self.topdir + '/logs/x86_64/buildinstall-Server-logs'),
+              mock.call('Test', '1', '1', self.topdir + '/work/amd64/repo',
+                        self.topdir + '/work/amd64/buildinstall/Server',
+                        buildarch='amd64', is_final=True, nomacboot=True, noupgrade=False,
+                        volid='vol_id', variant='Server', buildinstallpackages=['bash', 'vim'],
+                        bugurl=None,
++                       add_template=[], add_arch_template=[],
++                       add_template_var=[], add_arch_template_var=[],
+                        log_dir=self.topdir + '/logs/amd64/buildinstall-Server-logs'),
+              mock.call('Test', '1', '1', self.topdir + '/work/amd64/repo',
+                        self.topdir + '/work/amd64/buildinstall/Client',
+                        buildarch='amd64', is_final=True, nomacboot=True, noupgrade=False,
+                        volid='vol_id', variant='Client', buildinstallpackages=[],
+                        bugurl=None,
++                       add_template=[], add_arch_template=[],
++                       add_template_var=[], add_arch_template_var=[],
+                        log_dir=self.topdir + '/logs/amd64/buildinstall-Client-logs')])
+         self.assertItemsEqual(
+             get_volid.mock_calls,
+-- 
+2.13.6
+

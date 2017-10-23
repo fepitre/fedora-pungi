@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.19
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -8,6 +8,7 @@ License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-config-Allow-comps_file-for-any-gather_source.patch
+Patch1:         0001-buildinstall-Expose-template-arguments-for-lorax.patch
 
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
@@ -102,6 +103,7 @@ notification to Fedora Message Bus.
 %prep
 %setup -q
 %patch0 -p1
+%patch1 -p1
 
 %build
 %{__python} setup.py build
@@ -156,6 +158,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Mon Oct 23 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.19-4
+- Expose template arguments for lorax
+
 * Wed Oct 18 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.19-3
 - Allow comps_file for any gather_source
 
