@@ -1,12 +1,13 @@
 Name:           pungi
 Version:        4.1.20
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+Patch0:         0001-gather-get_packages_to_gather-returns-a-tuple.patch
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
 BuildRequires:  python-lockfile, kobo-rpmlib, createrepo_c
@@ -99,6 +100,7 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 %{__python} setup.py build
@@ -153,6 +155,9 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Tue Nov 21 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.20-2
+- Fix crash in modular compose
+
 * Wed Nov 01 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.20-1
 - image-build: Drop suffixes from configuration (lsedlar)
 - kojiwrapper: Deal with multiple values for image-build (lsedlar)
