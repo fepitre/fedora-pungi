@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.20
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -8,6 +8,9 @@ License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-gather-get_packages_to_gather-returns-a-tuple.patch
+Patch1:         https://pagure.io/pungi/pull-request/790.patch
+Patch2:         https://pagure.io/pungi/pull-request/791.patch
+Patch3:         https://pagure.io/pungi/pull-request/796.patch
 BuildRequires:  python-nose, python-mock
 BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
 BuildRequires:  python-lockfile, kobo-rpmlib, createrepo_c
@@ -101,6 +104,9 @@ notification to Fedora Message Bus.
 %prep
 %setup -q
 %patch0 -p1
+%patch1 -p1
+%patch2 -p1
+%patch3 -p1
 
 %build
 %{__python} setup.py build
@@ -155,6 +161,10 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Nov 22 2017 Patrick Uiterwijk <puiterwijk@redhat.com> - 4.1.20-3
+- Backport patch for PR#790 - old_composes per release type
+- Backport patch for PR#791,796 - implement DATE_RESPIN version generator
+
 * Tue Nov 21 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.20-2
 - Fix crash in modular compose
 
