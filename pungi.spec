@@ -1,45 +1,36 @@
 Name:           pungi
-Version:        4.1.20
-Release:        3%{?dist}
+Version:        4.1.21
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-gather-get_packages_to_gather-returns-a-tuple.patch
-Patch1:         https://pagure.io/pungi/pull-request/790.patch
-Patch2:         https://pagure.io/pungi/pull-request/791.patch
-Patch3:         https://pagure.io/pungi/pull-request/796.patch
-BuildRequires:  python-nose, python-mock
-BuildRequires:  python-devel, python-setuptools, python2-productmd >= 1.3
-BuildRequires:  python-lockfile, kobo-rpmlib, createrepo_c
-BuildRequires:  python-lxml, libselinux-python, yum-utils, lorax
-%if ! 0%{?epel}
-BuildRequires:  python-kickstart
-BuildRequires:  python-rpm
-BuildRequires:  python2-dnf
-BuildRequires:  python2-multilib
-BuildRequires:  python2-six
-%else
-BuildRequires:  pykickstart
-BuildRequires:  rpm-python
-BuildRequires:  python-six
-%endif
-BuildRequires:  yum => 3.4.3-28, createrepo >= 0.4.11
-BuildRequires:  gettext, git-core, cvs
-BuildRequires:  python-jsonschema
-BuildRequires:  python-enum34
-BuildRequires:  python2-libcomps
-BuildRequires:  kobo >= 0.6
-
-%if 0%{?fedora} >= 27
-BuildRequires:  python2-koji
-%endif
+BuildRequires:  python3-nose
+BuildRequires:  python3-mock
+BuildRequires:  python3-devel
+BuildRequires:  python3-setuptools
+BuildRequires:  python3-productmd >= 1.3
+BuildRequires:  python3-kobo-rpmlib
+BuildRequires:  createrepo_c
+BuildRequires:  python3-lxml
+BuildRequires:  python3-kickstart
+BuildRequires:  python3-rpm
+BuildRequires:  python3-dnf
+BuildRequires:  python3-multilib
+BuildRequires:  python3-six
+BuildRequires:  git-core
+BuildRequires:  python3-jsonschema
+BuildRequires:  python3-enum34
+BuildRequires:  python3-libcomps
+BuildRequires:  python3-kobo
+BuildRequires:  python3-koji
+BuildRequires:  python3-unittest2
+BuildRequires:  lorax
 
 #deps for doc building
-%if ! 0%{?epel}
-BuildRequires:  python-sphinx, texlive-collection-fontsrecommended
+BuildRequires:  python3-sphinx, texlive-collection-fontsrecommended
 BuildRequires:  texlive-cmap, texlive-babel-english, texlive-fancyhdr
 BuildRequires:  texlive-titlesec, texlive-framed, texlive-threeparttable
 BuildRequires:  texlive-mdwtools, texlive-wrapfig, texlive-parskip, texlive-upquote
@@ -48,43 +39,26 @@ BuildRequires:  tex(fncychap.sty)
 BuildRequires:  tex(tabulary.sty)
 BuildRequires:  tex(needspace.sty)
 BuildRequires:  latexmk
-%endif
 
-Requires:       createrepo >= 0.4.11
-Requires:       yum => 3.4.3-28
-Requires:       lorax >= 22.1
-Requires:       repoview
-Requires:       python-lockfile
-Requires:       kobo >= 0.6
-Requires:       kobo-rpmlib
-Requires:       python-productmd >= 1.3
-Requires:       python-kickstart
-Requires:       libselinux-python
+Requires:       python3-kobo >= 0.6
+Requires:       python3-kobo-rpmlib
+Requires:       python3-productmd >= 1.3
+Requires:       python3-kickstart
 Requires:       createrepo_c
-Requires:       python-lxml
+Requires:       python3-lxml
 Requires:       koji >= 1.10.1-13
 Requires:       python3-koji-cli-plugins
-# This is optional do not Require it
-#eRquires:       jigdo
-Requires:       cvs
-Requires:       yum-utils
 Requires:       isomd5sum
 Requires:       genisoimage
-Requires:       gettext
-# this is x86 only 
-#Requires:       syslinux
 Requires:       git
-Requires:       python-jsonschema
+Requires:       python3-jsonschema
 Requires:       libguestfs-tools-c
-Requires:       python-enum34
-Requires:       python2-dnf
-Requires:       python2-multilib
-Requires:       python2-libcomps
-Requires:       python2-six
-
-%if 0%{?fedora} >= 27
-Requires:       python2-koji
-%endif
+Requires:       python3-enum34
+Requires:       python3-dnf
+Requires:       python3-multilib
+Requires:       python3-libcomps
+Requires:       python3-six
+Requires:       python3-koji
 
 BuildArch:      noarch
 
@@ -103,56 +77,45 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
 
 %build
-%{__python} setup.py build
-%if ! 0%{?epel}
+%{__python3} setup.py build
 cd doc
-make latexpdf
-make epub
-make text
-make man
+make latexpdf SPHINXBUILD=/usr/bin/sphinx-build-3
+make epub     SPHINXBUILD=/usr/bin/sphinx-build-3
+make text     SPHINXBUILD=/usr/bin/sphinx-build-3
+make man      SPHINXBUILD=/usr/bin/sphinx-build-3
 gzip _build/man/pungi.1
-%endif
 
 %install
-%{__python} setup.py install -O1 --skip-build --root %{buildroot}
+%{__python3} setup.py install -O1 --skip-build --root %{buildroot}
 %{__install} -d %{buildroot}/var/cache/pungi
-%if ! 0%{?epel}
 %{__install} -d %{buildroot}%{_mandir}/man1
 %{__install} -m 0644 doc/_build/man/pungi.1.gz %{buildroot}%{_mandir}/man1
-%endif
 
 %check
-nosetests --exe
+nosetests-3 --exe
 ./tests/data/specs/build.sh
+ln -s $(which python3) bin/python
 cd tests && ./test_compose.sh
 
 %files
 %license COPYING GPL
 %doc AUTHORS
-%if ! 0%{?epel}
 %doc doc/_build/latex/Pungi.pdf doc/_build/epub/Pungi.epub doc/_build/text/*
-%endif
-%{python_sitelib}/%{name}
-%{python_sitelib}/%{name}-%{version}-py?.?.egg-info
+%{python3_sitelib}/%{name}
+%{python3_sitelib}/%{name}-%{version}-py?.?.egg-info
 %{_bindir}/%{name}
 %{_bindir}/%{name}-koji
 %{_bindir}/%{name}-gather
 %{_bindir}/comps_filter
 %{_bindir}/%{name}-make-ostree
-%if ! 0%{?epel}
 %{_mandir}/man1/pungi.1.gz
-%endif
 %{_datadir}/pungi
 /var/cache/pungi
 
 %files utils
-%{python_sitelib}/%{name}_utils
+%{python3_sitelib}/%{name}_utils
 %{_bindir}/%{name}-create-unified-isos
 %{_bindir}/%{name}-config-validate
 %{_bindir}/%{name}-fedmsg-notification
@@ -161,6 +124,32 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Dec 06 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.21-1
+- tests: Use correct python version for config validation test (lsedlar)
+- Use dnf backend for repoclosure on PY3 (lsedlar)
+- Drop checks for git and cvs (lsedlar)
+- Relax check for gettext (lsedlar)
+- Drop check for repoquery command (lsedlar)
+- Use modifyrepo_c if possible (lsedlar)
+- pkgset: Add SRPMs to whitelist (lsedlar)
+- modules: Allow multilib (lsedlar)
+- add ability to specify ostree ref in OSTREE phase - update (onosek)
+- add ability to specify ostree ref in OSTREE phase (onosek)
+- buildinstall: Allow using external dire for runroot task (jkaluza)
+- pkgset: Remove package skip optimization for bootable products (lsedlar)
+- Add documentation for modular composes (lsedlar)
+- osbs: Get correct path to repo for addons (lsedlar)
+- Remove deprecated options (onosek)
+- module-source: Log details about what packages are gathered (lsedlar)
+- gather: Log details about nodeps method (lsedlar)
+- gather: get_packages_to_gather returns a tuple (lsedlar)
+- iso-wrapper: Fix calling wrong logger method (lsedlar)
+- Turn COMPOSE_ID version generator into DATE_RESPIN (puiterwijk)
+- iso-wrapper: Remove hacks for sorting (lsedlar)
+- Report missing module dependencies earlier (lsedlar)
+- Implement version.compose_id version generator (patrick)
+- Optionally do old_compose per release type (patrick)
+
 * Wed Nov 22 2017 Patrick Uiterwijk <puiterwijk@redhat.com> - 4.1.20-3
 - Backport patch for PR#790 - old_composes per release type
 - Backport patch for PR#791,796 - implement DATE_RESPIN version generator
