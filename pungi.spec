@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.21
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -93,11 +93,11 @@ gzip _build/man/pungi.1
 %{__install} -d %{buildroot}%{_mandir}/man1
 %{__install} -m 0644 doc/_build/man/pungi.1.gz %{buildroot}%{_mandir}/man1
 
+# Remove old pungi executable. It can not be used with Python 3.
+rm %{buildroot}%{_bindir}/%{name}
+
 %check
 nosetests-3 --exe
-./tests/data/specs/build.sh
-ln -s $(which python3) bin/python
-cd tests && ./test_compose.sh
 
 %files
 %license COPYING GPL
@@ -105,7 +105,6 @@ cd tests && ./test_compose.sh
 %doc doc/_build/latex/Pungi.pdf doc/_build/epub/Pungi.epub doc/_build/text/*
 %{python3_sitelib}/%{name}
 %{python3_sitelib}/%{name}-%{version}-py?.?.egg-info
-%{_bindir}/%{name}
 %{_bindir}/%{name}-koji
 %{_bindir}/%{name}-gather
 %{_bindir}/comps_filter
@@ -124,6 +123,10 @@ cd tests && ./test_compose.sh
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Dec 13 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.21-2
+- Remove /usr/bin/pungi
+- Remove dummy compose from check section
+
 * Wed Dec 06 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.21-1
 - tests: Use correct python version for config validation test (lsedlar)
 - Use dnf backend for repoclosure on PY3 (lsedlar)
