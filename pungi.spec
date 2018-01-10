@@ -1,12 +1,13 @@
 Name:           pungi
 Version:        4.1.21
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+Patch0:         0001-gather-Fix-checking-string-type.patch
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python3-devel
@@ -77,6 +78,7 @@ notification to Fedora Message Bus.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 %{__python3} setup.py build
@@ -123,6 +125,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Jan 10 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.21-3
+- Fix checking string type in nodeps method
+
 * Wed Dec 13 2017 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.21-2
 - Remove /usr/bin/pungi
 - Remove dummy compose from check section

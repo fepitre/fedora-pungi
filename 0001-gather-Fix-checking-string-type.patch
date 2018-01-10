@@ -1,0 +1,40 @@
+From 5cc54cd58784dfdfc7394f8dd7de5d8232c87c5d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Wed, 10 Jan 2018 13:50:21 +0100
+Subject: [PATCH] gather: Fix checking string type
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+There is no unicode on Python 3, we should use six to hide this detail.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/gather/methods/method_nodeps.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/pungi/phases/gather/methods/method_nodeps.py b/pungi/phases/gather/methods/method_nodeps.py
+index 2d2cce4..af6e3c2 100644
+--- a/pungi/phases/gather/methods/method_nodeps.py
++++ b/pungi/phases/gather/methods/method_nodeps.py
+@@ -14,6 +14,7 @@
+ # along with this program; if not, see <https://gnu.org/licenses/>.
+ 
+ from pprint import pformat
++import six
+ 
+ import pungi.arch
+ from pungi.util import pkg_is_rpm, pkg_is_srpm, pkg_is_debug
+@@ -61,8 +62,7 @@ class GatherMethodNodeps(pungi.phases.gather.method.GatherMethodBase):
+             if pkg.arch not in valid_arches:
+                 continue
+             for gathered_pkg, pkg_arch in packages:
+-                if (type(gathered_pkg) in [str, unicode]
+-                        and pkg.name != gathered_pkg):
++                if isinstance(gathered_pkg, six.string_types) and pkg.name != gathered_pkg:
+                     continue
+                 elif (type(gathered_pkg) in [SimpleRpmWrapper, RpmWrapper]
+                       and pkg.nevra != gathered_pkg.nevra):
+-- 
+2.13.6
+
