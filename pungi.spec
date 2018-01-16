@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.21
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -8,6 +8,8 @@ License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-gather-Fix-checking-string-type.patch
+Patch1:         0001-Fall-back-to-mount-if-guestmount-is-not-available.patch
+Patch2:         0002-Add-buildinstall_use_guestmount-boolean-option.patch
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python3-devel
@@ -79,6 +81,8 @@ notification to Fedora Message Bus.
 %prep
 %setup -q
 %patch0 -p1
+%patch1 -p1
+%patch2 -p1
 
 %build
 %{__python3} setup.py build
@@ -125,6 +129,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Tue Jan 16 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.21-4
+- Add option to force fallback from guestmount
+
 * Wed Jan 10 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.21-3
 - Fix checking string type in nodeps method
 
