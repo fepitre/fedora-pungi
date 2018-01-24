@@ -1,15 +1,12 @@
 Name:           pungi
-Version:        4.1.21
-Release:        4%{?dist}
+Version:        4.1.22
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-gather-Fix-checking-string-type.patch
-Patch1:         0001-Fall-back-to-mount-if-guestmount-is-not-available.patch
-Patch2:         0002-Add-buildinstall_use_guestmount-boolean-option.patch
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python3-devel
@@ -79,10 +76,7 @@ notification to Fedora Message Bus.
 
 
 %prep
-%setup -q
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
+%autosetup -p1
 
 %build
 %{__python3} setup.py build
@@ -129,6 +123,31 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Jan 24 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-1
+- Better INFO messages about modules (onosek)
+- Updates composes should be marked as supported (lsedlar)
+- pkgset: Only add missing packages from global tag (lsedlar)
+- ostree/utils: Drop timestamps from generated repo names - tests (onosek)
+- ostree/utils: Generate a single pungi.repo file, use repo-<num> IDs (walters)
+- ostree/utils: Drop timestamps from generated repo names (walters)
+- gather: Do not require variant for module source (lsedlar)
+- gather: Comps source should not crash without comps file (lsedlar)
+- gather: JSON source returns nothing without configuration (lsedlar)
+- buildinstall: Fix treeinfo generating on failure (lsedlar)
+- Add buildinstall_use_guestmount boolean option (jkaluza)
+- gather: Use arch packages in nodeps method (lsedlar)
+- pkgset: Always use global tag if specified (lsedlar)
+- config: Make pkgset_koji_tag optional (lsedlar)
+- ostree: Add force_new_commit option - test added (onosek)
+- ostree: Add force_new_commit option (walters)
+- gather: Fix checking string type (lsedlar)
+- Improve logging for unsigned packages (onosek)
+- Fall back to mount if guestmount is not available (onosek)
+- El-Torito boot information on s390x (onosek)
+- Remove strace from buildinstall runroot (onosek)
+- doc: fix "Miscellaneous" spelling in Config section (kdreyer)
+- doc: move "Phases" up, "Contributing" down (kdreyer)
+
 * Tue Jan 16 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.21-4
 - Add option to force fallback from guestmount
 
