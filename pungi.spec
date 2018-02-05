@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.22
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -9,6 +9,7 @@ URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
+BuildRequires:  python2-devel
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 BuildRequires:  python3-productmd >= 1.3
@@ -60,6 +61,8 @@ Requires:       python3-libcomps
 Requires:       python3-six
 Requires:       python3-koji
 
+Requires:       python3-%{name} = %{version}-%{release}
+
 BuildArch:      noarch
 
 %description
@@ -75,11 +78,37 @@ for creating unified ISO images, validating config file or sending progress
 notification to Fedora Message Bus.
 
 
+%package legacy
+Summary:    Legacy pungi executable
+Requires:   %{name} = %{version}-%{release}
+Requires:   python2-%{name} = %{version}-%{release}
+
+%description legacy
+Legacy pungi executable. This package depends on Python 2.
+
+
+%package -n python2-%{name}
+Summary:    Python 2 libraries for pungi
+
+%description -n python2-%{name}
+Python library with code for Pungi. This is not a public library and there are
+no guarantees about API stability.
+
+
+%package -n python3-%{name}
+Summary:    Python 3 libraries for pungi
+
+%description -n python3-%{name}
+Python library with code for Pungi. This is not a public library and there are
+no guarantees about API stability.
+
+
 %prep
 %autosetup -p1
 
 %build
-%{__python3} setup.py build
+%py2_build
+%py3_build
 cd doc
 make latexpdf SPHINXBUILD=/usr/bin/sphinx-build-3
 make epub     SPHINXBUILD=/usr/bin/sphinx-build-3
@@ -88,13 +117,16 @@ make man      SPHINXBUILD=/usr/bin/sphinx-build-3
 gzip _build/man/pungi.1
 
 %install
-%{__python3} setup.py install -O1 --skip-build --root %{buildroot}
+%py2_install
+mv %{buildroot}%{_bindir}/pungi %{buildroot}%{_bindir}/pungi-2
+%py3_install
+mv %{buildroot}%{_bindir}/pungi-2 %{buildroot}%{_bindir}/pungi
 %{__install} -d %{buildroot}/var/cache/pungi
 %{__install} -d %{buildroot}%{_mandir}/man1
 %{__install} -m 0644 doc/_build/man/pungi.1.gz %{buildroot}%{_mandir}/man1
 
-# Remove old pungi executable. It can not be used with Python 3.
-rm %{buildroot}%{_bindir}/%{name}
+# No utils package for Python 2
+rm -rf %{buildroot}%{python2_sitelib}/%{name}_utils
 
 %check
 nosetests-3 --exe
@@ -103,8 +135,6 @@ nosetests-3 --exe
 %license COPYING GPL
 %doc AUTHORS
 %doc doc/_build/latex/Pungi.pdf doc/_build/epub/Pungi.epub doc/_build/text/*
-%{python3_sitelib}/%{name}
-%{python3_sitelib}/%{name}-%{version}-py?.?.egg-info
 %{_bindir}/%{name}-koji
 %{_bindir}/%{name}-gather
 %{_bindir}/comps_filter
@@ -112,6 +142,17 @@ nosetests-3 --exe
 %{_mandir}/man1/pungi.1.gz
 %{_datadir}/pungi
 /var/cache/pungi
+
+%files -n python2-%{name}
+%{python2_sitelib}/%{name}
+%{python2_sitelib}/%{name}-%{version}-py?.?.egg-info
+
+%files -n python3-%{name}
+%{python3_sitelib}/%{name}
+%{python3_sitelib}/%{name}-%{version}-py?.?.egg-info
+
+%files legacy
+%{_bindir}/%{name}
 
 %files utils
 %{python3_sitelib}/%{name}_utils
@@ -123,6 +164,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Mon Feb 5 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-2
+- Create a subpackage with legacy pungi command
+
 * Wed Jan 24 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-1
 - Better INFO messages about modules (onosek)
 - Updates composes should be marked as supported (lsedlar)
