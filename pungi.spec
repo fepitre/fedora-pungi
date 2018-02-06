@@ -1,12 +1,13 @@
 Name:           pungi
 Version:        4.1.22
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+Patch0:         https://pagure.io/pungi/pull-request/830.patch
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python2-devel
@@ -29,6 +30,7 @@ BuildRequires:  python3-kobo
 BuildRequires:  python3-koji
 BuildRequires:  python3-unittest2
 BuildRequires:  lorax
+BuildRequires:  python3-PyYAML
 
 #deps for doc building
 BuildRequires:  python3-sphinx, texlive-collection-fontsrecommended
@@ -164,6 +166,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Tue Feb 06 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-3
+- Add support for mixing traditional and modular content
+
 * Mon Feb 5 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-2
 - Create a subpackage with legacy pungi command
 
