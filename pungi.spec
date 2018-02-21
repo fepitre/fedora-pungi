@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.22
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -73,6 +73,7 @@ A tool to create anaconda based installation trees/isos of a set of rpms.
 %package utils
 Summary:    Utilities for working with finished composes
 Requires:   pungi = %{version}-%{release}
+Requires:   python3-fedmsg
 
 %description utils
 These utilities work with finished composes produced by Pungi. They can be used
@@ -166,6 +167,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Feb 21 2018 Dennis Gilmore <dennis@ausil.us> - 4.1.22-4
+- make pungi-utils require python3-fedmsg
+
 * Tue Feb 06 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-3
 - Add support for mixing traditional and modular content
 
