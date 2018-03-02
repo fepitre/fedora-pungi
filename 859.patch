@@ -1,0 +1,67 @@
+From bd852f4059b2061b30f335eef7e8734492a307f2 Mon Sep 17 00:00:00 2001
+From: Lubomír Sedlář <lsedlar@redhat.com>
+Date: Mar 02 2018 07:46:23 +0000
+Subject: Remove comps groups from purely modular variants
+
+
+The comps source should not return all groups when there are only
+modules defined. This fixes part of the problem: non-modular packages
+will not go in by default.
+
+The second part is the comps file in the created repository. It will be
+filtered to not contain any groups (because packages from there will not
+be in the repo).
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+
+---
+
+diff --git a/pungi/phases/gather/sources/source_comps.py b/pungi/phases/gather/sources/source_comps.py
+index 655c767..447e0a4 100644
+--- a/pungi/phases/gather/sources/source_comps.py
++++ b/pungi/phases/gather/sources/source_comps.py
+@@ -39,7 +39,8 @@ class GatherSourceComps(pungi.phases.gather.source.GatherSourceBase):
+ 
+         comps = CompsWrapper(self.compose.paths.work.comps(arch=arch))
+ 
+-        if variant is not None and (variant.groups or variant.type != 'variant'):
++        is_modular = variant and not variant.groups and variant.modules
++        if variant is not None and (variant.groups or variant.type != 'variant' or is_modular):
+             # Get packages for a particular variant. We want to skip the
+             # filtering if the variant is top-level and has no groups (to use
+             # all of them).
+diff --git a/pungi/phases/init.py b/pungi/phases/init.py
+index cbda494..a01168a 100644
+--- a/pungi/phases/init.py
++++ b/pungi/phases/init.py
+@@ -45,12 +45,16 @@ class InitPhase(PhaseBase):
+ 
+             # write variant comps
+             for variant in self.compose.get_variants():
++                is_modular = not variant.groups and variant.modules
+                 for arch in variant.arches:
+-                    if variant.groups or variant.type == 'optional':
++                    if variant.groups or variant.type == 'optional' or is_modular:
+                         # The variant lists only some groups, run filter. Other
+                         # option is that it's optional variant, in which case
+                         # we want to filter everything (unless there was
+                         # explicit list in which case it will be used).
++                        # For fully modular variant (one without groups but
++                        # with modules) we also want to filter (effectively
++                        # producing empty comps).
+                         write_variant_comps(self.compose, arch, variant)
+                     else:
+                         # The variant does not mention any groups, copy
+diff --git a/tests/test_initphase.py b/tests/test_initphase.py
+index 7d8b639..ae6c4e5 100644
+--- a/tests/test_initphase.py
++++ b/tests/test_initphase.py
+@@ -53,6 +53,7 @@ class TestInitPhase(PungiTestCase):
+         compose = DummyCompose(self.topdir, {})
+         compose.has_comps = True
+         compose.variants['Everything'].groups = []
++        compose.variants['Everything'].modules = []
+         phase = init.InitPhase(compose)
+         phase.run()
+ 
+
