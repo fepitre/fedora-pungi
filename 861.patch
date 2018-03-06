@@ -1,0 +1,30 @@
+From 6514dc85f31853e261cb009f1f2f0e13e30e651c Mon Sep 17 00:00:00 2001
+From: Lubomír Sedlář <lsedlar@redhat.com>
+Date: Mar 06 2018 08:56:31 +0000
+Subject: pkgset: Correctly detect single tag for variant
+
+
+We need to check tags for the variant, not for the whole compose. This
+results in merge always being done even if there is a single tag. For
+f29 tag in Fedora this takes about 2 hours for each variant.
+
+Relates: https://pagure.io/pungi/issue/860
+Relates: https://bugzilla.redhat.com/show_bug.cgi?id=1551653
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+
+---
+
+diff --git a/pungi/phases/pkgset/sources/source_koji.py b/pungi/phases/pkgset/sources/source_koji.py
+index 7d22290..534a77c 100644
+--- a/pungi/phases/pkgset/sources/source_koji.py
++++ b/pungi/phases/pkgset/sources/source_koji.py
+@@ -320,7 +320,7 @@ def populate_global_pkgset(compose, koji_wrapper, path_prefix, event_id):
+                 if compose_tag in variant_tags[variant]:
+                     # Optimization for case where we have just single compose
+                     # tag - we do not have to merge in this case...
+-                    if len(compose_tags) == 1:
++                    if len(variant_tags[variant]) == 1:
+                         variant.pkgset = pkgset
+                     else:
+                         variant.pkgset.merge(pkgset, None, list(all_arches))
+

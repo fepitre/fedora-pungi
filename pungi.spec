@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.22
-Release:        5%{?dist}
+Release:        6%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -9,6 +9,7 @@ URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         https://pagure.io/pungi/pull-request/830.patch
 Patch1:         https://pagure.io/pungi/pull-request/859.patch
+Patch2:         https://pagure.io/pungi/pull-request/861.patch
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python2-devel
@@ -169,6 +170,9 @@ rm -rf %{buildroot}%{python2_sitelib}/%{name}_utils
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Tue Mar 06 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-6
+- Speed up compose with modules
+
 * Fri Mar 02 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-5
 - Remove comps groups from purely modular variants
 
