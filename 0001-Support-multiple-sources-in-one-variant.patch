@@ -1,8 +1,10 @@
-From 364d7f5229dd36dd9c5f778f3575133be538cc47 Mon Sep 17 00:00:00 2001
-From: Lubomír Sedlář <lsedlar@redhat.com>
-Date: Feb 01 2018 13:31:09 +0000
-Subject: Support multiple sources in one variant
-
+From 659eb0215a7a53628533c195cb6dc6e461d8be27 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Tue, 7 Nov 2017 14:16:37 +0100
+Subject: [PATCH 1/8] Support multiple sources in one variant
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 With this patch the gather_source option is no longer used. Instead, all
 sources are always used. If they return at least some input packages,
@@ -18,11 +20,23 @@ Each gathering step is logged separately. All the logs are preserved for
 later inspection.
 
 Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
-
 ---
+ doc/configuration.rst                        |  36 +++++---
+ doc/gathering.rst                            |   6 +-
+ pungi/checks.py                              |  39 ++++----
+ pungi/paths.py                               |  21 +++--
+ pungi/phases/gather/__init__.py              | 127 ++++++++++++++++++---------
+ pungi/phases/gather/methods/method_deps.py   |  15 ++--
+ pungi/phases/gather/methods/method_nodeps.py |   5 +-
+ tests/data/dummy-pungi.conf                  |   8 +-
+ tests/helpers.py                             |   1 -
+ tests/test_config.py                         |  25 ------
+ tests/test_gather_phase.py                   |  51 +++++++----
+ tests/test_pkgset_source_koji.py             |   1 -
+ 12 files changed, 199 insertions(+), 136 deletions(-)
 
 diff --git a/doc/configuration.rst b/doc/configuration.rst
-index a140831..dbe5ba0 100644
+index a1408317..dbe5ba08 100644
 --- a/doc/configuration.rst
 +++ b/doc/configuration.rst
 @@ -35,7 +35,6 @@ Minimal Config Example
@@ -96,7 +110,7 @@ index a140831..dbe5ba0 100644
          # bz#123456
          ('^(Workstation|Server)$', {
 diff --git a/doc/gathering.rst b/doc/gathering.rst
-index 5111f61..08b348b 100644
+index 5111f617..08b348b7 100644
 --- a/doc/gathering.rst
 +++ b/doc/gathering.rst
 @@ -8,9 +8,9 @@ a subset of the content targeted at a particular use case.
@@ -113,7 +127,7 @@ index 5111f61..08b348b 100644
  .. note::
     The inputs for both explicit package list and comps file are interpreted as
 diff --git a/pungi/checks.py b/pungi/checks.py
-index faf18a2..9b317ab 100644
+index faf18a24..9b317ab6 100644
 --- a/pungi/checks.py
 +++ b/pungi/checks.py
 @@ -554,12 +554,30 @@ def make_schema():
@@ -186,7 +200,7 @@ index faf18a2..9b317ab 100644
          "requires": (
              (lambda x: bool(x), ["productimg_install_class"]),
 diff --git a/pungi/paths.py b/pungi/paths.py
-index 42d0e3e..0e50679 100644
+index 42d0e3eb..0e506795 100644
 --- a/pungi/paths.py
 +++ b/pungi/paths.py
 @@ -107,32 +107,37 @@ class WorkPaths(object):
@@ -236,7 +250,7 @@ index 42d0e3e..0e50679 100644
      def pungi_cache_dir(self, arch, variant=None, create_dir=True):
          """
 diff --git a/pungi/phases/gather/__init__.py b/pungi/phases/gather/__init__.py
-index 23b9079..bc056e2 100644
+index 23b9079b..bc056e25 100644
 --- a/pungi/phases/gather/__init__.py
 +++ b/pungi/phases/gather/__init__.py
 @@ -24,7 +24,7 @@ from productmd.rpms import Rpms
@@ -450,7 +464,7 @@ index 23b9079..bc056e2 100644
  
      return list(packages), list(groups)
 diff --git a/pungi/phases/gather/methods/method_deps.py b/pungi/phases/gather/methods/method_deps.py
-index f4d0d6f..7c9e8fb 100644
+index f4d0d6f8..7c9e8fb6 100644
 --- a/pungi/phases/gather/methods/method_deps.py
 +++ b/pungi/phases/gather/methods/method_deps.py
 @@ -40,8 +40,9 @@ class GatherMethodDeps(pungi.phases.gather.method.GatherMethodBase):
@@ -500,7 +514,7 @@ index f4d0d6f..7c9e8fb 100644
      multilib_methods = get_arch_variant_data(compose.conf, 'multilib', arch, variant)
  
 diff --git a/pungi/phases/gather/methods/method_nodeps.py b/pungi/phases/gather/methods/method_nodeps.py
-index 69249da..ffc8e46 100644
+index 69249da2..ffc8e460 100644
 --- a/pungi/phases/gather/methods/method_nodeps.py
 +++ b/pungi/phases/gather/methods/method_nodeps.py
 @@ -28,7 +28,10 @@ class GatherMethodNodeps(pungi.phases.gather.method.GatherMethodBase):
@@ -516,7 +530,7 @@ index 69249da..ffc8e46 100644
              return self.worker(log, arch, variant, *args, **kwargs)
  
 diff --git a/tests/data/dummy-pungi.conf b/tests/data/dummy-pungi.conf
-index faaebb5..2d1f21f 100644
+index faaebb5b..2d1f21f1 100644
 --- a/tests/data/dummy-pungi.conf
 +++ b/tests/data/dummy-pungi.conf
 @@ -36,8 +36,12 @@ createrepo_checksum = "sha256"
@@ -535,7 +549,7 @@ index faaebb5..2d1f21f 100644
  check_deps = False
  hashed_directories = True
 diff --git a/tests/helpers.py b/tests/helpers.py
-index 3f258ba..f069635 100644
+index 3f258ba9..f069635d 100644
 --- a/tests/helpers.py
 +++ b/tests/helpers.py
 @@ -186,7 +186,6 @@ BASE_CONFIG = dict(
@@ -547,7 +561,7 @@ index 3f258ba..f069635 100644
  )
  
 diff --git a/tests/test_config.py b/tests/test_config.py
-index 5cfdcbb..b2c1c8f 100644
+index 5cfdcbb0..b2c1c8fb 100644
 --- a/tests/test_config.py
 +++ b/tests/test_config.py
 @@ -213,31 +213,6 @@ class CreaterepoConfigTestCase(ConfigTestCase):
@@ -583,7 +597,7 @@ index 5cfdcbb..b2c1c8f 100644
          cfg = load_config(
              pkgset_source='koji',
 diff --git a/tests/test_gather_phase.py b/tests/test_gather_phase.py
-index 28598fa..1630ef3 100644
+index 28598fac..1630ef33 100644
 --- a/tests/test_gather_phase.py
 +++ b/tests/test_gather_phase.py
 @@ -460,7 +460,7 @@ class TestGetVariantPackages(helpers.PungiTestCase):
@@ -724,7 +738,7 @@ index 28598fa..1630ef3 100644
  class TestWritePrepopulate(helpers.PungiTestCase):
      def test_without_config(self):
 diff --git a/tests/test_pkgset_source_koji.py b/tests/test_pkgset_source_koji.py
-index 6ea1716..b1e1308 100644
+index 6ea17166..b1e1308d 100644
 --- a/tests/test_pkgset_source_koji.py
 +++ b/tests/test_pkgset_source_koji.py
 @@ -204,7 +204,6 @@ class TestPopulateGlobalPkgset(helpers.PungiTestCase):
@@ -735,4 +749,6 @@ index 6ea1716..b1e1308 100644
              'pkgset_koji_tag': 'f25',
              'sigkeys': mock.Mock(),
              'additional_packages': [
+-- 
+2.13.6
 

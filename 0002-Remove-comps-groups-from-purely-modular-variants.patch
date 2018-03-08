@@ -1,8 +1,10 @@
-From bd852f4059b2061b30f335eef7e8734492a307f2 Mon Sep 17 00:00:00 2001
-From: Lubomír Sedlář <lsedlar@redhat.com>
-Date: Mar 02 2018 07:46:23 +0000
-Subject: Remove comps groups from purely modular variants
-
+From de5dcc7e9ebb3c5b7201b404f302b9ac7dcab722 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Fri, 2 Mar 2018 08:33:37 +0100
+Subject: [PATCH 2/8] Remove comps groups from purely modular variants
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 The comps source should not return all groups when there are only
 modules defined. This fixes part of the problem: non-modular packages
@@ -13,11 +15,14 @@ filtered to not contain any groups (because packages from there will not
 be in the repo).
 
 Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
-
 ---
+ pungi/phases/gather/sources/source_comps.py | 3 ++-
+ pungi/phases/init.py                        | 6 +++++-
+ tests/test_initphase.py                     | 1 +
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/pungi/phases/gather/sources/source_comps.py b/pungi/phases/gather/sources/source_comps.py
-index 655c767..447e0a4 100644
+index 655c7673..447e0a47 100644
 --- a/pungi/phases/gather/sources/source_comps.py
 +++ b/pungi/phases/gather/sources/source_comps.py
 @@ -39,7 +39,8 @@ class GatherSourceComps(pungi.phases.gather.source.GatherSourceBase):
@@ -31,7 +36,7 @@ index 655c767..447e0a4 100644
              # filtering if the variant is top-level and has no groups (to use
              # all of them).
 diff --git a/pungi/phases/init.py b/pungi/phases/init.py
-index cbda494..a01168a 100644
+index cbda4949..a01168a9 100644
 --- a/pungi/phases/init.py
 +++ b/pungi/phases/init.py
 @@ -45,12 +45,16 @@ class InitPhase(PhaseBase):
@@ -53,7 +58,7 @@ index cbda494..a01168a 100644
                      else:
                          # The variant does not mention any groups, copy
 diff --git a/tests/test_initphase.py b/tests/test_initphase.py
-index 7d8b639..ae6c4e5 100644
+index 7d8b639a..ae6c4e52 100644
 --- a/tests/test_initphase.py
 +++ b/tests/test_initphase.py
 @@ -53,6 +53,7 @@ class TestInitPhase(PungiTestCase):
@@ -64,4 +69,6 @@ index 7d8b639..ae6c4e5 100644
          phase = init.InitPhase(compose)
          phase.run()
  
+-- 
+2.13.6
 

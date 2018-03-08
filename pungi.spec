@@ -1,15 +1,20 @@
 Name:           pungi
 Version:        4.1.22
-Release:        6%{?dist}
+Release:        7%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         https://pagure.io/pungi/pull-request/830.patch
-Patch1:         https://pagure.io/pungi/pull-request/859.patch
-Patch2:         https://pagure.io/pungi/pull-request/861.patch
+Patch0:         0001-Support-multiple-sources-in-one-variant.patch
+Patch1:         0002-Remove-comps-groups-from-purely-modular-variants.patch
+Patch2:         0003-pkgset-Correctly-detect-single-tag-for-variant.patch
+Patch3:         0004-image-build-Accept-tar.xz-extension-for-docker-image.patch
+Patch4:         0005-Write-package-whitelist-for-each-variant.patch
+Patch5:         0006-gather-Honor-package-whitelist.patch
+Patch6:         0007-pkgset-Remove-check-for-unique-name.patch
+Patch7:         0008-pkgset-Merge-initial-package-set-without-checks.patch
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python2-devel
@@ -170,6 +175,10 @@ rm -rf %{buildroot}%{python2_sitelib}/%{name}_utils
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Thu Mar 08 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-7
+- image-build: Accept tar.xz extension for docker images
+- Allow multiple versions of the same package in package set
+
 * Tue Mar 06 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-6
 - Speed up compose with modules
 

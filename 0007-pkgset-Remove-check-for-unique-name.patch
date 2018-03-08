@@ -1,0 +1,78 @@
+From 74b0d14095733c66c54d47edaac69ef056f55332 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Wed, 7 Mar 2018 13:58:53 +0100
+Subject: [PATCH 7/8] pkgset: Remove check for unique name
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+We now have a way to select even older version of package (since the
+newer one can be left out of the whitelist), so we can include multiple
+versions of the same package into global package set.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/pkgset/pkgsets.py             | 9 +--------
+ pungi/phases/pkgset/sources/source_koji.py | 5 ++---
+ 2 files changed, 3 insertions(+), 11 deletions(-)
+
+diff --git a/pungi/phases/pkgset/pkgsets.py b/pungi/phases/pkgset/pkgsets.py
+index 4d902f4f..9038f1b1 100644
+--- a/pungi/phases/pkgset/pkgsets.py
++++ b/pungi/phases/pkgset/pkgsets.py
+@@ -134,12 +134,9 @@ class PackageSetBase(kobo.log.LoggingBase):
+ 
+         return self.rpms_by_arch
+ 
+-    def merge(self, other, primary_arch, arch_list, unique_name=False):
++    def merge(self, other, primary_arch, arch_list):
+         """
+         Merge ``other`` package set into this instance.
+-
+-        With ``unique_name=True`` a package will be added only if there is not
+-        a package with the same name already.
+         """
+         msg = "Merging package sets for %s: %s" % (primary_arch, arch_list)
+         self.log_debug("[BEGIN] %s" % msg)
+@@ -163,15 +160,11 @@ class PackageSetBase(kobo.log.LoggingBase):
+         else:
+             exclusivearch_list = None
+         for arch in arch_list:
+-            known_packages = set(pkg.name for pkg in self.rpms_by_arch.get(arch, []))
+             self.rpms_by_arch.setdefault(arch, [])
+             for i in other.rpms_by_arch.get(arch, []):
+                 if i.file_path in self.file_cache:
+                     # TODO: test if it really works
+                     continue
+-                if unique_name and i.name in known_packages:
+-                    self.log_debug('Not merging in %r' % i)
+-                    continue
+                 if exclusivearch_list and arch == "noarch":
+                     if is_excluded(i, exclusivearch_list, logger=self._logger):
+                         continue
+diff --git a/pungi/phases/pkgset/sources/source_koji.py b/pungi/phases/pkgset/sources/source_koji.py
+index 17d66773..94ee79df 100644
+--- a/pungi/phases/pkgset/sources/source_koji.py
++++ b/pungi/phases/pkgset/sources/source_koji.py
+@@ -263,7 +263,7 @@ def populate_global_pkgset(compose, koji_wrapper, path_prefix, event_id):
+         if not variant_tags[variant]:
+             variant_tags[variant].extend(force_list(compose.conf["pkgset_koji_tag"]))
+ 
+-    # Add global tag if supplied.
++    # Add global tag(s) if supplied.
+     if 'pkgset_koji_tag' in compose.conf:
+         if compose.conf["pkgset_koji_tag"] == "not-used":
+             # The magic value is used for modular composes to avoid errors
+@@ -314,8 +314,7 @@ def populate_global_pkgset(compose, koji_wrapper, path_prefix, event_id):
+             if len(compose_tags) == 1:
+                 global_pkgset = pkgset
+             else:
+-                global_pkgset.merge(pkgset, None, list(all_arches),
+-                                    unique_name=compose_tag in compose.conf['pkgset_koji_tag'])
++                global_pkgset.merge(pkgset, None, list(all_arches))
+         with open(global_pkgset_path, 'wb') as f:
+             data = pickle.dumps(global_pkgset)
+             f.write(data)
+-- 
+2.13.6
+

@@ -1,0 +1,78 @@
+From fde41452c0bb030eb3467a87eaf25d7f789cba52 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Thu, 8 Mar 2018 09:07:48 +0100
+Subject: [PATCH 4/8] image-build: Accept tar.xz extension for docker images
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Fixes: https://pagure.io/pungi/issue/863
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/image_build.py | 43 +++++++++++++++++++++++--------------------
+ 1 file changed, 23 insertions(+), 20 deletions(-)
+
+diff --git a/pungi/phases/image_build.py b/pungi/phases/image_build.py
+index ef4242c7..ea517b4e 100644
+--- a/pungi/phases/image_build.py
++++ b/pungi/phases/image_build.py
+@@ -20,22 +20,22 @@ from productmd.images import Image
+ # name will be ending with. The extensions are used to filter out which task
+ # results will be pulled into the compose.
+ EXTENSIONS = {
+-    'docker': 'tar.gz',
+-    'liveimg-squashfs': 'liveimg.squashfs',
+-    'qcow': 'qcow',
+-    'qcow2': 'qcow2',
+-    'raw': 'raw',
+-    'raw-xz': 'raw.xz',
+-    'rhevm-ova': 'rhevm.ova',
+-    'tar-gz': 'tar.gz',
+-    'vagrant-hyperv': 'vagrant-hyperv.box',
+-    'vagrant-libvirt': 'vagrant-libvirt.box',
+-    'vagrant-virtualbox': 'vagrant-virtualbox.box',
+-    'vagrant-vmware-fusion': 'vagrant-vmware-fusion.box',
+-    'vdi': 'vdi',
+-    'vmdk': 'vdmk',
+-    'vpc': 'vhd',
+-    'vsphere-ova': 'vsphere.ova',
++    'docker': ['tar.gz', 'tar.xz'],
++    'liveimg-squashfs': ['liveimg.squashfs'],
++    'qcow': ['qcow'],
++    'qcow2': ['qcow2'],
++    'raw': ['raw'],
++    'raw-xz': ['raw.xz'],
++    'rhevm-ova': ['rhevm.ova'],
++    'tar-gz': ['tar.gz'],
++    'vagrant-hyperv': ['vagrant-hyperv.box'],
++    'vagrant-libvirt': ['vagrant-libvirt.box'],
++    'vagrant-virtualbox': ['vagrant-virtualbox.box'],
++    'vagrant-vmware-fusion': ['vagrant-vmware-fusion.box'],
++    'vdi': ['vdi'],
++    'vmdk': ['vdmk'],
++    'vpc': ['vhd'],
++    'vsphere-ova': ['vsphere.ova'],
+ }
+ 
+ 
+@@ -216,10 +216,13 @@ class CreateImageBuildThread(WorkerThread):
+         for arch, paths in paths.items():
+             for path in paths:
+                 for format in cmd['image_conf']['image-build']['format']:
+-                    suffix = EXTENSIONS[format]
+-                    if path.endswith(suffix):
+-                        image_infos.append({'path': path, 'suffix': suffix, 'type': format, 'arch': arch})
+-                        break
++                    for suffix in EXTENSIONS[format]:
++                        if path.endswith(suffix):
++                            image_infos.append({'path': path,
++                                                'suffix': suffix,
++                                                'type': format,
++                                                'arch': arch})
++                            break
+ 
+         # The usecase here is that you can run koji image-build with multiple --format
+         # It's ok to do it serialized since we're talking about max 2 images per single
+-- 
+2.13.6
+
