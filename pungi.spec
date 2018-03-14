@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.22
-Release:        8%{?dist}
+Release:        9%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -15,7 +15,9 @@ Patch4:         0005-Write-package-whitelist-for-each-variant.patch
 Patch5:         0006-gather-Honor-package-whitelist.patch
 Patch6:         0007-pkgset-Remove-check-for-unique-name.patch
 Patch7:         0008-pkgset-Merge-initial-package-set-without-checks.patch
-Patch8:         0001-gather-Fix-package-set-whitelist.patch
+Patch8:         0009-gather-Fix-package-set-whitelist.patch
+Patch9:         0010-buildinstall-Add-option-to-disable-it.patch
+Patch10:        0011-pkgset-Allow-empty-list-of-modules.patch
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python2-devel
@@ -176,6 +178,10 @@ rm -rf %{buildroot}%{python2_sitelib}/%{name}_utils
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Mar 14 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-9
+- Allow empty modular variants
+- Add option to disable multilib
+
 * Fri Mar 09 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-8
 - Fix package set whitelist
 

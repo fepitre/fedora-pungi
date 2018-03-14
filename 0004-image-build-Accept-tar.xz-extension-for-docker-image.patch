@@ -1,7 +1,7 @@
 From fde41452c0bb030eb3467a87eaf25d7f789cba52 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Thu, 8 Mar 2018 09:07:48 +0100
-Subject: [PATCH 4/8] image-build: Accept tar.xz extension for docker images
+Subject: [PATCH 04/11] image-build: Accept tar.xz extension for docker images
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

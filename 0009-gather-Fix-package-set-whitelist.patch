@@ -1,7 +1,7 @@
-From 56e00505e0f757f2376f6127808f472b3fb67900 Mon Sep 17 00:00:00 2001
+From 2dca0b0e3106f3c7252a5d0ad56f3943940e3fd0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Fri, 9 Mar 2018 13:45:03 +0100
-Subject: [PATCH] gather: Fix package set whitelist
+Subject: [PATCH 09/11] gather: Fix package set whitelist
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -19,7 +19,7 @@ Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
  4 files changed, 23 insertions(+), 26 deletions(-)
 
 diff --git a/pungi/gather_dnf.py b/pungi/gather_dnf.py
-index f4dda5b3..2c2d7691 100644
+index 1023c57d..a0ea6fd1 100644
 --- a/pungi/gather_dnf.py
 +++ b/pungi/gather_dnf.py
 @@ -19,7 +19,7 @@ from itertools import count
@@ -49,10 +49,10 @@ index f4dda5b3..2c2d7691 100644
                  for queue in all_queues:
                      setattr(self, queue, getattr(self, queue).filter(pkg=to_keep).latest().apply())
 diff --git a/pungi/phases/gather/methods/method_deps.py b/pungi/phases/gather/methods/method_deps.py
-index 1f38f9a1..f6a765a9 100644
+index d38343f3..8c29cfde 100644
 --- a/pungi/phases/gather/methods/method_deps.py
 +++ b/pungi/phases/gather/methods/method_deps.py
-@@ -23,7 +23,7 @@ from kobo.rpmlib import parse_nvra
+@@ -22,7 +22,7 @@ from kobo.pkgset import SimpleRpmWrapper, RpmWrapper
  from pungi.util import rmtree, get_arch_variant_data
  from pungi.wrappers.pungi import PungiWrapper
  
@@ -61,7 +61,7 @@ index 1f38f9a1..f6a765a9 100644
  import pungi.phases.gather
  
  import pungi.phases.gather.method
-@@ -109,8 +109,11 @@ def write_pungi_config(compose, arch, variant, packages, groups, filter_packages
+@@ -90,8 +90,11 @@ def write_pungi_config(compose, arch, variant, packages, groups, filter_packages
  
      package_whitelist = set()
      if variant.pkgset:
@@ -76,10 +76,10 @@ index 1f38f9a1..f6a765a9 100644
      pungi_wrapper.write_kickstart(
          ks_path=pungi_cfg, repos=repos, groups=groups, packages=packages_str,
 diff --git a/tests/test_gather.py b/tests/test_gather.py
-index 81df6324..1daf3c60 100644
+index e73ae9c3..fb59dc17 100644
 --- a/tests/test_gather.py
 +++ b/tests/test_gather.py
-@@ -1853,18 +1853,14 @@ class DNFDepsolvingTestCase(DepsolvingBase, unittest.TestCase):
+@@ -1798,18 +1798,14 @@ class DNFDepsolvingTestCase(DepsolvingBase, unittest.TestCase):
              "dummy-bash",
          ]
          package_whitelist = [
@@ -106,7 +106,7 @@ index 81df6324..1daf3c60 100644
          ]
          pkg_map = self.go(packages, None, greedy="none", package_whitelist=package_whitelist)
  
-@@ -1900,8 +1896,7 @@ class DNFDepsolvingTestCase(DepsolvingBase, unittest.TestCase):
+@@ -1845,8 +1841,7 @@ class DNFDepsolvingTestCase(DepsolvingBase, unittest.TestCase):
      def test_package_whitelist(self):
          packages = ['*']
          whitelist = [

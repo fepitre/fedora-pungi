@@ -1,7 +1,7 @@
 From adcb2e23312914535dd71b15d4705c8101055836 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Tue, 6 Mar 2018 08:47:17 +0100
-Subject: [PATCH 3/8] pkgset: Correctly detect single tag for variant
+Subject: [PATCH 03/11] pkgset: Correctly detect single tag for variant
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

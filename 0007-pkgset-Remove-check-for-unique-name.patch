@@ -1,7 +1,7 @@
 From 74b0d14095733c66c54d47edaac69ef056f55332 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 7 Mar 2018 13:58:53 +0100
-Subject: [PATCH 7/8] pkgset: Remove check for unique name
+Subject: [PATCH 07/11] pkgset: Remove check for unique name
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
