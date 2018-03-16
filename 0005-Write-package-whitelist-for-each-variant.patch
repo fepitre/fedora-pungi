@@ -1,7 +1,7 @@
 From 63329d48c3bc1c72a7bacd654a3ce6e93f6041e7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 7 Mar 2018 12:35:33 +0100
-Subject: [PATCH 05/11] Write package whitelist for each variant
+Subject: [PATCH 05/12] Write package whitelist for each variant
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

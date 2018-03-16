@@ -1,7 +1,7 @@
 From 4481d1145e1ea4b0bc3ac3696491a01e633f6397 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 14 Mar 2018 08:17:50 +0100
-Subject: [PATCH 11/11] pkgset: Allow empty list of modules
+Subject: [PATCH 11/12] pkgset: Allow empty list of modules
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

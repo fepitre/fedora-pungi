@@ -1,0 +1,59 @@
+From f3d33e74b30d5475de1f4a605858ba677596c408 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Fri, 16 Mar 2018 13:57:03 +0100
+Subject: [PATCH 12/12] Fix modular content in non-modular variant
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+When allowing empty list of modules, the check for variant tags got
+broken, causing Everything to no longer have an associated list of
+allowed packages.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+Relates: https://pagure.io/pungi/issue/862
+---
+ pungi/wrappers/variants.py | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/pungi/wrappers/variants.py b/pungi/wrappers/variants.py
+index 6bd00800..34ff215a 100755
+--- a/pungi/wrappers/variants.py
++++ b/pungi/wrappers/variants.py
+@@ -104,13 +104,13 @@ class VariantsXmlParser(object):
+                 variant_dict["groups"].append(group)
+ 
+         for modulelist_node in variant_node.xpath("modules"):
++            variant_dict["modules"] = variant_dict["modules"] or []
+             for module_node in modulelist_node.xpath("module"):
+                 module = {
+                     "name": str(module_node.text),
+                     "glob": self._is_true(module_node.attrib.get("glob", "false"))
+                 }
+ 
+-                variant_dict["modules"] = variant_dict["modules"] or []
+                 variant_dict["modules"].append(module)
+ 
+         for environments_node in variant_node.xpath("environments"):
+@@ -205,7 +205,6 @@ class Variant(object):
+                  modules=None):
+ 
+         environments = environments or []
+-        modules = modules or []
+         buildinstallpackages = buildinstallpackages or []
+ 
+         self.id = id
+@@ -214,7 +213,9 @@ class Variant(object):
+         self.arches = sorted(copy.deepcopy(arches))
+         self.groups = sorted(copy.deepcopy(groups), key=lambda x: x["name"])
+         self.environments = sorted(copy.deepcopy(environments), key=lambda x: x["name"])
+-        self.modules = sorted(copy.deepcopy(modules), key=lambda x: x["name"])
++        self.modules = copy.deepcopy(modules)
++        if self.modules:
++            self.modules = sorted(self.modules, key=lambda x: x["name"])
+         self.buildinstallpackages = sorted(buildinstallpackages)
+         self.variants = {}
+         self.parent = parent
+-- 
+2.13.6
+

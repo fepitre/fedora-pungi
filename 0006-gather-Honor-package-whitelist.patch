@@ -1,7 +1,7 @@
 From 1bfea4523b803917e37f81f83519721848012674 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 7 Mar 2018 13:42:09 +0100
-Subject: [PATCH 06/11] gather: Honor package whitelist
+Subject: [PATCH 06/12] gather: Honor package whitelist
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

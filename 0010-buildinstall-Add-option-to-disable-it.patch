@@ -1,7 +1,7 @@
 From 1e6a0c19e78be15e2398bd1a462b5c8b41168155 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Tue, 13 Mar 2018 15:54:52 +0100
-Subject: [PATCH 10/11] buildinstall: Add option to disable it
+Subject: [PATCH 10/12] buildinstall: Add option to disable it
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

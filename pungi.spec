@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.22
-Release:        9%{?dist}
+Release:        10%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -18,6 +18,7 @@ Patch7:         0008-pkgset-Merge-initial-package-set-without-checks.patch
 Patch8:         0009-gather-Fix-package-set-whitelist.patch
 Patch9:         0010-buildinstall-Add-option-to-disable-it.patch
 Patch10:        0011-pkgset-Allow-empty-list-of-modules.patch
+Patch11:        0012-Fix-modular-content-in-non-modular-variant.patch
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python2-devel
@@ -178,6 +179,9 @@ rm -rf %{buildroot}%{python2_sitelib}/%{name}_utils
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Fri Mar 16 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-10
+- Fix package whitelist for non-modular variants
+
 * Wed Mar 14 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-9
 - Allow empty modular variants
 - Add option to disable multilib

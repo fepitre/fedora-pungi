@@ -1,7 +1,7 @@
 From 40c8f95b2bba62f454c7f996409e8bf1d775eee4 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 7 Mar 2018 13:59:12 +0100
-Subject: [PATCH 08/11] pkgset: Merge initial package set without checks
+Subject: [PATCH 08/12] pkgset: Merge initial package set without checks
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

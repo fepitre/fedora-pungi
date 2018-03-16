@@ -1,7 +1,7 @@
 From 659eb0215a7a53628533c195cb6dc6e461d8be27 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Tue, 7 Nov 2017 14:16:37 +0100
-Subject: [PATCH 01/11] Support multiple sources in one variant
+Subject: [PATCH 01/12] Support multiple sources in one variant
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

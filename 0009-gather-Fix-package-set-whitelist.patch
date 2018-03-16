@@ -1,7 +1,7 @@
 From 2dca0b0e3106f3c7252a5d0ad56f3943940e3fd0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Fri, 9 Mar 2018 13:45:03 +0100
-Subject: [PATCH 09/11] gather: Fix package set whitelist
+Subject: [PATCH 09/12] gather: Fix package set whitelist
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
