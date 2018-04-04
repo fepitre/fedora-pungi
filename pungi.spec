@@ -1,30 +1,19 @@
 Name:           pungi
-Version:        4.1.22
-Release:        10%{?dist}
+Version:        4.1.23
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-Support-multiple-sources-in-one-variant.patch
-Patch1:         0002-Remove-comps-groups-from-purely-modular-variants.patch
-Patch2:         0003-pkgset-Correctly-detect-single-tag-for-variant.patch
-Patch3:         0004-image-build-Accept-tar.xz-extension-for-docker-image.patch
-Patch4:         0005-Write-package-whitelist-for-each-variant.patch
-Patch5:         0006-gather-Honor-package-whitelist.patch
-Patch6:         0007-pkgset-Remove-check-for-unique-name.patch
-Patch7:         0008-pkgset-Merge-initial-package-set-without-checks.patch
-Patch8:         0009-gather-Fix-package-set-whitelist.patch
-Patch9:         0010-buildinstall-Add-option-to-disable-it.patch
-Patch10:        0011-pkgset-Allow-empty-list-of-modules.patch
-Patch11:        0012-Fix-modular-content-in-non-modular-variant.patch
+Patch0:         0001-tests-Use-dummy-modulesdir-for-DNF.patch
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python2-devel
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
-BuildRequires:  python3-productmd >= 1.3
+BuildRequires:  python3-productmd >= 1.11
 BuildRequires:  python3-kobo-rpmlib
 BuildRequires:  createrepo_c
 BuildRequires:  python3-lxml
@@ -42,6 +31,8 @@ BuildRequires:  python3-koji
 BuildRequires:  python3-unittest2
 BuildRequires:  lorax
 BuildRequires:  python3-PyYAML
+BuildRequires:  libmodulemd
+BuildRequires:  gobject-introspection
 
 #deps for doc building
 BuildRequires:  python3-sphinx, texlive-collection-fontsrecommended
@@ -56,7 +47,7 @@ BuildRequires:  latexmk
 
 Requires:       python3-kobo >= 0.6
 Requires:       python3-kobo-rpmlib
-Requires:       python3-productmd >= 1.3
+Requires:       python3-productmd >= 1.11
 Requires:       python3-kickstart
 Requires:       createrepo_c
 Requires:       python3-lxml
@@ -73,6 +64,8 @@ Requires:       python3-multilib
 Requires:       python3-libcomps
 Requires:       python3-six
 Requires:       python3-koji
+Requires:       libmodulemd
+Requires:       gobject-introspection
 
 Requires:       python3-%{name} = %{version}-%{release}
 
@@ -144,7 +137,7 @@ rm -rf %{buildroot}%{python2_sitelib}/%{name}_utils
 
 %check
 # Temporarily disabled to avoid problems with DNF trying to write to /etc...
-# nosetests-3 --exe
+nosetests-3 --exe
 
 %files
 %license COPYING GPL
@@ -179,6 +172,53 @@ rm -rf %{buildroot}%{python2_sitelib}/%{name}_utils
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Apr 4 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.23-1
+- Update documentation section 'contributing' (onosek)
+- Write module metadata (onosek)
+- Support multilib in GatherSourceModule (jkaluza)
+- ostree: Always substitute basearch (lsedlar)
+- If sigkeys is specified, require at least one (puiterwijk)
+- Allow setting <kojitag/> in <modules/> in variants.xml to get the modules
+  from this Koji tag. (jkaluza)
+- Move Modulemd import to pungi/__init__.py to remove duplicated code.
+  (jkaluza)
+- Use Modulemd.Module for 'variant.arch_mmds' instead of yaml dump (jkaluza)
+- Fix modular content in non-modular variant (lsedlar)
+- Remove the filtered RPMs from module metadata even in case all RPMs are
+  filtered out. (jkaluza)
+- pkgset: Allow empty list of modules (lsedlar)
+- buildinstall: Add option to disable it (lsedlar)
+- Use libmodulemd instead of modulemd Python module (jkaluza)
+- gather: Fix package set whitelist (lsedlar)
+- pkgset: Merge initial package set without checks (lsedlar)
+- pkgset: Remove check for unique name (lsedlar)
+- gather: Honor package whitelist (lsedlar)
+- Write package whitelist for each variant (lsedlar)
+- image-build: Accept tar.xz extension for docker images (lsedlar)
+- pkgset: Correctly detect single tag for variant (lsedlar)
+- Remove comps groups from purely modular variants (lsedlar)
+- gather: Allow filtering debuginfo packages (lsedlar)
+- Move ostree phase and pipelines for running phases (onosek)
+- Other repo for OstreeInstaller (onosek)
+- Add modulemd metadata to repo even without components (jkaluza)
+- Correct fix for volume ID substition sorting by length (awilliam)
+- Ordering processing for volume ID substitutions (onosek)
+- Disable multilib for modules (jkaluza)
+- scm: Stop decoding output of post-clone command (lsedlar)
+- Remove useless shebang (lsedlar)
+- source_koji.py: Properly handle unset pkgset_koji_tag (otaylor)
+- pkgset: Only use package whitelist if enabled (lsedlar)
+- Fail early if input packages are unsigned (jkaluza)
+- Allow composing from tag with unsigned packages (jkaluza)
+- Ostree can use pkgset repos (onosek)
+- Support multiple sources in one variant (lsedlar)
+- gather: Set lookaside flag focorrectly (lsedlar)
+- gather: Try getting srpm from the same repo as rpm (lsedlar)
+- Minor correction for python backward compatibility (onosek)
+
+* Fri Mar 23 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-10.1
+- Always substitute basearch in ostree
+
 * Fri Mar 16 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.22-10
 - Fix package whitelist for non-modular variants
 
