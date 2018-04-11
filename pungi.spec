@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.23
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -8,6 +8,9 @@ License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-tests-Use-dummy-modulesdir-for-DNF.patch
+Patch1:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
+Patch2:         0002-Revert-Other-repo-for-OstreeInstaller.patch
+Patch3:         0003-Revert-Ostree-can-use-pkgset-repos.patch
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python2-devel
@@ -172,6 +175,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Apr 11 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.23-2
+- Revert reordering of ostree phases
+
 * Wed Apr 4 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.23-1
 - Update documentation section 'contributing' (onosek)
 - Write module metadata (onosek)
