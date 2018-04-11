@@ -35,7 +35,7 @@ BuildRequires:  python3-unittest2
 BuildRequires:  lorax
 BuildRequires:  python3-PyYAML
 BuildRequires:  libmodulemd
-BuildRequires:  gobject-introspection
+BuildRequires:  python3-gobject
 
 #deps for doc building
 BuildRequires:  python3-sphinx, texlive-collection-fontsrecommended
@@ -68,7 +68,8 @@ Requires:       python3-libcomps
 Requires:       python3-six
 Requires:       python3-koji
 Requires:       libmodulemd
-Requires:       gobject-introspection
+Requires:       python3-gobject
+Requires:       python3-pdc-client
 
 Requires:       python3-%{name} = %{version}-%{release}
 
