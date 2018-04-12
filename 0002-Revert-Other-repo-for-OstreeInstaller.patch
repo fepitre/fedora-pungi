@@ -1,7 +1,7 @@
 From fcc431622fc0305248bb966271c71c8d17fd5f69 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 09:19:53 +0200
-Subject: [PATCH 2/3] Revert "Other repo for OstreeInstaller"
+Subject: [PATCH 2/8] Revert "Other repo for OstreeInstaller"
 
 This reverts commit 5c081cb545715c2a912ff50fa57554e89d905868.
 ---

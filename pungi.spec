@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.23
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -11,6 +11,12 @@ Patch0:         0001-tests-Use-dummy-modulesdir-for-DNF.patch
 Patch1:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
 Patch2:         0002-Revert-Other-repo-for-OstreeInstaller.patch
 Patch3:         0003-Revert-Ostree-can-use-pkgset-repos.patch
+Patch4:         0004-Include-module-defaults-in-the-repodata.patch
+Patch5:         0005-Handle-relative-paths-in-module_defaults_dir.patch
+Patch6:         0006-Update-configuration-docs-with-module_defaults_dir.patch
+Patch7:         0007-Update-the-configuration-JSON-schema-for-module_defa.patch
+Patch8:         0008-Clone-module-defaults-into-work-directory.patch
+
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
 BuildRequires:  python2-devel
@@ -176,6 +182,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Thu Apr 12 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.23-3
+- Add support for module defaults
+
 * Wed Apr 11 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.23-2
 - Revert reordering of ostree phases
 

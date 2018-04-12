@@ -1,7 +1,7 @@
 From 8a7bf97434cbbf2397d3209498eacc326fc130f2 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 09:20:51 +0200
-Subject: [PATCH 3/3] Revert "Ostree can use pkgset repos"
+Subject: [PATCH 3/8] Revert "Ostree can use pkgset repos"
 
 This reverts commit c7cc200246300c6a3946b2e3a9f5f7693896a7d6.
 ---

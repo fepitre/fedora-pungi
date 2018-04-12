@@ -1,0 +1,131 @@
+From 7d3baa8531e11059866412ddc6ae1aae4e855fc2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Petr=20=C5=A0abata?= <contyk@redhat.com>
+Date: Wed, 4 Apr 2018 12:59:52 +0200
+Subject: [PATCH 4/8] Include module defaults in the repodata
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+If the compose configuration includes the module_defaults_dir (an
+scm_dict), clone the directory, read the module defaults contained
+therein and include relevant defaults in the combined modulemd file.
+
+Only defaults for modules present in the variant are included.
+
+This requires libmodulemd 1.2.0+.
+
+Merges: https://pagure.io/pungi/pull-request/891
+Signed-off-by: Petr Šabata <contyk@redhat.com>
+---
+ pungi/compose.py           |  4 ++++
+ pungi/phases/createrepo.py |  8 +++++++-
+ pungi/phases/init.py       | 17 ++++++++++++++++-
+ tests/test_initphase.py    |  3 +++
+ 4 files changed, 30 insertions(+), 2 deletions(-)
+
+diff --git a/pungi/compose.py b/pungi/compose.py
+index 4199d72a..07c67f4f 100644
+--- a/pungi/compose.py
++++ b/pungi/compose.py
+@@ -194,6 +194,10 @@ class Compose(kobo.log.LoggingBase):
+         return bool(self.conf.get("comps_file", False))
+ 
+     @property
++    def has_module_defaults(self):
++        return bool(self.conf.get("module_defaults_dir", False))
++
++    @property
+     def config_dir(self):
+         return os.path.dirname(self.conf._open_file or "")
+ 
+diff --git a/pungi/phases/createrepo.py b/pungi/phases/createrepo.py
+index 1ce2b171..49ff553a 100644
+--- a/pungi/phases/createrepo.py
++++ b/pungi/phases/createrepo.py
+@@ -218,9 +218,15 @@ def create_variant_repo(compose, arch, variant, pkg_type, modules_metadata=None)
+                     raise AttributeError("module_metadata parameter was not passed and it is needed for module processing")
+             modules.append(repo_mmd)
+ 
++        module_names = set([x.get_name() for x in modules])
++        for mmddeffile in glob.glob(os.path.join(compose.config_dir, "module_defaults", "*.yaml")):
++            for mmddef in Modulemd.objects_from_file(mmddeffile):
++                if isinstance(mmddef, Modulemd.Defaults) and mmddef.peek_module_name() in module_names:
++                    modules.append(mmddef)
++
+         with temp_dir() as tmp_dir:
+             modules_path = os.path.join(tmp_dir, "modules.yaml")
+-            Modulemd.Module.dump_all(modules, modules_path)
++            Modulemd.dump(modules, modules_path)
+ 
+             cmd = repo.get_modifyrepo_cmd(os.path.join(repo_dir, "repodata"),
+                                           modules_path, mdtype="modules",
+diff --git a/pungi/phases/init.py b/pungi/phases/init.py
+index a01168a9..81eec0f4 100644
+--- a/pungi/phases/init.py
++++ b/pungi/phases/init.py
+@@ -23,7 +23,8 @@ from pungi.phases.base import PhaseBase
+ from pungi.phases.gather import write_prepopulate_file
+ from pungi.wrappers.createrepo import CreaterepoWrapper
+ from pungi.wrappers.comps import CompsWrapper
+-from pungi.wrappers.scm import get_file_from_scm
++from pungi.wrappers.scm import get_file_from_scm, get_dir_from_scm
++from pungi.util import temp_dir
+ 
+ 
+ class InitPhase(PhaseBase):
+@@ -63,6 +64,10 @@ class InitPhase(PhaseBase):
+ 
+         # download variants.xml / product.xml?
+ 
++        # download module defaults
++        if self.compose.has_module_defaults:
++            write_module_defaults(self.compose)
++
+         # write prepopulate file
+         write_prepopulate_file(self.compose)
+ 
+@@ -160,3 +165,13 @@ def create_comps_repo(compose, arch):
+                                       checksum=createrepo_checksum)
+         run(cmd, logfile=compose.paths.log.log_file(arch, "comps_repo"), show_cmd=True)
+         compose.log_info("[DONE ] %s" % msg)
++
++
++def write_module_defaults(compose):
++    scm_dict = compose.conf["module_defaults_dir"]
++
++    with temp_dir(prefix="moduledefaults_") as tmp_dir:
++        get_dir_from_scm(scm_dict, tmp_dir, logger=compose._logger)
++        compose.log_debug("Writing module defaults")
++        shutil.rmtree(os.path.join(compose.config_dir, "module_defaults"), ignore_errors=True)
++        shutil.copytree(tmp_dir, os.path.join(compose.config_dir, "module_defaults"))
+diff --git a/tests/test_initphase.py b/tests/test_initphase.py
+index ae6c4e52..8c3b0d9d 100644
+--- a/tests/test_initphase.py
++++ b/tests/test_initphase.py
+@@ -24,6 +24,7 @@ class TestInitPhase(PungiTestCase):
+     def test_run(self, write_prepopulate, write_variant, create_comps, write_arch, write_global):
+         compose = DummyCompose(self.topdir, {})
+         compose.has_comps = True
++        compose.has_module_defaults = False
+         compose.setup_optional()
+         phase = init.InitPhase(compose)
+         phase.run()
+@@ -52,6 +53,7 @@ class TestInitPhase(PungiTestCase):
+                                write_arch, write_global, copy_comps):
+         compose = DummyCompose(self.topdir, {})
+         compose.has_comps = True
++        compose.has_module_defaults = False
+         compose.variants['Everything'].groups = []
+         compose.variants['Everything'].modules = []
+         phase = init.InitPhase(compose)
+@@ -81,6 +83,7 @@ class TestInitPhase(PungiTestCase):
+                                write_arch, write_global, copy_comps):
+         compose = DummyCompose(self.topdir, {})
+         compose.has_comps = False
++        compose.has_module_defaults = False
+         phase = init.InitPhase(compose)
+         phase.run()
+ 
+-- 
+2.13.6
+

@@ -1,0 +1,64 @@
+From 9104444a7bc874c18de2a57851356e60a776341c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Wed, 11 Apr 2018 16:05:08 +0200
+Subject: [PATCH 8/8] Clone module defaults into work/ directory
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+We can not rely on config_dir being writable, and should not modify
+anything in there anyway.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/paths.py             | 8 ++++++++
+ pungi/phases/createrepo.py | 2 +-
+ pungi/phases/init.py       | 3 +--
+ 3 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/pungi/paths.py b/pungi/paths.py
+index 0e506795..37c6da13 100644
+--- a/pungi/paths.py
++++ b/pungi/paths.py
+@@ -340,6 +340,14 @@ class WorkPaths(object):
+         path = "%s.cfg" % path
+         return path
+ 
++    def module_defaults_dir(self, create_dir=True):
++        """
++        """
++        path = os.path.join(self.topdir(create_dir=create_dir), 'module_defaults')
++        if create_dir:
++            makedirs(path)
++        return path
++
+ 
+ class ComposePaths(object):
+     def __init__(self, compose):
+diff --git a/pungi/phases/createrepo.py b/pungi/phases/createrepo.py
+index 49ff553a..f8e61387 100644
+--- a/pungi/phases/createrepo.py
++++ b/pungi/phases/createrepo.py
+@@ -219,7 +219,7 @@ def create_variant_repo(compose, arch, variant, pkg_type, modules_metadata=None)
+             modules.append(repo_mmd)
+ 
+         module_names = set([x.get_name() for x in modules])
+-        for mmddeffile in glob.glob(os.path.join(compose.config_dir, "module_defaults", "*.yaml")):
++        for mmddeffile in glob.glob(os.path.join(compose.paths.work.module_defaults_dir(), "*.yaml")):
+             for mmddef in Modulemd.objects_from_file(mmddeffile):
+                 if isinstance(mmddef, Modulemd.Defaults) and mmddef.peek_module_name() in module_names:
+                     modules.append(mmddef)
+diff --git a/pungi/phases/init.py b/pungi/phases/init.py
+index ef203568..9d9212e7 100644
+--- a/pungi/phases/init.py
++++ b/pungi/phases/init.py
+@@ -178,5 +178,4 @@ def write_module_defaults(compose):
+     with temp_dir(prefix="moduledefaults_") as tmp_dir:
+         get_dir_from_scm(scm_dict, tmp_dir, logger=compose._logger)
+         compose.log_debug("Writing module defaults")
+-        shutil.rmtree(os.path.join(compose.config_dir, "module_defaults"), ignore_errors=True)
+-        shutil.copytree(tmp_dir, os.path.join(compose.config_dir, "module_defaults"))
++        shutil.copytree(tmp_dir, compose.paths.work.module_defaults_dir())
+-- 
+2.13.6
+
