@@ -1,7 +1,7 @@
 From 9104444a7bc874c18de2a57851356e60a776341c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 16:05:08 +0200
-Subject: [PATCH 8/8] Clone module defaults into work/ directory
+Subject: [PATCH 8/9] Clone module defaults into work/ directory
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

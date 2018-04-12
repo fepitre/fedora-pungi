@@ -1,7 +1,7 @@
 From 7d3baa8531e11059866412ddc6ae1aae4e855fc2 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Petr=20=C5=A0abata?= <contyk@redhat.com>
 Date: Wed, 4 Apr 2018 12:59:52 +0200
-Subject: [PATCH 4/8] Include module defaults in the repodata
+Subject: [PATCH 4/9] Include module defaults in the repodata
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

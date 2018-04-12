@@ -1,7 +1,7 @@
 From 91a03c693222a41a23d1a3250984e0d8c9372b75 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Petr=20=C5=A0abata?= <contyk@redhat.com>
 Date: Wed, 4 Apr 2018 14:01:10 +0200
-Subject: [PATCH 5/8] Handle relative paths in module_defaults_dir
+Subject: [PATCH 5/9] Handle relative paths in module_defaults_dir
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

@@ -1,7 +1,7 @@
 From dc6fccd522efc0ae0c2072812b6fc0559cc74475 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Petr=20=C5=A0abata?= <contyk@redhat.com>
 Date: Wed, 11 Apr 2018 10:33:42 +0200
-Subject: [PATCH 7/8] Update the configuration JSON schema for
+Subject: [PATCH 7/9] Update the configuration JSON schema for
  module_defaults_dir
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

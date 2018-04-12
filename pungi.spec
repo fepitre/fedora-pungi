@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.23
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -16,6 +16,7 @@ Patch5:         0005-Handle-relative-paths-in-module_defaults_dir.patch
 Patch6:         0006-Update-configuration-docs-with-module_defaults_dir.patch
 Patch7:         0007-Update-the-configuration-JSON-schema-for-module_defa.patch
 Patch8:         0008-Clone-module-defaults-into-work-directory.patch
+Patch9:         0009-init-Stop-creating-module-defaults-dir-twice.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -182,6 +183,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Thu Apr 12 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.23-4
+- Stop creating module defaults dir twice
+
 * Thu Apr 12 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.23-3
 - Add support for module defaults
 

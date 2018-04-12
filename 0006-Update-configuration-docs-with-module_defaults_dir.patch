@@ -1,7 +1,7 @@
 From 587b4847843af878650d56e7c093cbef6b356801 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Petr=20=C5=A0abata?= <contyk@redhat.com>
 Date: Wed, 4 Apr 2018 14:02:15 +0200
-Subject: [PATCH 6/8] Update configuration docs with module_defaults_dir
+Subject: [PATCH 6/9] Update configuration docs with module_defaults_dir
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

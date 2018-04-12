@@ -1,0 +1,27 @@
+From 57342f31e94118b172366b7a00b6b5fcfd62c28a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Thu, 12 Apr 2018 13:37:30 +0200
+Subject: [PATCH 9/9] init: Stop creating module defaults dir twice
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+JIRA: COMPOSE-2447
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/init.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pungi/phases/init.py b/pungi/phases/init.py
+index 9d9212e7..d6afcd92 100644
+--- a/pungi/phases/init.py
++++ b/pungi/phases/init.py
+@@ -178,4 +178,4 @@ def write_module_defaults(compose):
+     with temp_dir(prefix="moduledefaults_") as tmp_dir:
+         get_dir_from_scm(scm_dict, tmp_dir, logger=compose._logger)
+         compose.log_debug("Writing module defaults")
+-        shutil.copytree(tmp_dir, compose.paths.work.module_defaults_dir())
++        shutil.copytree(tmp_dir, compose.paths.work.module_defaults_dir(create_dir=False))
+-- 
+2.13.6
+
