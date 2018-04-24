@@ -1,0 +1,44 @@
+From 527394707d118d36977b17091eb39212a1f1aae0 Mon Sep 17 00:00:00 2001
+From: Patrick Uiterwijk <puiterwijk@redhat.com>
+Date: Apr 15 2018 00:16:23 +0000
+Subject: Access ci_base date via compose
+
+
+Signed-off-by: Patrick Uiterwijk <puiterwijk@redhat.com>
+
+---
+
+diff --git a/pungi/util.py b/pungi/util.py
+index 261f3f2..b8cf9ba 100644
+--- a/pungi/util.py
++++ b/pungi/util.py
+@@ -789,7 +789,7 @@ def version_generator(compose, gen):
+         return compose.image_release
+     elif gen == '!VERSION_FROM_VERSION_DATE_RESPIN':
+         return '%s.%s.%s' % (compose.ci_base.release.version,
+-                             compose.ci_base.date,
++                             compose.compose_date,
+                              compose.compose_respin)
+     elif gen and gen[0] == '!':
+         raise RuntimeError("Unknown version generator '%s'" % gen)
+diff --git a/tests/test_util.py b/tests/test_util.py
+index 2b4c2d2..1f22b63 100644
+--- a/tests/test_util.py
++++ b/tests/test_util.py
+@@ -626,7 +626,6 @@ class TestVersionGenerator(unittest.TestCase):
+         ci.respin = 0
+         ci.id = 'RHEL-8.0-20180101.0'
+         ci.release.version = '8'
+-        ci.date = '20160101'
+         ci.type = 'nightly'
+         ci.type_suffix = ''
+         ci.label = 'RC-1.0'
+@@ -635,6 +634,7 @@ class TestVersionGenerator(unittest.TestCase):
+         self.compose = mock.MagicMock()
+         self.compose.ci_base = ci
+         self.compose.compose_respin = 0
++        self.compose.compose_date = '20160101'
+ 
+     def test_unknown_generator(self):
+         compose = mock.Mock()
+

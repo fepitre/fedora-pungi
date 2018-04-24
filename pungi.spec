@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.23
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -17,6 +17,7 @@ Patch6:         0006-Update-configuration-docs-with-module_defaults_dir.patch
 Patch7:         0007-Update-the-configuration-JSON-schema-for-module_defa.patch
 Patch8:         0008-Clone-module-defaults-into-work-directory.patch
 Patch9:         0009-init-Stop-creating-module-defaults-dir-twice.patch
+Patch10:        0010-Access-ci_base-date-via-compose.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -183,6 +184,10 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Tue Apr 24 2018 Kevin Fenzi <kevin@scrye.com> - 4.1.23-5
+- Backport fix for Accessing ci_base date via compose
+- https://pagure.io/pungi/pull-request/910
+
 * Thu Apr 12 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.23-4
 - Stop creating module defaults dir twice
 
