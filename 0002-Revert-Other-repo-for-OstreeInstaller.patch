@@ -1,21 +1,21 @@
-From fcc431622fc0305248bb966271c71c8d17fd5f69 Mon Sep 17 00:00:00 2001
+From c62eb8dd27bc17406649e3560223f20b690de63f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 09:19:53 +0200
-Subject: [PATCH 2/9] Revert "Other repo for OstreeInstaller"
+Subject: [PATCH 2/3] Revert "Other repo for OstreeInstaller"
 
 This reverts commit 5c081cb545715c2a912ff50fa57554e89d905868.
 ---
  pungi/checks.py                      |  3 ++-
- pungi/phases/ostree_installer.py     |  8 ++-----
- pungi/util.py                        | 21 +++++-------------
- tests/test_ostree_installer_phase.py | 43 +++++++++++++++---------------------
- 4 files changed, 28 insertions(+), 47 deletions(-)
+ pungi/phases/ostree_installer.py     | 11 ++------
+ pungi/util.py                        | 21 +++++----------
+ tests/test_ostree_installer_phase.py | 50 +++++++++++++-----------------------
+ 4 files changed, 28 insertions(+), 57 deletions(-)
 
 diff --git a/pungi/checks.py b/pungi/checks.py
-index 6233d5d7..189ca948 100644
+index d84f24ad..0c0623d6 100644
 --- a/pungi/checks.py
 +++ b/pungi/checks.py
-@@ -938,7 +938,7 @@ def make_schema():
+@@ -944,7 +944,7 @@ def make_schema():
                              "tag_ref": {"type": "boolean"},
                              "ostree_ref": {"type": "string"},
                          },
@@ -24,7 +24,7 @@ index 6233d5d7..189ca948 100644
                          "additionalProperties": False,
                      }),
                  ]
-@@ -959,6 +959,7 @@ def make_schema():
+@@ -965,6 +965,7 @@ def make_schema():
                      "template_repo": {"type": "string"},
                      "template_branch": {"type": "string"},
                  },
@@ -33,7 +33,7 @@ index 6233d5d7..189ca948 100644
              }),
  
 diff --git a/pungi/phases/ostree_installer.py b/pungi/phases/ostree_installer.py
-index b7843195..9bf5e255 100644
+index a78fccad..9bf5e255 100644
 --- a/pungi/phases/ostree_installer.py
 +++ b/pungi/phases/ostree_installer.py
 @@ -9,7 +9,7 @@ from kobo import shortcuts
@@ -45,13 +45,16 @@ index b7843195..9bf5e255 100644
  from ..wrappers import kojiwrapper, iso, lorax, scm
  
  
-@@ -64,11 +64,7 @@ class OstreeInstallerThread(WorkerThread):
+@@ -64,14 +64,7 @@ class OstreeInstallerThread(WorkerThread):
          self.pool.log_info('[BEGIN] %s' % msg)
          self.logdir = compose.paths.log.topdir('%s/%s/ostree_installer-%s' % (arch, variant, self.num))
  
 -        repo_baseurl = compose.paths.work.arch_repo('$basearch', create_dir=False)
+-        comps_baseurl = compose.paths.work.comps_repo('$basearch', variant=variant, create_dir=False)
 -        repos = get_repo_urls(None,  # compose==None. Special value says that method should ignore deprecated variant-type repo
--                              shortcuts.force_list(config['repo']) + shortcuts.force_list(translate_path(compose, repo_baseurl)),
+-                              shortcuts.force_list(config['repo'])
+-                              + shortcuts.force_list(translate_path(compose, repo_baseurl))
+-                              + shortcuts.force_list(translate_path(compose, comps_baseurl)),
 -                              arch=arch,
 -                              logger=self.pool)
 +        repos = get_repo_urls(compose, shortcuts.force_list(config['repo']), arch=arch)
@@ -59,10 +62,10 @@ index b7843195..9bf5e255 100644
          output_dir = os.path.join(compose.paths.work.topdir(arch), variant.uid, 'ostree_installer')
          util.makedirs(os.path.dirname(output_dir))
 diff --git a/pungi/util.py b/pungi/util.py
-index 261f3f25..8ea945da 100644
+index 19df1f49..431c9978 100644
 --- a/pungi/util.py
 +++ b/pungi/util.py
-@@ -678,8 +678,6 @@ def get_repo_url(compose, repo, arch='$basearch'):
+@@ -683,8 +683,6 @@ def get_repo_url(compose, repo, arch='$basearch'):
      Convert repo to repo URL.
  
      @param compose - required for access to variants
@@ -71,7 +74,7 @@ index 261f3f25..8ea945da 100644
      @param repo - string or a dict which at least contains 'baseurl' key
      @param arch - string to be used as arch in repo url
      """
-@@ -690,17 +688,14 @@ def get_repo_url(compose, repo, arch='$basearch'):
+@@ -695,17 +693,14 @@ def get_repo_url(compose, repo, arch='$basearch'):
              raise RuntimeError('Baseurl is required in repo dict %s' % str(repo))
      if '://' not in repo:
          # this is a variant name
@@ -93,7 +96,7 @@ index 261f3f25..8ea945da 100644
      """
      Convert repos to a list of repo URLs.
  
-@@ -711,11 +706,7 @@ def get_repo_urls(compose, repos, arch='$basearch', logger=None):
+@@ -716,11 +711,7 @@ def get_repo_urls(compose, repos, arch='$basearch', logger=None):
      urls = []
      for repo in repos:
          repo = get_repo_url(compose, repo, arch=arch)
@@ -106,7 +109,7 @@ index 261f3f25..8ea945da 100644
      return urls
  
  
-@@ -773,7 +764,7 @@ def get_repo_dicts(repos, logger=None):
+@@ -778,7 +769,7 @@ def get_repo_dicts(repos, logger=None):
          repo_dict = get_repo_dict(repo)
          if repo_dict == {}:
              if logger:
@@ -116,7 +119,7 @@ index 261f3f25..8ea945da 100644
              repo_dicts.append(repo_dict)
      return repo_dicts
 diff --git a/tests/test_ostree_installer_phase.py b/tests/test_ostree_installer_phase.py
-index 1c7af1ad..ba56d8c7 100644
+index e3af4468..ba56d8c7 100644
 --- a/tests/test_ostree_installer_phase.py
 +++ b/tests/test_ostree_installer_phase.py
 @@ -14,7 +14,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -155,29 +158,31 @@ index 1c7af1ad..ba56d8c7 100644
              'release': '20160321.n.0',
          }
          koji = KojiWrapper.return_value
-@@ -159,7 +155,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -159,8 +155,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
          t.process((self.compose, self.compose.variants['Everything'], 'x86_64', cfg), 1)
  
          self.assertRunrootCall(koji,
--                               'http://example.com/work/$basearch/repo',
+-                               ['http://example.com/work/$basearch/repo',
+-                                'http://example.com/work/$basearch/comps_repo_Everything'],
 +                               'file://%s/compose/Everything/x86_64/os' % self.topdir,
                                 cfg['release'],
                                 extra=['--logfile=%s/%s/lorax.log' % (self.topdir, LOG_PATH)])
          self.assertIsoLinked(link, get_file_size, get_mtime, final_iso_path)
-@@ -194,11 +190,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -195,12 +190,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
  
          t.process((self.compose, self.compose.variants['Everything'], 'x86_64', cfg), 1)
  
 -        self.assertRunrootCall(koji,
 -                               ('http://example.com/repo/x86_64/',
--                                'http://example.com/work/$basearch/repo'),
+-                                'http://example.com/work/$basearch/repo',
+-                                'http://example.com/work/$basearch/comps_repo_Everything'),
 -                               cfg['release'],
 -                               isfinal=True,
 +        self.assertRunrootCall(koji, 'http://example.com/repo/x86_64/', cfg['release'], isfinal=True,
                                 extra=['--logfile=%s/%s/lorax.log' % (self.topdir, LOG_PATH)])
          self.assertIsoLinked(link, get_file_size, get_mtime, final_iso_path)
          self.assertImageAdded(self.compose, ImageCls, iso)
-@@ -217,7 +209,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -219,7 +209,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
          cfg = {
              'release': '20160321.n.0',
              'repo': [
@@ -186,7 +191,7 @@ index 1c7af1ad..ba56d8c7 100644
                  'https://example.com/extra-repo1.repo',
                  'https://example.com/extra-repo2.repo',
              ],
-@@ -234,9 +226,9 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -236,10 +226,9 @@ class OstreeThreadTest(helpers.PungiTestCase):
          t.process((self.compose, self.compose.variants['Everything'], 'x86_64', cfg), 1)
  
          sources = [
@@ -194,11 +199,12 @@ index 1c7af1ad..ba56d8c7 100644
              'https://example.com/extra-repo1.repo',
 -            'https://example.com/extra-repo2.repo',
 -            'http://example.com/work/$basearch/repo',
+-            'http://example.com/work/$basearch/comps_repo_Everything',
 +            'https://example.com/extra-repo2.repo'
          ]
  
          self.assertRunrootCall(koji, sources, cfg['release'], isfinal=True,
-@@ -255,8 +247,8 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -258,8 +247,8 @@ class OstreeThreadTest(helpers.PungiTestCase):
          cfg = {
              'release': '20160321.n.0',
              'repo': [
@@ -209,7 +215,7 @@ index 1c7af1ad..ba56d8c7 100644
                  'https://example.com/extra-repo1.repo',
                  'https://example.com/extra-repo2.repo',
              ],
-@@ -273,9 +265,10 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -276,10 +265,10 @@ class OstreeThreadTest(helpers.PungiTestCase):
          t.process((self.compose, self.compose.variants['Everything'], 'x86_64', cfg), 1)
  
          sources = [
@@ -218,11 +224,12 @@ index 1c7af1ad..ba56d8c7 100644
              'https://example.com/extra-repo1.repo',
 -            'https://example.com/extra-repo2.repo',
 -            'http://example.com/work/$basearch/repo',
+-            'http://example.com/work/$basearch/comps_repo_Everything',
 +            'https://example.com/extra-repo2.repo'
          ]
  
          self.assertRunrootCall(koji, sources, cfg['release'], isfinal=True,
-@@ -326,7 +319,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -330,7 +319,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
                                   get_dir_from_scm):
          pool = mock.Mock()
          cfg = {
@@ -231,16 +238,17 @@ index 1c7af1ad..ba56d8c7 100644
              'release': '20160321.n.0',
              'add_template': ['some_file.txt'],
              'add_arch_template': ['other_file.txt'],
-@@ -353,7 +346,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -357,8 +346,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
                                       'branch': 'f24', 'dir': '.'},
                                      templ_dir, logger=pool._logger)])
          self.assertRunrootCall(koji,
--                               'http://example.com/work/$basearch/repo',
+-                               ['http://example.com/work/$basearch/repo',
+-                                'http://example.com/work/$basearch/comps_repo_Everything'],
 +                               'file://%s/compose/Everything/x86_64/os' % self.topdir,
                                 cfg['release'],
                                 isfinal=True,
                                 extra=['--add-template=%s/some_file.txt' % templ_dir,
-@@ -374,7 +367,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -379,7 +367,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
                                                     get_file_size, get_mtime, ImageCls, run):
          pool = mock.Mock()
          cfg = {
@@ -249,16 +257,17 @@ index 1c7af1ad..ba56d8c7 100644
              'release': '!RELEASE_FROM_LABEL_DATE_TYPE_RESPIN',
              "installpkgs": ["fedora-productimg-atomic"],
              "add_template": ["/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl"],
-@@ -406,7 +399,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -411,8 +399,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
  
          self.assertRunrootCall(
              koji,
--            'http://example.com/work/$basearch/repo',
+-            ['http://example.com/work/$basearch/repo',
+-             'http://example.com/work/$basearch/comps_repo_Everything'],
 +            'file://%s/compose/Everything/x86_64/os' % self.topdir,
              '20151203.t.0',
              isfinal=True,
              extra=['--installpkgs=fedora-productimg-atomic',
-@@ -435,7 +428,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -441,7 +428,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
                                         get_file_size, get_mtime, ImageCls, run):
          pool = mock.Mock()
          cfg = {
@@ -267,15 +276,16 @@ index 1c7af1ad..ba56d8c7 100644
              'release': None,
              "installpkgs": ["fedora-productimg-atomic"],
              "add_template": ["/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl"],
-@@ -467,7 +460,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
+@@ -473,8 +460,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
  
          self.assertRunrootCall(
              koji,
--            'http://example.com/work/$basearch/repo',
+-            ['http://example.com/work/$basearch/repo',
+-             'http://example.com/work/$basearch/comps_repo_Everything'],
 +            'file://%s/compose/Everything/x86_64/os' % self.topdir,
              '20151203.t.0',
              isfinal=True,
              extra=['--installpkgs=fedora-productimg-atomic',
 -- 
-2.13.6
+2.14.3
 

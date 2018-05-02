@@ -1,36 +1,40 @@
-From 8a7bf97434cbbf2397d3209498eacc326fc130f2 Mon Sep 17 00:00:00 2001
+From f51543a24a35145ecbc60e86951accf5369df364 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 09:20:51 +0200
-Subject: [PATCH 3/9] Revert "Ostree can use pkgset repos"
+Subject: [PATCH 3/3] Revert "Ostree can use pkgset repos"
 
 This reverts commit c7cc200246300c6a3946b2e3a9f5f7693896a7d6.
 ---
- pungi/phases/ostree.py               |  3 +--
- pungi/util.py                        | 35 +++++++++++++++++-------------
- tests/test_config_validate_script.py |  4 +++-
- tests/test_ostree_phase.py           | 41 ++++++++----------------------------
- tests/test_util.py                   | 26 +++++++++++++++--------
- 5 files changed, 50 insertions(+), 59 deletions(-)
+ pungi/phases/ostree.py               |  7 +----
+ pungi/util.py                        | 35 +++++++++++++-----------
+ tests/test_config_validate_script.py |  4 ++-
+ tests/test_ostree_phase.py           | 52 +++++++-----------------------------
+ tests/test_util.py                   | 26 +++++++++++-------
+ 5 files changed, 50 insertions(+), 74 deletions(-)
 
 diff --git a/pungi/phases/ostree.py b/pungi/phases/ostree.py
-index 787bf07a..0550b18c 100644
+index 2918fff8..0550b18c 100644
 --- a/pungi/phases/ostree.py
 +++ b/pungi/phases/ostree.py
-@@ -58,8 +58,7 @@ class OSTreeThread(WorkerThread):
+@@ -58,12 +58,7 @@ class OSTreeThread(WorkerThread):
          repodir = os.path.join(workdir, 'config_repo')
          self._clone_repo(repodir, config['config_url'], config.get('config_branch', 'master'))
  
 -        repo_baseurl = compose.paths.work.arch_repo('$basearch', create_dir=False)
--        repos = get_repo_dicts(shortcuts.force_list(config['repo']) + shortcuts.force_list(translate_path(compose, repo_baseurl)), logger=self.pool)
+-        comps_repo = compose.paths.work.comps_repo('$basearch', variant=variant, create_dir=False)
+-        repos = shortcuts.force_list(config['repo']) + [translate_path(compose, repo_baseurl)]
+-        if compose.has_comps:
+-            repos.append(translate_path(compose, comps_repo))
+-        repos = get_repo_dicts(repos, logger=self.pool)
 +        repos = get_repo_dicts(compose, shortcuts.force_list(config['repo']))
  
          # copy the original config and update before save to a json file
          new_config = copy.copy(config)
 diff --git a/pungi/util.py b/pungi/util.py
-index 8ea945da..b095598c 100644
+index 431c9978..61a13244 100644
 --- a/pungi/util.py
 +++ b/pungi/util.py
-@@ -718,16 +718,19 @@ def _translate_url_to_repo_id(url):
+@@ -723,16 +723,19 @@ def _translate_url_to_repo_id(url):
      return ''.join([s if s in list(_REPOID_CHARS) else '_' for s in url])
  
  
@@ -55,7 +59,7 @@ index 8ea945da..b095598c 100644
      """
      repo_dict = {}
      if isinstance(repo, dict):
-@@ -737,8 +740,10 @@ def get_repo_dict(repo):
+@@ -742,8 +745,10 @@ def get_repo_dict(repo):
              if name is None:
                  name = _translate_url_to_repo_id(url)
          else:
@@ -68,7 +72,7 @@ index 8ea945da..b095598c 100644
          repo['name'] = name
          repo['baseurl'] = url
          return repo
-@@ -749,24 +754,24 @@ def get_repo_dict(repo):
+@@ -754,24 +759,24 @@ def get_repo_dict(repo):
              repo_dict['name'] = _translate_url_to_repo_id(repo)
              repo_dict['baseurl'] = repo
          else:
@@ -124,7 +128,7 @@ index 031a15a4..c73fe126 100644
          interp = 'python2' if six.PY2 else 'python3'
          p = subprocess.Popen([interp, PUNGI_CONFIG_VALIDATE, DUMMY_CONFIG],
 diff --git a/tests/test_ostree_phase.py b/tests/test_ostree_phase.py
-index d57dc682..3a9ebf32 100644
+index ad14eca4..3a9ebf32 100644
 --- a/tests/test_ostree_phase.py
 +++ b/tests/test_ostree_phase.py
 @@ -118,7 +118,7 @@ class OSTreeThreadTest(helpers.PungiTestCase):
@@ -136,10 +140,12 @@ index d57dc682..3a9ebf32 100644
              ]
          })
          self.pool = mock.Mock()
-@@ -150,28 +150,6 @@ class OSTreeThreadTest(helpers.PungiTestCase):
+@@ -148,36 +148,6 @@ class OSTreeThreadTest(helpers.PungiTestCase):
+             return {'task_id': 1234, 'retcode': retcode, 'output': 'Foo bar\n'}
+         return fake_runroot
  
-     @mock.patch('pungi.wrappers.scm.get_dir_from_scm')
-     @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
+-    @mock.patch('pungi.wrappers.scm.get_dir_from_scm')
+-    @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
 -    def test_extra_config_content(self, KojiWrapper, get_dir_from_scm):
 -        get_dir_from_scm.side_effect = self._dummy_config_repo
 -        self.compose.conf['runroot_weights'] = {'ostree': 123}
@@ -157,15 +163,21 @@ index d57dc682..3a9ebf32 100644
 -        self.assertTrue(os.path.isfile(extra_config_file))
 -        with open(extra_config_file, 'r') as f:
 -            extraconf_content = json.load(f)
--        proper_extraconf_content = json.loads('{"repo": [{"name": "http:__example.com_work__basearch_repo", "baseurl": "http://example.com/work/$basearch/repo"}]}')
+-
+-        proper_extraconf_content = {
+-            "repo": [
+-                {"name": "http:__example.com_work__basearch_repo",
+-                 "baseurl": "http://example.com/work/$basearch/repo"},
+-                {"name": "http:__example.com_work__basearch_comps_repo_Everything",
+-                 "baseurl": "http://example.com/work/$basearch/comps_repo_Everything"}
+-            ]
+-        }
 -        self.assertEqual(proper_extraconf_content, extraconf_content)
 -
--    @mock.patch('pungi.wrappers.scm.get_dir_from_scm')
--    @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
+     @mock.patch('pungi.wrappers.scm.get_dir_from_scm')
+     @mock.patch('pungi.wrappers.kojiwrapper.KojiWrapper')
      def test_run(self, KojiWrapper, get_dir_from_scm):
-         get_dir_from_scm.side_effect = self._dummy_config_repo
-         self.compose.conf['runroot_weights'] = {'ostree': 123}
-@@ -291,7 +269,7 @@ class OSTreeThreadTest(helpers.PungiTestCase):
+@@ -299,7 +269,7 @@ class OSTreeThreadTest(helpers.PungiTestCase):
                                      arch='x86_64',
                                      ref='fedora-atomic/25/x86_64',
                                      commitid=None,
@@ -174,7 +186,7 @@ index d57dc682..3a9ebf32 100644
                                      local_repo_path=self.repo)])
  
      @mock.patch('pungi.wrappers.scm.get_dir_from_scm')
-@@ -424,14 +402,14 @@ class OSTreeThreadTest(helpers.PungiTestCase):
+@@ -432,14 +402,14 @@ class OSTreeThreadTest(helpers.PungiTestCase):
          koji.run_runroot_cmd.side_effect = self._mock_runroot(0)
  
          cfg = {
@@ -192,7 +204,7 @@ index d57dc682..3a9ebf32 100644
                      'name': 'Server',
                      'baseurl': 'Server',
                      'exclude': 'systemd-container'
-@@ -450,13 +428,12 @@ class OSTreeThreadTest(helpers.PungiTestCase):
+@@ -458,16 +428,12 @@ class OSTreeThreadTest(helpers.PungiTestCase):
  
          extra_config_file = os.path.join(self.topdir, 'work/ostree-1/extra_config.json')
          self.assertTrue(os.path.isfile(extra_config_file))
@@ -200,7 +212,10 @@ index d57dc682..3a9ebf32 100644
 -            extra_config = json.load(extra_config_fd)
 +        extra_config = json.load(open(extra_config_file, 'r'))
          self.assertTrue(extra_config.get('keep_original_sources', False))
--        self.assertEqual(len(extra_config.get('repo', [])), 2)  # should equal to number of valid repositories in cfg['repo'] + default repository
+-        # should equal to number of valid repositories in cfg['repo'] + default repository + comps repository
+-        self.assertEqual(len(extra_config.get('repo', [])), 3)
+-        self.assertEqual(extra_config.get('repo').pop()['baseurl'],
+-                         'http://example.com/work/$basearch/comps_repo_Everything')
 -        self.assertEqual(extra_config.get('repo').pop()['baseurl'], 'http://example.com/work/$basearch/repo')
 +        self.assertEqual(len(extra_config.get('repo', [])), len(cfg['repo']))
 +        self.assertEqual(extra_config.get('repo').pop()['baseurl'], 'http://example.com/Server/$basearch/os')
@@ -211,7 +226,7 @@ index d57dc682..3a9ebf32 100644
  if __name__ == '__main__':
      unittest.main()
 diff --git a/tests/test_util.py b/tests/test_util.py
-index 2b4c2d2c..b4c85a57 100644
+index 1f22b63e..322301ff 100644
 --- a/tests/test_util.py
 +++ b/tests/test_util.py
 @@ -588,35 +588,43 @@ class GetRepoFuncsTestCase(unittest.TestCase):
@@ -268,5 +283,5 @@ index 2b4c2d2c..b4c85a57 100644
  
  
 -- 
-2.13.6
+2.14.3
 

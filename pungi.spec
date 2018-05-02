@@ -1,23 +1,15 @@
 Name:           pungi
-Version:        4.1.23
-Release:        5%{?dist}
+Version:        4.1.24
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-tests-Use-dummy-modulesdir-for-DNF.patch
-Patch1:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
-Patch2:         0002-Revert-Other-repo-for-OstreeInstaller.patch
-Patch3:         0003-Revert-Ostree-can-use-pkgset-repos.patch
-Patch4:         0004-Include-module-defaults-in-the-repodata.patch
-Patch5:         0005-Handle-relative-paths-in-module_defaults_dir.patch
-Patch6:         0006-Update-configuration-docs-with-module_defaults_dir.patch
-Patch7:         0007-Update-the-configuration-JSON-schema-for-module_defa.patch
-Patch8:         0008-Clone-module-defaults-into-work-directory.patch
-Patch9:         0009-init-Stop-creating-module-defaults-dir-twice.patch
-Patch10:        0010-Access-ci_base-date-via-compose.patch
+Patch0:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
+Patch1:         0002-Revert-Other-repo-for-OstreeInstaller.patch
+Patch2:         0003-Revert-Ostree-can-use-pkgset-repos.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -42,7 +34,7 @@ BuildRequires:  python3-koji
 BuildRequires:  python3-unittest2
 BuildRequires:  lorax
 BuildRequires:  python3-PyYAML
-BuildRequires:  libmodulemd
+BuildRequires:  libmodulemd >= 1.3.0
 BuildRequires:  python3-gobject
 
 #deps for doc building
@@ -75,7 +67,7 @@ Requires:       python3-multilib
 Requires:       python3-libcomps
 Requires:       python3-six
 Requires:       python3-koji
-Requires:       libmodulemd
+Requires:       libmodulemd >= 1.3.0
 Requires:       python3-gobject
 Requires:       python3-pdc-client
 
@@ -184,6 +176,52 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed May 02 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.24-1
+- koji-wrapper: Log failed subtasks (lsedlar)
+- Update compose status when config validation fails (lsedlar)
+- pkgset: Allow different inheritance for modules (lsedlar)
+- ostree: Recognize force_new_commit option in old config (lsedlar)
+- modules: Correctly report error for unexpected modules (lsedlar)
+- modules: Allow context in variants XML (lsedlar)
+- gather: Print profiling information to stderr (lsedlar)
+- pkgset: Stop creating database for repodata (jkaluza)
+- gather: Use another variant as lookaside (lsedlar)
+- buildinstall: Use metadata if skipped (lsedlar)
+- Allow reusing pkgset FileCache from old composes. (jkaluza)
+- validation: Populate dict of all variants (lsedlar)
+- gather: Stop pulling debuginfo and source for lookaside packages (lsedlar)
+- Only use comps repo if we really have comps (lsedlar)
+- pkgset: Use modules PDC API (lsedlar)
+- Access ci_base date via compose (puiterwijk)
+- Allow filtering comps for different variants (lsedlar)
+- comps: Make filtering by attribute more generic (lsedlar)
+- pkgset: Dump downloaded modulemd to logs (lsedlar)
+- Fix PEP8 warning about if not x in y (lsedlar)
+- Variant as a lookaside - configuration (onosek)
+- Remove comps from arch repo (lsedlar)
+- init: Stop creating module defaults dir twice (lsedlar)
+- gather: Reduce logs from DNF gathering (lsedlar)
+- Clone module defaults into work/ directory (lsedlar)
+- Update the configuration JSON schema for module_defaults_dir (contyk)
+- Update configuration docs with module_defaults_dir (contyk)
+- Handle relative paths in module_defaults_dir (contyk)
+- Include module defaults in the repodata (contyk)
+- Add *.in fixtures to tarball (lsedlar)
+- init: Always filter comps file (lsedlar)
+- docs: Describe comps processing (lsedlar)
+- gather: Use comps for given variant (lsedlar)
+- docs: Fix typo (lsedlar)
+- Add all packages to whitelist for hybrid variant (lsedlar)
+- comps: Add tests for CompsFilter (lsedlar)
+- comps: Move filtering into wrapper module (lsedlar)
+- Tests fail if unittest2 library is missing (onosek)
+- Add unittest2 and rpmdevools to contributing doc (rmarshall)
+- pkgset: Construct UID for PDC modules (lsedlar)
+- gather: Simplify creating temporary directory (lsedlar)
+- buildinstall: Add extra repos (lsedlar)
+- tests: Use dummy modulesdir for DNF (lsedlar)
+- Update tests for Python 2.6 (onosek)
+
 * Tue Apr 24 2018 Kevin Fenzi <kevin@scrye.com> - 4.1.23-5
 - Backport fix for Accessing ci_base date via compose
 - https://pagure.io/pungi/pull-request/910
