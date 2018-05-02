@@ -1,0 +1,102 @@
+From c2fb790652ab9b6f1b03ebd61e70838c0695d1fd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Wed, 2 May 2018 15:36:52 +0200
+Subject: [PATCH 4/4] Update tests for libmodulemd 1.4.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+It got a little picky about allowed inputs. We need full RPM NEVRA in
+all tests.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ tests/test_createrepophase.py      |  6 +++---
+ tests/test_gather_source_module.py | 14 +++++++-------
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/tests/test_createrepophase.py b/tests/test_createrepophase.py
+index 6a2847a0..fa46272b 100644
+--- a/tests/test_createrepophase.py
++++ b/tests/test_createrepophase.py
+@@ -723,9 +723,9 @@ class TestCreateVariantRepo(PungiTestCase):
+         variant = compose.variants['Server']
+         variant.arch_mmds["x86_64"] = {}
+         variant.arch_mmds["x86_64"]["test-f27"] = variant.add_fake_module(
+-            "test:f27:1:2017", rpm_nvrs=["pkg-1.0.0-1"])
++            "test:f27:1:2017", rpm_nvrs=["pkg-0:1.0.0-1.x86_64"])
+         variant.arch_mmds["x86_64"]["test-f28"] = variant.add_fake_module(
+-            "test:f28:1:2017", rpm_nvrs=["pkg-2.0.0-1"])
++            "test:f28:1:2017", rpm_nvrs=["pkg-0:2.0.0-1.x86_64"])
+ 
+         def mocked_modifyrepo_cmd(repodir, mmd_path, **kwargs):
+             modules = Modulemd.Module.new_all_from_file(mmd_path)
+@@ -767,7 +767,7 @@ class TestCreateVariantRepo(PungiTestCase):
+         variant.arch_mmds["x86_64"]["test-f27"] = variant.add_fake_module(
+             "test:f27:1:2017", rpm_nvrs=["bash-0:4.3.30-2.fc21.x86_64"])
+         variant.arch_mmds["x86_64"]["test-f28"] = variant.add_fake_module(
+-            "test:f28:1:2017", rpm_nvrs=["pkg-2.0.0-1"])
++            "test:f28:1:2017", rpm_nvrs=["pkg-0:2.0.0-1.x86_64"])
+ 
+         def mocked_modifyrepo_cmd(repodir, mmd_path, **kwargs):
+             modules = Modulemd.Module.new_all_from_file(mmd_path)
+diff --git a/tests/test_gather_source_module.py b/tests/test_gather_source_module.py
+index e656f875..ae2a6bb7 100644
+--- a/tests/test_gather_source_module.py
++++ b/tests/test_gather_source_module.py
+@@ -24,17 +24,17 @@ class TestGatherSourceModule(helpers.PungiTestCase):
+         self.compose = helpers.DummyCompose(self.topdir, {})
+         self.compose.DEBUG = False
+         self.mmd = self.compose.variants["Server"].add_fake_module(
+-            "testmodule:master:1:2017", rpm_nvrs=["pkg-1.0.0-1.x86_64", "pkg-1.0.0-1.i686"])
++            "testmodule:master:1:2017", rpm_nvrs=["pkg-0:1.0.0-1.x86_64", "pkg-0:1.0.0-1.i686"])
+ 
+         mock_rpm = mock.Mock(version='1.0.0', release='1',
+                              epoch=0, excludearch=None, exclusivearch=None,
+-                             sourcerpm='pkg-1.0.0-1', nevra='pkg-1.0.0-1.x86_64',
++                             sourcerpm='pkg-1.0.0-1', nevra='pkg-0:1.0.0-1.x86_64',
+                              arch="x86_64")
+         mock_rpm.name = 'pkg'
+         self.compose.variants['Server'].pkgset.rpms_by_arch['x86_64'] = [mock_rpm]
+         mock_rpm = mock.Mock(version='1.0.0', release='1',
+                              epoch=0, excludearch=None, exclusivearch=None,
+-                             sourcerpm='pkg-1.0.0-1', nevra='pkg-1.0.0-1.i686',
++                             sourcerpm='pkg-1.0.0-1', nevra='pkg-0:1.0.0-1.i686',
+                              arch="i686")
+         mock_rpm.name = 'pkg'
+         self.compose.variants['Server'].pkgset.rpms_by_arch['i686'] = [mock_rpm]
+@@ -43,13 +43,13 @@ class TestGatherSourceModule(helpers.PungiTestCase):
+         source = GatherSourceModule(self.compose)
+         packages, groups = source("x86_64", self.compose.variants["Server"])
+         self.assertEqual(len(packages), 1)
+-        self.assertEqual(list(packages)[0][0].nevra, "pkg-1.0.0-1.x86_64")
++        self.assertEqual(list(packages)[0][0].nevra, "pkg-0:1.0.0-1.x86_64")
+         self.assertEqual(len(groups), 0)
+ 
+         variant = self.compose.variants["Server"]
+         arch_mmd = variant.arch_mmds["x86_64"]["testmodule-master"]
+         self.assertEqual(set(arch_mmd.get_rpm_artifacts().get()),
+-                         set(["pkg-1.0.0-1.x86_64"]))
++                         set(["pkg-0:1.0.0-1.x86_64"]))
+ 
+     def test_gather_multilib(self):
+         multilib = Modulemd.SimpleSet()
+@@ -60,13 +60,13 @@ class TestGatherSourceModule(helpers.PungiTestCase):
+         packages, groups = source("x86_64", self.compose.variants["Server"])
+         self.assertEqual(len(packages), 2)
+         self.assertEqual(set(package[0].nevra for package in packages),
+-                         set(["pkg-1.0.0-1.x86_64", "pkg-1.0.0-1.i686"]))
++                         set(["pkg-0:1.0.0-1.x86_64", "pkg-0:1.0.0-1.i686"]))
+         self.assertEqual(len(groups), 0)
+ 
+         variant = self.compose.variants["Server"]
+         arch_mmd = variant.arch_mmds["x86_64"]["testmodule-master"]
+         self.assertEqual(set(arch_mmd.get_rpm_artifacts().get()),
+-                         set(["pkg-1.0.0-1.x86_64", "pkg-1.0.0-1.i686"]))
++                         set(["pkg-0:1.0.0-1.x86_64", "pkg-0:1.0.0-1.i686"]))
+ 
+     def test_gather_filtered_module(self):
+         filter_set = Modulemd.SimpleSet()
+-- 
+2.14.3
+
