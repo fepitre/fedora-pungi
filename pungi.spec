@@ -36,6 +36,7 @@ BuildRequires:  lorax
 BuildRequires:  python3-PyYAML
 BuildRequires:  libmodulemd >= 1.3.0
 BuildRequires:  python3-gobject
+BuildRequires:  python3-pdc-client
 
 #deps for doc building
 BuildRequires:  python3-sphinx, texlive-collection-fontsrecommended
@@ -140,7 +141,6 @@ mv %{buildroot}%{_bindir}/pungi-2 %{buildroot}%{_bindir}/pungi
 rm -rf %{buildroot}%{python2_sitelib}/%{name}_utils
 
 %check
-# Temporarily disabled to avoid problems with DNF trying to write to /etc...
 nosetests-3 --exe
 
 %files
