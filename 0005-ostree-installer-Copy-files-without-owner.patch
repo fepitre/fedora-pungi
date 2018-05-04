@@ -1,0 +1,48 @@
+From 52a3c87c71522db59191f1f7e4e66cee72e67bf5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Fri, 4 May 2018 08:58:34 +0200
+Subject: [PATCH 5/5] ostree-installer: Copy files without owner
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The files created in koji runroot will be owned by root. If the compose
+is done under different user, there could be a problem with copying the
+files preserving the owner. Let's just copy them without that.
+
+Fixes: https://pagure.io/pungi/issue/932
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/ostree_installer.py     | 2 +-
+ tests/test_ostree_installer_phase.py | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/pungi/phases/ostree_installer.py b/pungi/phases/ostree_installer.py
+index 9bf5e255..58eede96 100644
+--- a/pungi/phases/ostree_installer.py
++++ b/pungi/phases/ostree_installer.py
+@@ -98,7 +98,7 @@ class OstreeInstallerThread(WorkerThread):
+         os_path = compose.paths.compose.os_tree(arch, variant)
+         boot_iso = os.path.join(output_dir, 'images', 'boot.iso')
+ 
+-        shortcuts.run('cp -av %s/* %s/' %
++        shortcuts.run('cp -rv %s/* %s/' %
+                       (shlex_quote(output_dir), shlex_quote(os_path)))
+         try:
+             os.link(boot_iso, iso_path)
+diff --git a/tests/test_ostree_installer_phase.py b/tests/test_ostree_installer_phase.py
+index ba56d8c7..62598315 100644
+--- a/tests/test_ostree_installer_phase.py
++++ b/tests/test_ostree_installer_phase.py
+@@ -123,7 +123,7 @@ class OstreeThreadTest(helpers.PungiTestCase):
+         self.assertTrue(os.path.isdir(self.topdir + '/work/x86_64/Everything/'))
+         self.assertFalse(os.path.isdir(self.topdir + '/work/x86_64/Everything/ostree_installer'))
+         self.assertEqual(run.call_args_list,
+-                         [mock.call('cp -av {0}/work/x86_64/Everything/ostree_installer/* {0}/compose/Everything/x86_64/os/'.format(self.topdir))])
++                         [mock.call('cp -rv {0}/work/x86_64/Everything/ostree_installer/* {0}/compose/Everything/x86_64/os/'.format(self.topdir))])
+ 
+     @mock.patch('kobo.shortcuts.run')
+     @mock.patch('productmd.images.Image')
+-- 
+2.14.3
+
