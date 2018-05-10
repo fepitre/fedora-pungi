@@ -1,7 +1,7 @@
 From 52a3c87c71522db59191f1f7e4e66cee72e67bf5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Fri, 4 May 2018 08:58:34 +0200
-Subject: [PATCH 5/5] ostree-installer: Copy files without owner
+Subject: [PATCH 5/7] ostree-installer: Copy files without owner
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

@@ -1,0 +1,38 @@
+From 5d0e7911e080d4244a071b9af441bcff88b8c6cf Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Thu, 10 May 2018 08:58:33 +0200
+Subject: [PATCH 7/7] init: Stop filtering comps environments all the time
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+For variants that contain all packages (Fedora's Everything) we don't
+want to lose any environments.
+
+Fixes: https://pagure.io/pungi/issue/940
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/init.py | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/pungi/phases/init.py b/pungi/phases/init.py
+index a8dcc967..4b9916d1 100644
+--- a/pungi/phases/init.py
++++ b/pungi/phases/init.py
+@@ -128,7 +128,12 @@ def write_variant_comps(compose, arch, variant):
+         unmatched = comps.filter_groups(variant.groups)
+         for grp in unmatched:
+             compose.log_warning(UNMATCHED_GROUP_MSG % (variant.uid, arch, grp))
+-    if compose.conf["comps_filter_environments"]:
++    contains_all = not variant.groups and not variant.environments
++    if compose.conf["comps_filter_environments"] and not contains_all:
++        # We only want to filter environments if it's enabled by configuration
++        # and it's a variant with some groups and environements defined. If
++        # there are none, all packages should go in there and also all
++        # environments should be preserved.
+         comps.filter_environments(variant.environments)
+     comps.write_comps()
+ 
+-- 
+2.14.3
+
