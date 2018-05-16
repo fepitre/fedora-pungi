@@ -1,7 +1,7 @@
 From 155e60563a6f1a2d593525e563a8e45a4fc4f38c Mon Sep 17 00:00:00 2001
 From: Patrick Uiterwijk <puiterwijk@redhat.com>
 Date: Wed, 9 May 2018 23:17:59 +0200
-Subject: [PATCH 6/7] Make wait-for-signed-ostree repeat the fedmsg in case the
+Subject: [PATCH 6/8] Make wait-for-signed-ostree repeat the fedmsg in case the
  signer crashed
 
 Signed-off-by: Patrick Uiterwijk <puiterwijk@redhat.com>

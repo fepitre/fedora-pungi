@@ -1,7 +1,7 @@
 From 5d0e7911e080d4244a071b9af441bcff88b8c6cf Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Thu, 10 May 2018 08:58:33 +0200
-Subject: [PATCH 7/7] init: Stop filtering comps environments all the time
+Subject: [PATCH 7/8] init: Stop filtering comps environments all the time
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

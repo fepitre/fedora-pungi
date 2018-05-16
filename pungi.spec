@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.24
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -14,6 +14,7 @@ Patch3:         0004-Update-tests-for-libmodulemd-1.4.0.patch
 Patch4:         0005-ostree-installer-Copy-files-without-owner.patch
 Patch5:         0006-Make-wait-for-signed-ostree-repeat-the-fedmsg-in-cas.patch
 Patch6:         0007-init-Stop-filtering-comps-environments-all-the-time.patch
+Patch7:         0008-ostree-installer-Use-Python-function-to-copy.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -180,6 +181,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed May 16 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.24-4
+- Use python function to copy ostree installer output
+
 * Thu May 10 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.24-3
 - Make wait-for-signed-ostree repeat the fedmsg in case the signer crashed
 - Stop filtering comps environments all the time

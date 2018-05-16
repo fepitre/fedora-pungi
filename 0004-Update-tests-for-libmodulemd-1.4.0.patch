@@ -1,7 +1,7 @@
 From c2fb790652ab9b6f1b03ebd61e70838c0695d1fd Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 2 May 2018 15:36:52 +0200
-Subject: [PATCH 4/7] Update tests for libmodulemd 1.4.0
+Subject: [PATCH 4/8] Update tests for libmodulemd 1.4.0
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
