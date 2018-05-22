@@ -1,24 +1,24 @@
-From fa0ed11ee0c733e9c3e4785f6526ef889109111c Mon Sep 17 00:00:00 2001
+From c6bb04041867c242629c9becd83d47f2722b2432 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 09:18:59 +0200
-Subject: [PATCH 1/8] Revert "Move ostree phase and pipelines for running
+Subject: [PATCH 1/3] Revert "Move ostree phase and pipelines for running
  phases"
 
 This reverts commit 660c04368ba1abed310f121d01f0fa029eea5f11.
 ---
- bin/pungi-koji           |  52 +++++---
- doc/_static/phases.svg   | 339 ++++++++++++++++++++++-------------------------
- pungi/phases/__init__.py |  19 ++-
- pungi/phases/weaver.py   |  72 ----------
- tests/test_phase_base.py | 129 ++++--------------
- 5 files changed, 230 insertions(+), 381 deletions(-)
+ bin/pungi-koji           |  54 +++++++++-------
+ doc/_static/phases.svg   | 162 +++++++++++++++++++++++++++++++++++------------
+ pungi/phases/__init__.py |  19 +++++-
+ pungi/phases/weaver.py   |  72 ---------------------
+ tests/test_phase_base.py | 129 ++++++++-----------------------------
+ 5 files changed, 198 insertions(+), 238 deletions(-)
  delete mode 100644 pungi/phases/weaver.py
 
 diff --git a/bin/pungi-koji b/bin/pungi-koji
-index 9dd1cd65..0bb66d2c 100755
+index b3b49de5..e797ce86 100755
 --- a/bin/pungi-koji
 +++ b/bin/pungi-koji
-@@ -358,27 +358,41 @@ def run_compose(compose, create_latest_link=True, latest_link_status=None):
+@@ -365,27 +365,41 @@ def run_compose(compose, create_latest_link=True, latest_link_status=None):
              # Store the password
              compose.conf["signing_key_password"] = signing_key_password
  
@@ -71,12 +71,13 @@ index 9dd1cd65..0bb66d2c 100755
  
      # write treeinfo before ISOs are created
      for variant in compose.get_variants():
-@@ -394,16 +408,11 @@ def run_compose(compose, create_latest_link=True, latest_link_status=None):
+@@ -401,17 +415,12 @@ def run_compose(compose, create_latest_link=True, latest_link_status=None):
              pungi.metadata.write_media_repo(compose, arch, variant, timestamp)
  
      # Start all phases for image artifacts
 -    compose_images_schema = (
 -        createiso_phase,
+-        extra_isos_phase,
 -        liveimages_phase,
 -        image_build_phase,
 -        livemedia_phase,
@@ -86,6 +87,7 @@ index 9dd1cd65..0bb66d2c 100755
 -    compose_images_phase.start()
 -    compose_images_phase.stop()
 +    pungi.phases.run_all([createiso_phase,
++                          extra_isos_phase,
 +                          liveimages_phase,
 +                          image_build_phase,
 +                          livemedia_phase,
@@ -93,7 +95,7 @@ index 9dd1cd65..0bb66d2c 100755
  
      image_checksum_phase.start()
      image_checksum_phase.stop()
-@@ -412,6 +421,7 @@ def run_compose(compose, create_latest_link=True, latest_link_status=None):
+@@ -420,6 +429,7 @@ def run_compose(compose, create_latest_link=True, latest_link_status=None):
      compose.im.dump(compose.paths.compose.metadata("images.json"))
      osbs_phase.dump_metadata()
  
@@ -102,51 +104,10 @@ index 9dd1cd65..0bb66d2c 100755
      test_phase.stop()
  
 diff --git a/doc/_static/phases.svg b/doc/_static/phases.svg
-index 66184b15..072e5dd2 100644
+index 7bbc5e1f..611eb06b 100644
 --- a/doc/_static/phases.svg
 +++ b/doc/_static/phases.svg
-@@ -14,7 +14,7 @@
-    viewBox="0 0 839.33334 220.33335"
-    id="svg2"
-    version="1.1"
--   inkscape:version="0.91 r13725"
-+   inkscape:version="0.92+devel unknown"
-    sodipodi:docname="phases.svg"
-    inkscape:export-filename="/home/lsedlar/repos/pungi/doc/_static/phases.png"
-    inkscape:export-xdpi="90"
-@@ -26,16 +26,16 @@
-      borderopacity="1.0"
-      inkscape:pageopacity="1"
-      inkscape:pageshadow="2"
--     inkscape:zoom="1.6532468"
--     inkscape:cx="337.4932"
--     inkscape:cy="70.825454"
-+     inkscape:zoom="0.8266234"
-+     inkscape:cx="226.63066"
-+     inkscape:cy="201.60264"
-      inkscape:document-units="px"
-      inkscape:current-layer="layer1"
-      showgrid="false"
-      inkscape:window-width="1920"
--     inkscape:window-height="1020"
--     inkscape:window-x="1920"
--     inkscape:window-y="31"
-+     inkscape:window-height="1016"
-+     inkscape:window-x="0"
-+     inkscape:window-y="27"
-      inkscape:window-maximized="1"
-      units="px"
-      inkscape:document-rotation="0"
-@@ -67,7 +67,7 @@
-         <dc:format>image/svg+xml</dc:format>
-         <dc:type
-            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
--        <dc:title />
-+        <dc:title></dc:title>
-       </cc:Work>
-     </rdf:RDF>
-   </metadata>
-@@ -100,7 +100,87 @@
+@@ -104,7 +104,87 @@
             style="font-size:13.14787769px;line-height:1.25">Pkgset</tspan></text>
      </g>
      <g
@@ -235,17 +196,7 @@ index 66184b15..072e5dd2 100644
         id="g3446">
        <rect
           y="554.10059"
-@@ -115,8 +195,7 @@
-          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-          x="556.95709"
-          y="971.54041"
--         id="text3384-0"
--         sodipodi:linespacing="0%"><tspan
-+         id="text3384-0"><tspan
-            y="971.54041"
-            x="556.95709"
-            sodipodi:role="line"
-@@ -124,7 +203,7 @@
+@@ -127,7 +207,7 @@
             style="font-size:13.14749908px;line-height:1.25">ImageChecksum</tspan></text>
      </g>
      <g
@@ -254,17 +205,7 @@ index 66184b15..072e5dd2 100644
         id="g3398">
        <rect
           y="553.98242"
-@@ -139,8 +218,7 @@
-          style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-          x="557.61566"
-          y="971.33813"
--         id="text3396"
--         sodipodi:linespacing="0%"><tspan
-+         id="text3396"><tspan
-            sodipodi:role="line"
-            id="tspan3398"
-            x="557.61566"
-@@ -148,209 +226,107 @@
+@@ -150,14 +230,15 @@
             style="font-size:13.14787769px;line-height:1.25">Test</tspan></text>
      </g>
      <g
@@ -283,14 +224,8 @@ index 66184b15..072e5dd2 100644
           transform="matrix(0,1,1,0,0,0)" />
        <text
           xml:space="preserve"
-          style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
--         x="6.2600794"
--         y="891.1604"
--         id="text3356"
--         sodipodi:linespacing="0%"><tspan
-+         x="1.1060941"
-+         y="971.63348"
-+         id="text3356"><tspan
+@@ -167,8 +248,8 @@
+          id="text3356"><tspan
             sodipodi:role="line"
             id="tspan3358"
 -           x="6.2600794"
@@ -300,12 +235,9 @@ index 66184b15..072e5dd2 100644
             style="font-size:13.14787769px;line-height:1.25">Init</tspan></text>
      </g>
      <path
-        inkscape:connector-curvature="0"
-        id="path3642"
--       d="m 100.90864,859.8891 553.31842,0"
--       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.17466855px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend)" />
-+       d="M 100.90864,859.8891 H 712.42335"
-+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.23489845px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend)" />
+@@ -177,40 +258,41 @@
+        d="M 100.90864,859.8891 H 654.22706"
+        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.17466855px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend)" />
      <g
 -       id="g241"
 -       transform="translate(-60.108974,42.1407)">
@@ -325,7 +257,6 @@ index 66184b15..072e5dd2 100644
 +         y="254.60153"
           transform="matrix(0,1,1,0,0,0)" />
        <text
--         sodipodi:linespacing="0%"
           xml:space="preserve"
 -         style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
 -         x="403.15945"
@@ -366,87 +297,10 @@ index 66184b15..072e5dd2 100644
 +           id="rect3350"
 +           style="fill:#a40000;fill-rule:evenodd;stroke:none;stroke-width:1.10477591px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
          <text
--           sodipodi:linespacing="0%"
--           id="text3364"
--           y="891.06732"
--           x="105.76799"
--           style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
--           xml:space="preserve"><tspan
--             style="font-size:13.14787769px;line-height:1.25"
--             y="891.06732"
--             x="105.76799"
--             id="tspan3366"
--             sodipodi:role="line">Buildinstall</tspan></text>
--      </g>
--      <g
--         id="g3639">
--        <rect
--           transform="matrix(0,1,1,0,0,0)"
--           y="103.28194"
--           x="905.2099"
--           height="54.197887"
--           width="26.295755"
--           id="rect3344"
--           style="fill:#729fcf;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
--        <text
--           sodipodi:linespacing="0%"
--           id="text3368"
--           y="923.25934"
--           x="106.1384"
--           style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
--           xml:space="preserve"><tspan
--             style="font-size:13.14787769px;line-height:1.25"
--             y="923.25934"
--             x="106.1384"
--             id="tspan3370"
--             sodipodi:role="line">Gather</tspan></text>
--      </g>
--      <g
--         id="g3647">
--        <g
--           id="g3644">
--          <rect
--             style="fill:#ad7fa8;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
--             id="rect3346"
--             width="26.295755"
--             height="72.729973"
--             x="905.2099"
--             y="162.92607"
--             transform="matrix(0,1,1,0,0,0)" />
--        </g>
--        <text
--           sodipodi:linespacing="0%"
--           id="text3372"
--           y="923.25934"
--           x="165.23042"
--           style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
--           xml:space="preserve"><tspan
--             style="font-size:13.14787769px;line-height:1.25"
--             y="923.25934"
--             x="165.23042"
--             id="tspan3374"
--             sodipodi:role="line">ExtraFiles</tspan></text>
--      </g>
--      <g
--         id="g3658">
--        <rect
--           transform="matrix(0,1,1,0,0,0)"
--           y="241.10229"
--           x="905.2099"
--           height="78.636055"
--           width="26.295755"
--           id="rect3348"
--           style="fill:#e9b96e;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
--        <text
--           sodipodi:linespacing="0%"
--           id="text3376"
--           y="921.86945"
--           x="243.95874"
--           style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-+           id="text3380"
-+           y="847.65234"
-+           x="403.15945"
-+           style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+            id="text3364"
+            y="891.06732"
+@@ -287,22 +369,22 @@
+            style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
             xml:space="preserve"><tspan
               style="font-size:13.14787769px;line-height:1.25"
 -             y="921.86945"
@@ -477,119 +331,13 @@ index 66184b15..072e5dd2 100644
 +           id="rect3428"
 +           style="fill:#fcaf3e;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
          <text
--           sodipodi:linespacing="0%"
--           id="text3380-2"
--           y="840.3219"
--           x="256.90588"
--           style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-+           id="text3430"
-+           y="1039.4121"
-+           x="492.642"
-+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:11.99999714px;line-height:0%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-            xml:space="preserve"><tspan
--             style="font-size:13.14787769px;line-height:1.25"
--             id="tspan3406"
--             sodipodi:role="line"
--             x="256.90588"
--             y="840.3219">OSTree</tspan></text>
--      </g>
--      <g
--         transform="translate(-328.39105,-85.517823)"
--         id="g288">
--        <g
--           transform="translate(0.56706579,0)"
--           id="g3653">
--          <rect
--             style="fill:#fcaf3e;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
--             id="rect3428"
--             width="26.295755"
--             height="101.85102"
--             x="1022.637"
--             y="490.33765"
--             transform="matrix(0,1,1,0,0,0)" />
--          <text
--             sodipodi:linespacing="0%"
--             xml:space="preserve"
--             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:11.99999714px;line-height:0%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
--             x="492.642"
-              y="1039.4121"
--             id="text3430"><tspan
--               id="tspan283"
--               sodipodi:role="line"
--               x="492.642"
--               y="1039.4121">OSTreeInstaller</tspan></text>
--        </g>
-+             x="492.642"
-+             sodipodi:role="line"
-+             id="tspan283">OSTreeInstaller</tspan></text>
-       </g>
-     </g>
-     <g
-        id="g236"
--       transform="translate(-60.108974,42.1407)">
-+       transform="translate(0,42.1407)">
-       <g
-          transform="translate(88.832932,-122.61379)"
-          id="g3458">
-@@ -367,8 +343,7 @@
-            y="971.54041"
-            x="422.99252"
-            style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
--           xml:space="preserve"
--           sodipodi:linespacing="0%"><tspan
-+           xml:space="preserve"><tspan
-              y="971.54041"
-              x="422.99252"
-              id="tspan3386"
-@@ -391,8 +366,7 @@
-            y="1006.4276"
-            x="422.69772"
-            style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
--           xml:space="preserve"
--           sodipodi:linespacing="0%"><tspan
-+           xml:space="preserve"><tspan
-              y="1006.4276"
-              x="422.69772"
-              id="tspan3390"
-@@ -415,8 +389,7 @@
-            y="1042.8416"
-            x="422.69772"
-            style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
--           xml:space="preserve"
--           sodipodi:linespacing="0%"><tspan
-+           xml:space="preserve"><tspan
-              y="1042.8416"
-              x="422.69772"
-              id="tspan3394"
-@@ -439,8 +412,7 @@
-            style="font-style:normal;font-weight:normal;line-height:0%;font-family:sans-serif;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-            x="423.40482"
-            y="1079.6111"
--           id="text3424"
--           sodipodi:linespacing="0%"><tspan
-+           id="text3424"><tspan
-              id="tspan3434"
-              sodipodi:role="line"
-              x="423.40482"
-@@ -460,11 +432,10 @@
-            transform="matrix(0,1,1,0,0,0)" />
-         <text
-            xml:space="preserve"
--           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:11.99999714px;line-height:0%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:11.99999714px;line-height:0%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-            x="492.642"
-            y="1065.7078"
--           id="text294"
--           sodipodi:linespacing="0%"><tspan
-+           id="text294"><tspan
-              y="1065.7078"
-              x="492.642"
-              sodipodi:role="line"
+            id="text3380-2"
+            y="840.3219"
 diff --git a/pungi/phases/__init__.py b/pungi/phases/__init__.py
-index 90765be5..044aa467 100644
+index 0ed3e564..77720f80 100644
 --- a/pungi/phases/__init__.py
 +++ b/pungi/phases/__init__.py
-@@ -16,7 +16,6 @@
+@@ -17,7 +17,6 @@ import sys
  
  # phases in runtime order
  from .init import InitPhase  # noqa
@@ -597,10 +345,10 @@ index 90765be5..044aa467 100644
  from .pkgset import PkgsetPhase  # noqa
  from .gather import GatherPhase  # noqa
  from .createrepo import CreaterepoPhase  # noqa
-@@ -32,3 +31,21 @@ from .livemedia_phase import LiveMediaPhase  # noqa
- from .ostree import OSTreePhase  # noqa
- from .ostree_installer import OstreeInstallerPhase  # noqa
- from .osbs import OSBSPhase  # noqa
+@@ -39,3 +38,21 @@ from .phases_metadata import gather_phases_metadata  # noqa
+ 
+ this_module = sys.modules[__name__]
+ PHASES_NAMES = gather_phases_metadata(this_module)
 +
 +
 +def run_all(phases):

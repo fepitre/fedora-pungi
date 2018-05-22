@@ -1,6 +1,6 @@
 Name:           pungi
-Version:        4.1.24
-Release:        4%{?dist}
+Version:        4.1.25
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -10,11 +10,6 @@ Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
 Patch1:         0002-Revert-Other-repo-for-OstreeInstaller.patch
 Patch2:         0003-Revert-Ostree-can-use-pkgset-repos.patch
-Patch3:         0004-Update-tests-for-libmodulemd-1.4.0.patch
-Patch4:         0005-ostree-installer-Copy-files-without-owner.patch
-Patch5:         0006-Make-wait-for-signed-ostree-repeat-the-fedmsg-in-cas.patch
-Patch6:         0007-init-Stop-filtering-comps-environments-all-the-time.patch
-Patch7:         0008-ostree-installer-Use-Python-function-to-copy.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -181,6 +176,29 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Tue May 22 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.25-1
+- comps-wrapper: Make tests pass on EL6 (lsedlar)
+- pkgset: Add option to ignore noarch in ExclusiveArch (lsedlar)
+- Handling multiple modules with the same NSV - PDC (onosek)
+- createrepo: Allow disabling SQLite database (lsedlar)
+- init: Drop database from comps repo (lsedlar)
+- createrepo: Add module arch to metadata (lsedlar)
+- arch: Drop mapping ppc64 -> ppc64p7 (lsedlar)
+- arch: Make i386 map to i686 instead of athlon (lsedlar)
+- Add a phase for creating extra ISOs (lsedlar)
+- Stop using .message attribute on exceptions (lsedlar)
+- Validation of parameter skip_phases (onosek)
+- Capture sigterm and mark the compose as DOOMED (puiterwijk)
+- createiso: Remove useless method (lsedlar)
+- createiso: Refactor code into smaller functions (lsedlar)
+- arch: Remove mocks in tests (lsedlar)
+- ostree-installer: Allow overwriting buildinstall (lsedlar)
+- ostree-installer: Work with skipped buildinstall (lsedlar)
+- createrepo: Use less verbose logs (lsedlar)
+- pkgset: Create global repo in parallel to merging pkgsets (lsedlar)
+- createiso: Skip if buildinstall fails (lsedlar)
+- Update tests for libmodulemd 1.4.0 (lsedlar)
+
 * Wed May 16 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.24-4
 - Use python function to copy ostree installer output
 
