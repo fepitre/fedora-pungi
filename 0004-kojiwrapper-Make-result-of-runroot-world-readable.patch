@@ -1,7 +1,7 @@
 From c8e03cfba196719e80c953c3d197653ef84716ed Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Tue, 29 May 2018 08:38:09 +0200
-Subject: [PATCH 4/4] kojiwrapper: Make result of runroot world readable
+Subject: [PATCH 4/5] kojiwrapper: Make result of runroot world readable
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

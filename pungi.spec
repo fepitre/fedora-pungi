@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.25
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -11,6 +11,7 @@ Patch0:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
 Patch1:         0002-Revert-Other-repo-for-OstreeInstaller.patch
 Patch2:         0003-Revert-Ostree-can-use-pkgset-repos.patch
 Patch3:         0004-kojiwrapper-Make-result-of-runroot-world-readable.patch
+Patch4:         0005-kojiwrapper-Don-t-mark-runroot-as-successful-by-chmo.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -177,6 +178,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Thu May 31 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.25-3
+- Don't mark all runroots as successful by chmod
+
 * Wed May 30 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.25-2
 - Make results of runroot tasks world readable
 
