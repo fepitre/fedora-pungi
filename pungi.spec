@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.25
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -12,6 +12,7 @@ Patch1:         0002-Revert-Other-repo-for-OstreeInstaller.patch
 Patch2:         0003-Revert-Ostree-can-use-pkgset-repos.patch
 Patch3:         0004-kojiwrapper-Make-result-of-runroot-world-readable.patch
 Patch4:         0005-kojiwrapper-Don-t-mark-runroot-as-successful-by-chmo.patch
+Patch5:         0006-kojiwrapper-Call-chmod-recursively.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -178,6 +179,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Mon Jun 04 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.25-4
+- Call chmod recursively
+
 * Thu May 31 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.25-3
 - Don't mark all runroots as successful by chmod
 
