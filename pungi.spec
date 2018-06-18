@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.25
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -179,6 +179,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Mon Jun 18 2018 Miro Hrončok <mhroncok@redhat.com> - 4.1.25-5
+- Rebuilt for Python 3.7
+
 * Mon Jun 04 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.25-4
 - Call chmod recursively
 
