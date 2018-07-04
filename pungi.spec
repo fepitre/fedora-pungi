@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.25
-Release:        5%{?dist}
+Release:        6%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -13,6 +13,7 @@ Patch2:         0003-Revert-Ostree-can-use-pkgset-repos.patch
 Patch3:         0004-kojiwrapper-Make-result-of-runroot-world-readable.patch
 Patch4:         0005-kojiwrapper-Don-t-mark-runroot-as-successful-by-chmo.patch
 Patch5:         0006-kojiwrapper-Call-chmod-recursively.patch
+Patch6:         0001-Skip-tests-involving-lookaside-with-new-DNF.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -97,6 +98,7 @@ notification to Fedora Message Bus.
 Summary:    Legacy pungi executable
 Requires:   %{name} = %{version}-%{release}
 Requires:   python2-%{name} = %{version}-%{release}
+Requires:   python2-productmd
 
 %description legacy
 Legacy pungi executable. This package depends on Python 2.
@@ -179,6 +181,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Jul 04 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.25-6
+- Add dependency on python2-productmd to legacy subpackage
+
 * Mon Jun 18 2018 Miro Hrončok <mhroncok@redhat.com> - 4.1.25-5
 - Rebuilt for Python 3.7
 
