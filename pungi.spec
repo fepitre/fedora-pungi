@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.25
-Release:        6%{?dist}
+Release:        7%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -181,6 +181,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.25-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
 * Wed Jul 04 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.25-6
 - Add dependency on python2-productmd to legacy subpackage
 
