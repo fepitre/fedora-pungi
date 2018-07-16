@@ -1,7 +1,7 @@
-From 836750b9c53aa4c6330b986e7fb28f92d940df55 Mon Sep 17 00:00:00 2001
+From 079177c5bf498fe21c1f0b03d127bfa25fa09fe0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 09:20:51 +0200
-Subject: [PATCH 3/6] Revert "Ostree can use pkgset repos"
+Subject: [PATCH 3/3] Revert "Ostree can use pkgset repos"
 
 This reverts commit c7cc200246300c6a3946b2e3a9f5f7693896a7d6.
 ---
@@ -31,10 +31,10 @@ index 2918fff8..0550b18c 100644
          # copy the original config and update before save to a json file
          new_config = copy.copy(config)
 diff --git a/pungi/util.py b/pungi/util.py
-index 3150e26c..7cfbb4e6 100644
+index 31e763b5..9f0aab69 100644
 --- a/pungi/util.py
 +++ b/pungi/util.py
-@@ -726,16 +726,19 @@ def _translate_url_to_repo_id(url):
+@@ -728,16 +728,19 @@ def _translate_url_to_repo_id(url):
      return ''.join([s if s in list(_REPOID_CHARS) else '_' for s in url])
  
  
@@ -59,7 +59,7 @@ index 3150e26c..7cfbb4e6 100644
      """
      repo_dict = {}
      if isinstance(repo, dict):
-@@ -745,8 +748,10 @@ def get_repo_dict(repo):
+@@ -747,8 +750,10 @@ def get_repo_dict(repo):
              if name is None:
                  name = _translate_url_to_repo_id(url)
          else:
@@ -72,7 +72,7 @@ index 3150e26c..7cfbb4e6 100644
          repo['name'] = name
          repo['baseurl'] = url
          return repo
-@@ -757,24 +762,24 @@ def get_repo_dict(repo):
+@@ -759,24 +764,24 @@ def get_repo_dict(repo):
              repo_dict['name'] = _translate_url_to_repo_id(repo)
              repo_dict['baseurl'] = repo
          else:
@@ -226,10 +226,10 @@ index ad14eca4..3a9ebf32 100644
  if __name__ == '__main__':
      unittest.main()
 diff --git a/tests/test_util.py b/tests/test_util.py
-index 1f22b63e..322301ff 100644
+index 739ea9e1..ab4f3459 100644
 --- a/tests/test_util.py
 +++ b/tests/test_util.py
-@@ -588,35 +588,43 @@ class GetRepoFuncsTestCase(unittest.TestCase):
+@@ -587,35 +587,43 @@ class GetRepoFuncsTestCase(unittest.TestCase):
          self.assertEqual(util.get_repo_urls(self.compose, repos), expect)
  
      def test_get_repo_dict_from_normal_url(self):
@@ -283,5 +283,5 @@ index 1f22b63e..322301ff 100644
  
  
 -- 
-2.14.3
+2.14.4
 

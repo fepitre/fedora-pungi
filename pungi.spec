@@ -1,6 +1,6 @@
 Name:           pungi
-Version:        4.1.25
-Release:        7%{?dist}
+Version:        4.1.26
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -10,10 +10,7 @@ Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
 Patch1:         0002-Revert-Other-repo-for-OstreeInstaller.patch
 Patch2:         0003-Revert-Ostree-can-use-pkgset-repos.patch
-Patch3:         0004-kojiwrapper-Make-result-of-runroot-world-readable.patch
-Patch4:         0005-kojiwrapper-Don-t-mark-runroot-as-successful-by-chmo.patch
-Patch5:         0006-kojiwrapper-Call-chmod-recursively.patch
-Patch6:         0001-Skip-tests-involving-lookaside-with-new-DNF.patch
+Patch3:         0001-Fix-tests-for-DNF-3.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -41,6 +38,7 @@ BuildRequires:  python3-PyYAML
 BuildRequires:  libmodulemd >= 1.3.0
 BuildRequires:  python3-gobject
 BuildRequires:  python3-pdc-client
+BuildRequires:  python3-createrepo_c
 
 #deps for doc building
 BuildRequires:  python3-sphinx, texlive-collection-fontsrecommended
@@ -75,6 +73,7 @@ Requires:       python3-koji
 Requires:       libmodulemd >= 1.3.0
 Requires:       python3-gobject
 Requires:       python3-pdc-client
+Requires:       python3-createrepo_c
 
 Requires:       python3-%{name} = %{version}-%{release}
 
@@ -181,6 +180,37 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Mon Jul 16 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.26-1
+- gather: Add a hybrid depsolver backend (lsedlar)
+- Always use lookasides for repoclosure (lsedlar)
+- doc: closing parentheses for require_all_comps_packages (kdreyer)
+- osbs: Generate unique repo names (lsedlar)
+- Expand version field during image_build using version_generator (sinny)
+- createrepo: Stop including modulemd in debug repos (lsedlar)
+- Simplify iterating over module defaults (lsedlar)
+- pkgset: Apply module filters on pkgset level (lsedlar)
+- init: Validate whitespace in comps groups (lsedlar)
+- createrepo: Include empty modules (lsedlar)
+- createiso: Break hardlinks by copying files (lsedlar)
+- pkgset: Query Koji instead of PDC (mcurlej)
+- config: Report variants validity issues (lsedlar)
+- variants: Reject values with whitespace (lsedlar)
+- osbs: Fresh koji session for getting metadata (lsedlar)
+- gather: Ignore comps in lookaside repo (lsedlar)
+- init: Test that init phase correctly clones defaults (lsedlar)
+- init: Add tests for cloning module defaults (lsedlar)
+- init: Add validation for module defaults (lsedlar)
+- ostree-installer: Skip comps repo if there are no comps (lsedlar)
+- Add test for getting licenses from a repo (lsedlar)
+- Add content_licenses to module metadata (sgallagh)
+- Update virtualenv instructions (lsedlar)
+- Allow extracting koji event from another compose (lsedlar)
+- Copy modules instead of reparsing them (sgallagh)
+- Silence config warnings in quiet mode (lsedlar)
+- osbs: Add nvr to metadata (lsedlar)
+- Always get old compose with release type suffix (patrick)
+- Make ostree_installer check if buildinstall is skipped correctly (puiterwijk)
+
 * Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.25-7
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
 
