@@ -1,0 +1,80 @@
+From 346bf883593e3d4a3531c1dce15abbc696130c6e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Wed, 4 Jul 2018 09:16:51 +0200
+Subject: [PATCH 5/5] Fix tests for DNF 3
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The configuration for modules has changed.
+
+Lookaside handling has changed, and there are now test failures. This
+is a not a bug in DNF, so we need to fix it on our side.
+
+Relates: https://bugzilla.redhat.com/show_bug.cgi?id=1603123
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/gather_dnf.py  | 19 ++++++++++++++++++-
+ tests/test_gather.py |  6 +++++-
+ 2 files changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/pungi/gather_dnf.py b/pungi/gather_dnf.py
+index 328d69c8..1d6c510a 100644
+--- a/pungi/gather_dnf.py
++++ b/pungi/gather_dnf.py
+@@ -227,10 +227,27 @@ class Gather(GatherBase):
+         if not package_list:
+             return []
+ 
++        # The list can contain packages from lookaside and outside of
++        # lookaside. If the package is in both, we want to prefer the version
++        # from lookaside. This can be achieved by removing any package that is
++        # also in lookaside from the list.
++        lookaside_pkgs = set()
++        for pkg in package_list:
++            if pkg.repoid in self.opts.lookaside_repos:
++                lookaside_pkgs.add("{0.name}-{0.evr}".format(pkg))
++
+         if self.opts.greedy_method == "all":
+             return list(package_list)
+ 
+-        all_pkgs = list(package_list)
++        all_pkgs = []
++        for pkg in package_list:
++            # Remove packages that are also in lookaside
++            if (
++                "{0.name}-{0.evr}".format(pkg) not in lookaside_pkgs
++                or pkg.repoid in self.opts.lookaside_repos
++            ):
++                all_pkgs.append(pkg)
++
+         native_pkgs = self.q_native_binary_packages.filter(pkg=all_pkgs).apply()
+         multilib_pkgs = self.q_multilib_binary_packages.filter(pkg=all_pkgs).apply()
+ 
+diff --git a/tests/test_gather.py b/tests/test_gather.py
+index 25dfc399..60085b89 100644
+--- a/tests/test_gather.py
++++ b/tests/test_gather.py
+@@ -22,6 +22,7 @@ os.environ['PATH'] = '%s:%s' % (BINDIR, os.environ['PATH'])
+ 
+ from pungi.wrappers.pungi import PungiWrapper
+ try:
++    from dnf import __version__ as dnf_version
+     from pungi.dnf_wrapper import DnfWrapper, Conf
+     from pungi.gather_dnf import Gather, GatherOptions, PkgFlag
+     HAS_DNF = True
+@@ -1810,7 +1811,10 @@ class DNFDepsolvingTestCase(DepsolvingBase, unittest.TestCase):
+         conf = Conf(base_arch)
+         conf.persistdir = persistdir
+         conf.cachedir = self.cachedir
+-        conf.modulesdir = os.path.join(persistdir, 'modules.d')
++        if int(dnf_version.split('.')[0]) < 3:
++            conf.modulesdir = os.path.join(persistdir, 'modules.d')
++        else:
++            conf.modulesdir._set(os.path.join(persistdir, 'modules.d'))
+         if exclude:
+             conf.exclude = exclude
+         dnf = DnfWrapper(conf)
+-- 
+2.14.4
+
