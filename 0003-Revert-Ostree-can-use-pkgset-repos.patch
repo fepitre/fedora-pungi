@@ -1,7 +1,7 @@
-From 079177c5bf498fe21c1f0b03d127bfa25fa09fe0 Mon Sep 17 00:00:00 2001
+From 1fc1fe8a84417d213a9ed6f787c3a61e0f859df5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 09:20:51 +0200
-Subject: [PATCH 3/5] Revert "Ostree can use pkgset repos"
+Subject: [PATCH 3/3] Revert "Ostree can use pkgset repos"
 
 This reverts commit c7cc200246300c6a3946b2e3a9f5f7693896a7d6.
 ---
@@ -31,10 +31,10 @@ index 2918fff8..0550b18c 100644
          # copy the original config and update before save to a json file
          new_config = copy.copy(config)
 diff --git a/pungi/util.py b/pungi/util.py
-index 31e763b5..9f0aab69 100644
+index f878febe..d8eac880 100644
 --- a/pungi/util.py
 +++ b/pungi/util.py
-@@ -728,16 +728,19 @@ def _translate_url_to_repo_id(url):
+@@ -731,16 +731,19 @@ def _translate_url_to_repo_id(url):
      return ''.join([s if s in list(_REPOID_CHARS) else '_' for s in url])
  
  
@@ -59,7 +59,7 @@ index 31e763b5..9f0aab69 100644
      """
      repo_dict = {}
      if isinstance(repo, dict):
-@@ -747,8 +750,10 @@ def get_repo_dict(repo):
+@@ -750,8 +753,10 @@ def get_repo_dict(repo):
              if name is None:
                  name = _translate_url_to_repo_id(url)
          else:
@@ -72,7 +72,7 @@ index 31e763b5..9f0aab69 100644
          repo['name'] = name
          repo['baseurl'] = url
          return repo
-@@ -759,24 +764,24 @@ def get_repo_dict(repo):
+@@ -762,24 +767,24 @@ def get_repo_dict(repo):
              repo_dict['name'] = _translate_url_to_repo_id(repo)
              repo_dict['baseurl'] = repo
          else:
@@ -128,7 +128,7 @@ index 031a15a4..c73fe126 100644
          interp = 'python2' if six.PY2 else 'python3'
          p = subprocess.Popen([interp, PUNGI_CONFIG_VALIDATE, DUMMY_CONFIG],
 diff --git a/tests/test_ostree_phase.py b/tests/test_ostree_phase.py
-index ad14eca4..3a9ebf32 100644
+index c2986bc8..4ce66bbd 100644
 --- a/tests/test_ostree_phase.py
 +++ b/tests/test_ostree_phase.py
 @@ -118,7 +118,7 @@ class OSTreeThreadTest(helpers.PungiTestCase):
@@ -226,10 +226,10 @@ index ad14eca4..3a9ebf32 100644
  if __name__ == '__main__':
      unittest.main()
 diff --git a/tests/test_util.py b/tests/test_util.py
-index 739ea9e1..ab4f3459 100644
+index 9e247cde..2b93e496 100644
 --- a/tests/test_util.py
 +++ b/tests/test_util.py
-@@ -587,35 +587,43 @@ class GetRepoFuncsTestCase(unittest.TestCase):
+@@ -624,35 +624,43 @@ class GetRepoFuncsTestCase(unittest.TestCase):
          self.assertEqual(util.get_repo_urls(self.compose, repos), expect)
  
      def test_get_repo_dict_from_normal_url(self):

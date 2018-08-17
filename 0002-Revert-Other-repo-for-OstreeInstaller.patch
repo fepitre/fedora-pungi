@@ -1,7 +1,7 @@
-From 883a69645b92b243787312af232aeb804cf53292 Mon Sep 17 00:00:00 2001
+From 208c5e88a14a0caea8180b5958d41ffd5f046bc6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 09:19:53 +0200
-Subject: [PATCH 2/5] Revert "Other repo for OstreeInstaller"
+Subject: [PATCH 2/3] Revert "Other repo for OstreeInstaller"
 
 This reverts commit 5c081cb545715c2a912ff50fa57554e89d905868.
 ---
@@ -12,10 +12,10 @@ This reverts commit 5c081cb545715c2a912ff50fa57554e89d905868.
  4 files changed, 29 insertions(+), 67 deletions(-)
 
 diff --git a/pungi/checks.py b/pungi/checks.py
-index 017fab23..61d42b89 100644
+index 53fc615e..35390022 100644
 --- a/pungi/checks.py
 +++ b/pungi/checks.py
-@@ -1009,7 +1009,7 @@ def make_schema():
+@@ -1020,7 +1020,7 @@ def make_schema():
                              "tag_ref": {"type": "boolean"},
                              "ostree_ref": {"type": "string"},
                          },
@@ -24,7 +24,7 @@ index 017fab23..61d42b89 100644
                          "additionalProperties": False,
                      }),
                  ]
-@@ -1030,6 +1030,7 @@ def make_schema():
+@@ -1041,6 +1041,7 @@ def make_schema():
                      "template_repo": {"type": "string"},
                      "template_branch": {"type": "string"},
                  },
@@ -69,10 +69,10 @@ index 587ff2c5..861d9db1 100644
          output_dir = os.path.join(compose.paths.work.topdir(arch), variant.uid, 'ostree_installer')
          util.makedirs(os.path.dirname(output_dir))
 diff --git a/pungi/util.py b/pungi/util.py
-index 78a9c9be..31e763b5 100644
+index 65f3fe61..f878febe 100644
 --- a/pungi/util.py
 +++ b/pungi/util.py
-@@ -688,8 +688,6 @@ def get_repo_url(compose, repo, arch='$basearch'):
+@@ -691,8 +691,6 @@ def get_repo_url(compose, repo, arch='$basearch'):
      Convert repo to repo URL.
  
      @param compose - required for access to variants
@@ -81,7 +81,7 @@ index 78a9c9be..31e763b5 100644
      @param repo - string or a dict which at least contains 'baseurl' key
      @param arch - string to be used as arch in repo url
      """
-@@ -700,17 +698,14 @@ def get_repo_url(compose, repo, arch='$basearch'):
+@@ -703,17 +701,14 @@ def get_repo_url(compose, repo, arch='$basearch'):
              raise RuntimeError('Baseurl is required in repo dict %s' % str(repo))
      if '://' not in repo:
          # this is a variant name
@@ -103,7 +103,7 @@ index 78a9c9be..31e763b5 100644
      """
      Convert repos to a list of repo URLs.
  
-@@ -721,11 +716,7 @@ def get_repo_urls(compose, repos, arch='$basearch', logger=None):
+@@ -724,11 +719,7 @@ def get_repo_urls(compose, repos, arch='$basearch', logger=None):
      urls = []
      for repo in repos:
          repo = get_repo_url(compose, repo, arch=arch)
@@ -116,7 +116,7 @@ index 78a9c9be..31e763b5 100644
      return urls
  
  
-@@ -783,7 +774,7 @@ def get_repo_dicts(repos, logger=None):
+@@ -786,7 +777,7 @@ def get_repo_dicts(repos, logger=None):
          repo_dict = get_repo_dict(repo)
          if repo_dict == {}:
              if logger:
@@ -126,7 +126,7 @@ index 78a9c9be..31e763b5 100644
              repo_dicts.append(repo_dict)
      return repo_dicts
 diff --git a/tests/test_ostree_installer_phase.py b/tests/test_ostree_installer_phase.py
-index 7569e348..25227689 100644
+index 80e68d42..459ae063 100644
 --- a/tests/test_ostree_installer_phase.py
 +++ b/tests/test_ostree_installer_phase.py
 @@ -14,7 +14,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))

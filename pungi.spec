@@ -1,6 +1,6 @@
 Name:           pungi
-Version:        4.1.26
-Release:        2%{?dist}
+Version:        4.1.27
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -10,8 +10,6 @@ Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
 Patch1:         0002-Revert-Other-repo-for-OstreeInstaller.patch
 Patch2:         0003-Revert-Ostree-can-use-pkgset-repos.patch
-Patch3:         0004-Fix-Koji-search-for-modules-with-dash-in-stream.patch
-Patch4:         0005-Fix-tests-for-DNF-3.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -75,6 +73,7 @@ Requires:       libmodulemd >= 1.3.0
 Requires:       python3-gobject
 Requires:       python3-pdc-client
 Requires:       python3-createrepo_c
+Requires:       python3-PyYAML
 
 Requires:       python3-%{name} = %{version}-%{release}
 
@@ -181,6 +180,31 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Fri Aug 17 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.27-1
+- extra-iso: Rename test data file (lsedlar)
+- createiso: Use correct python version (lsedlar)
+- ostree: Update tests for working with YAML file (lsedlar)
+- pungi/ostree: Convert rpm-ostree YAML to JSON (walters)
+- createrepo: Allow passing arbitrary arguments (lsedlar)
+- gather: Get modular packages from fus (lsedlar)
+- util: Remove escaping spaces from volume ID (lsedlar)
+- Allow removing non-alnum chars from volid (lsedlar)
+- extra-isos: Include treeinfo pointing to all variants (lsedlar)
+- createiso: Use unique paths for breaking hardlinks (lsedlar)
+- gather: Detect hybrid variant with additional packages (lsedlar)
+- Include exact version of pungi in the logs (mboddu)
+- gather: Allow empty result for gather (lsedlar)
+- gather: Add langpacks in hybrid solver (lsedlar)
+- comps: Add get_langpacks function (lsedlar)
+- pungi-legacy: Add --joliet-long option (lsedlar)
+- gather: Early exit for non-comps sources (lsedlar)
+- tests: Use unittest2 when available (lsedlar)
+- buildinstall: Make output world readable (lsedlar)
+- buildinstall: Copy file without preserving owner (lsedlar)
+- Report failed failable deliverables as errors (lsedlar)
+- Stop importing PDCClient (lsedlar)
+- spec: build require python-multilib (lsedlar)
+
 * Fri Jul 20 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.26-2
 - Backport patch for DNF 3 compatibility
 - Fix querying Koji about modules with dash in stream
