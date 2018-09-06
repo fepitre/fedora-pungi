@@ -1,5 +1,5 @@
 Name:           pungi
-Version:        4.1.27
+Version:        4.1.28
 Release:        1%{?dist}
 Summary:        Distribution compose tool
 
@@ -38,6 +38,7 @@ BuildRequires:  libmodulemd >= 1.3.0
 BuildRequires:  python3-gobject
 BuildRequires:  python3-pdc-client
 BuildRequires:  python3-createrepo_c
+BuildRequires:  python3-dogpile-cache
 
 #deps for doc building
 BuildRequires:  python3-sphinx, texlive-collection-fontsrecommended
@@ -74,6 +75,7 @@ Requires:       python3-gobject
 Requires:       python3-pdc-client
 Requires:       python3-createrepo_c
 Requires:       python3-PyYAML
+Requires:       python3-dogpile-cache
 
 Requires:       python3-%{name} = %{version}-%{release}
 
@@ -180,6 +182,26 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Thu Sep 06 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.28-1
+- gather: Fix multilib query for hybrid solver (lsedlar)
+- gather: Expand multilib lists for hybrid method (lsedlar)
+- Index arch modulemd by full NSVC (lsedlar)
+- pkgset: Apply whitelist to modules in the tag (lsedlar)
+- ostree: Wait for updated ref as well as signature (lsedlar)
+- extra_iso: Set unified flag in metadata (lsedlar)
+- pkgset: Respect koji event when searching for modules (lsedlar)
+- Use dogpile.cache to cache the listTaggedRPMS calls if possible (jkaluza)
+- gather: Keep original rpms.json in debug mode (lsedlar)
+- Reduce duplication in tests (lsedlar)
+- docs: Add better description for package globs (lsedlar)
+- Create non-bootable ISO for variant without buildinstall (lsedlar)
+- Clean up after yum tests (lsedlar)
+- gather: Honor module whitelist (lsedlar)
+- Clarify error about non-existing module (lsedlar)
+- gather: Print full unresolved dependency (lsedlar)
+- Fix tests on Python 2.6 (lsedlar)
+- Include all test data in tarball (lsedlar)
+
 * Fri Aug 17 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.27-1
 - extra-iso: Rename test data file (lsedlar)
 - createiso: Use correct python version (lsedlar)

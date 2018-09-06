@@ -1,15 +1,15 @@
-From 1fc1fe8a84417d213a9ed6f787c3a61e0f859df5 Mon Sep 17 00:00:00 2001
+From 625183a5a3c35c68184b5da8166775de691e6d61 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 09:20:51 +0200
 Subject: [PATCH 3/3] Revert "Ostree can use pkgset repos"
 
 This reverts commit c7cc200246300c6a3946b2e3a9f5f7693896a7d6.
 ---
- pungi/phases/ostree.py               |  7 +----
- pungi/util.py                        | 35 +++++++++++++-----------
+ pungi/phases/ostree.py               |  7 +---
+ pungi/util.py                        | 35 +++++++++++--------
  tests/test_config_validate_script.py |  4 ++-
- tests/test_ostree_phase.py           | 52 +++++++-----------------------------
- tests/test_util.py                   | 26 +++++++++++-------
+ tests/test_ostree_phase.py           | 52 +++++-----------------------
+ tests/test_util.py                   | 26 +++++++++-----
  5 files changed, 50 insertions(+), 74 deletions(-)
 
 diff --git a/pungi/phases/ostree.py b/pungi/phases/ostree.py
@@ -31,7 +31,7 @@ index 2918fff8..0550b18c 100644
          # copy the original config and update before save to a json file
          new_config = copy.copy(config)
 diff --git a/pungi/util.py b/pungi/util.py
-index f878febe..d8eac880 100644
+index 37b4d5f5..1a95e1f4 100644
 --- a/pungi/util.py
 +++ b/pungi/util.py
 @@ -731,16 +731,19 @@ def _translate_url_to_repo_id(url):
@@ -283,5 +283,5 @@ index 9e247cde..2b93e496 100644
  
  
 -- 
-2.14.4
+2.17.1
 

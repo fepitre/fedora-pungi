@@ -1,4 +1,4 @@
-From 208c5e88a14a0caea8180b5958d41ffd5f046bc6 Mon Sep 17 00:00:00 2001
+From 2fffbaf2b09a44e85a597e45bb258e3bcb98743f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
 Date: Wed, 11 Apr 2018 09:19:53 +0200
 Subject: [PATCH 2/3] Revert "Other repo for OstreeInstaller"
@@ -6,16 +6,16 @@ Subject: [PATCH 2/3] Revert "Other repo for OstreeInstaller"
 This reverts commit 5c081cb545715c2a912ff50fa57554e89d905868.
 ---
  pungi/checks.py                      |  3 +-
- pungi/phases/ostree_installer.py     | 18 ++----------
- pungi/util.py                        | 21 ++++----------
- tests/test_ostree_installer_phase.py | 54 +++++++++++++-----------------------
+ pungi/phases/ostree_installer.py     | 18 ++--------
+ pungi/util.py                        | 21 ++++-------
+ tests/test_ostree_installer_phase.py | 54 ++++++++++------------------
  4 files changed, 29 insertions(+), 67 deletions(-)
 
 diff --git a/pungi/checks.py b/pungi/checks.py
-index 53fc615e..35390022 100644
+index 7a2f9a8d..673b3666 100644
 --- a/pungi/checks.py
 +++ b/pungi/checks.py
-@@ -1020,7 +1020,7 @@ def make_schema():
+@@ -1030,7 +1030,7 @@ def make_schema():
                              "tag_ref": {"type": "boolean"},
                              "ostree_ref": {"type": "string"},
                          },
@@ -24,7 +24,7 @@ index 53fc615e..35390022 100644
                          "additionalProperties": False,
                      }),
                  ]
-@@ -1041,6 +1041,7 @@ def make_schema():
+@@ -1051,6 +1051,7 @@ def make_schema():
                      "template_repo": {"type": "string"},
                      "template_branch": {"type": "string"},
                  },
@@ -69,7 +69,7 @@ index 587ff2c5..861d9db1 100644
          output_dir = os.path.join(compose.paths.work.topdir(arch), variant.uid, 'ostree_installer')
          util.makedirs(os.path.dirname(output_dir))
 diff --git a/pungi/util.py b/pungi/util.py
-index 65f3fe61..f878febe 100644
+index 3a31ca87..37b4d5f5 100644
 --- a/pungi/util.py
 +++ b/pungi/util.py
 @@ -691,8 +691,6 @@ def get_repo_url(compose, repo, arch='$basearch'):
@@ -305,5 +305,5 @@ index 80e68d42..459ae063 100644
              isfinal=True,
              extra=['--installpkgs=fedora-productimg-atomic',
 -- 
-2.14.4
+2.17.1
 
