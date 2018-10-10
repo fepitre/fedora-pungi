@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.29
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -16,7 +16,7 @@ BuildRequires:  python3-mock
 BuildRequires:  python2-devel
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
-BuildRequires:  python3-productmd >= 1.11
+BuildRequires:  python3-productmd >= 1.17
 BuildRequires:  python3-kobo-rpmlib
 BuildRequires:  createrepo_c
 BuildRequires:  python3-lxml
@@ -53,7 +53,7 @@ BuildRequires:  latexmk
 
 Requires:       python3-kobo >= 0.6
 Requires:       python3-kobo-rpmlib
-Requires:       python3-productmd >= 1.11
+Requires:       python3-productmd >= 1.17
 Requires:       python3-kickstart
 Requires:       createrepo_c
 Requires:       python3-lxml
@@ -99,7 +99,8 @@ notification to Fedora Message Bus.
 Summary:    Legacy pungi executable
 Requires:   %{name} = %{version}-%{release}
 Requires:   python2-%{name} = %{version}-%{release}
-Requires:   python2-productmd
+Requires:   python2-productmd >= 1.17
+Requires:   xorriso
 
 %description legacy
 Legacy pungi executable. This package depends on Python 2.
@@ -182,6 +183,10 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Oct 10 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.29-2
+- Add dependency on xorriso to pungi-legacy
+- Bump dependency on python-productmd
+
 * Wed Oct 10 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.29-1
 - hybrid: Only include modules that are not in lookaside (lsedlar)
 - Try to be more conservative about memory usage (lsedlar)
