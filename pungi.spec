@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.29
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -10,6 +10,7 @@ Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
 Patch1:         0002-Revert-Other-repo-for-OstreeInstaller.patch
 Patch2:         0003-Revert-Ostree-can-use-pkgset-repos.patch
+Patch3:         0001-Save-memory-less-agressively.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -183,6 +184,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Mon Oct 15 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.29-3
+- Save memory less agressively
+
 * Wed Oct 10 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.29-2
 - Add dependency on xorriso to pungi-legacy
 - Bump dependency on python-productmd

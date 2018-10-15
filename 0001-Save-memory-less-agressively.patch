@@ -1,0 +1,33 @@
+From 844f2005a0d9e0848a03a328d5a0770c9072e1a0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Mon, 15 Oct 2018 15:34:35 +0200
+Subject: [PATCH] Save memory less agressively
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+We can't drop the whole package set once the first solver iteration
+finishes, because it runs for each arch separately and we need the data
+for each of them. We can however delete the arch specific portion.
+
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/gather/methods/method_deps.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pungi/phases/gather/methods/method_deps.py b/pungi/phases/gather/methods/method_deps.py
+index 3c7b54fb..083992ef 100644
+--- a/pungi/phases/gather/methods/method_deps.py
++++ b/pungi/phases/gather/methods/method_deps.py
+@@ -146,7 +146,7 @@ def write_pungi_config(compose, arch, variant, packages, groups, filter_packages
+                         '{0.name}-{1}:{0.version}-{0.release}'.format(rpm_obj, rpm_obj.epoch or 0))
+ 
+         # Drop the packageset to hopefully save some memory
+-        variant.pkgset = None
++        variant.pkgset.rpms_by_arch[arch] = None
+ 
+     pungi_wrapper.write_kickstart(
+         ks_path=pungi_cfg, repos=repos, groups=groups, packages=packages_str,
+-- 
+2.17.2
+
