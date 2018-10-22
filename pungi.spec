@@ -100,8 +100,20 @@ notification to Fedora Message Bus.
 Summary:    Legacy pungi executable
 Requires:   %{name} = %{version}-%{release}
 Requires:   python2-%{name} = %{version}-%{release}
+Requires:   createrepo
+Requires:   isomd5sum
+Requires:   lorax
+Requires:   python2-functools
+Requires:   python2-kickstart
+Requires:   python2-kobo
+Requires:   python2-libselinux
+Requires:   python2-lockfile
 Requires:   python2-productmd >= 1.17
+Requires:   python2-six
+Requires:   repoview
 Requires:   xorriso
+Requires:   yum
+Requires:   yum-utils
 
 %description legacy
 Legacy pungi executable. This package depends on Python 2.
