@@ -1,6 +1,6 @@
 Name:           pungi
-Version:        4.1.29
-Release:        3%{?dist}
+Version:        4.1.30
+Release:        1%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -10,7 +10,6 @@ Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
 Patch0:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
 Patch1:         0002-Revert-Other-repo-for-OstreeInstaller.patch
 Patch2:         0003-Revert-Ostree-can-use-pkgset-repos.patch
-Patch3:         0001-Save-memory-less-agressively.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -196,6 +195,21 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Oct 31 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.30-1
+- gather: Expand wildcards in Pungi (lsedlar)
+- repoclosure: Extract logs from hybrid solver (lsedlar)
+- gather: Track multilib that doesn't exist (lsedlar)
+- Get the NSVC from Koji module CG build metadata (jkaluza)
+- extra_iso: Include media.repo and .discinfo (lsedlar)
+- hybrid: Don't add debuginfo as langpacks (lsedlar)
+- fus: Write solvables to file (lsedlar)
+- hybrid: Honor filter_packages (lsedlar)
+- Include all test fixtures in source tarball (lsedlar)
+- extra-iso: Use correct efiboot.img file (lsedlar)
+- extra-iso: Fix treeinfo (lsedlar)
+- createiso: Move code for tweaking treeinfo into a function (lsedlar)
+- extra-iso: Generate jigdo by default (lsedlar)
+
 * Mon Oct 15 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.29-3
 - Save memory less agressively
 
