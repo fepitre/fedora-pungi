@@ -7,9 +7,6 @@ Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
-Patch0:         0001-Revert-Move-ostree-phase-and-pipelines-for-running-p.patch
-Patch1:         0002-Revert-Other-repo-for-OstreeInstaller.patch
-Patch2:         0003-Revert-Ostree-can-use-pkgset-repos.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
