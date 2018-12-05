@@ -1,0 +1,43 @@
+From 5f6dcb37f69734229ce2e94528139640c46583aa Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lubom=C3=ADr=20Sedl=C3=A1=C5=99?= <lsedlar@redhat.com>
+Date: Wed, 5 Dec 2018 11:20:17 +0100
+Subject: [PATCH] ostree: Send correct ref in the message
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+If configuration requests a different ref than what treefile has, a
+wrong message can be sent.
+
+If the treefile is in JSON, the local copy will be updated in-place and
+it works. However with YAML the updated version is still written as JSON
+and thus we are still sending the original value.
+
+Fixes: https://pagure.io/pungi/issue/1092
+Signed-off-by: Lubomír Sedlář <lsedlar@redhat.com>
+---
+ pungi/phases/ostree.py | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/pungi/phases/ostree.py b/pungi/phases/ostree.py
+index ae8505ac..8bbe4434 100644
+--- a/pungi/phases/ostree.py
++++ b/pungi/phases/ostree.py
+@@ -93,8 +93,12 @@ class OSTreeThread(WorkerThread):
+                                        extra_config_file=extra_config_file)
+ 
+         if compose.notifier:
+-            ref = get_ref_from_treefile(os.path.join(repodir, config['treefile']),
+-                                        arch, logger=self.pool._logger)
++            original_ref = get_ref_from_treefile(
++                os.path.join(repodir, config["treefile"]),
++                arch,
++                logger=self.pool._logger,
++            )
++            ref = config.get("ostree_ref") or original_ref
+             # 'pungi-make-ostree tree' writes commitid to commitid.log in
+             # logdir, except if there was no new commit we will get None
+             # instead. If the commit id could not be read, an exception will be
+-- 
+2.17.2
+

@@ -1,12 +1,13 @@
 Name:           pungi
 Version:        4.1.31
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
 License:        GPLv2
 URL:            https://pagure.io/pungi
 Source0:        https://pagure.io/releases/%{name}/%{name}-%{version}.tar.bz2
+Patch0:         0001-ostree-Send-correct-ref-in-the-message.patch
 
 BuildRequires:  python3-nose
 BuildRequires:  python3-mock
@@ -193,6 +194,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Dec 05 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.31-2
+- Send correct ostree ref to fedmsg
+
 * Mon Nov 26 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.31-1
 - Remove patches keeping old ostree phase ordering
 - Add script to merge and dump multiple configuration files (lsedlar)
