@@ -1,6 +1,6 @@
 Name:           pungi
 Version:        4.1.31
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Distribution compose tool
 
 Group:          Development/Tools
@@ -32,7 +32,7 @@ BuildRequires:  python3-koji
 BuildRequires:  python3-unittest2
 BuildRequires:  lorax
 BuildRequires:  python3-PyYAML
-BuildRequires:  libmodulemd >= 1.3.0
+BuildRequires:  python3-libmodulemd1
 BuildRequires:  python3-gobject
 BuildRequires:  python3-pdc-client
 BuildRequires:  python3-createrepo_c
@@ -68,7 +68,7 @@ Requires:       python3-multilib
 Requires:       python3-libcomps
 Requires:       python3-six
 Requires:       python3-koji
-Requires:       libmodulemd >= 1.3.0
+Requires:       python3-libmodulemd1
 Requires:       python3-gobject
 Requires:       python3-pdc-client
 Requires:       python3-createrepo_c
@@ -194,6 +194,9 @@ nosetests-3 --exe
 %{_bindir}/%{name}-wait-for-signed-ostree-handler
 
 %changelog
+* Wed Dec 12 2018 Stephen Gallagher <sgallagh@redhat.com> - 4.1.31-3
+- Update dependency for libmodulemd
+
 * Wed Dec 05 2018 Lubomír Sedlář <lsedlar@redhat.com> - 4.1.31-2
 - Send correct ostree ref to fedmsg
 
