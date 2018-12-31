@@ -100,7 +100,7 @@ Requires:   python2-%{name} = %{version}-%{release}
 Requires:   createrepo
 Requires:   isomd5sum
 Requires:   lorax
-Requires:   python2-functools
+Requires:   python2-functools32
 Requires:   python2-kickstart
 Requires:   python2-kobo
 Requires:   python2-libselinux
